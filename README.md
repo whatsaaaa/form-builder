@@ -27,8 +27,8 @@ Early work in progress. The initial JSON -> Formisch builder function is in plac
 This repository is a [pnpm workspace](https://pnpm.io/workspaces):
 
 ```
-playground/        Vue app for trying out the packages locally (not published)
-packages/schema/  @whatsaaaa/form-builder-schema
+apps/playground/   Vue app for trying out the packages locally (not published)
+packages/schema/   @whatsaaaa/form-builder-schema
 ```
 
 Lint, format and TypeScript tooling is shared at the workspace root. Dependency versions used by more than one package are kept in the `catalog` in `pnpm-workspace.yaml`.
