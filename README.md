@@ -65,3 +65,72 @@ React, Angular and friends will sit next to the Vue adapter in `frameworks/` onc
 | :-: | --- | --- |
 | 🛝 | `apps/playground` | A Vite + Vue sandbox for poking at the packages while you work on them. |
 | 🏗️ | `apps/builder` | A visual form builder that spits out JSON definitions. |
+
+## 🚀 Getting started
+
+You'll need **Node.js** and **pnpm**. If you don't have pnpm yet, `corepack enable` sets it up.
+
+```sh
+git clone https://github.com/whatsaaaa/form-builder.git
+cd form-builder
+pnpm install
+pnpm dev    # open the playground
+```
+
+That's it, you're in.
+
+### Handy commands
+
+| Command | |
+| --- | --- |
+| `pnpm dev` | Starts the playground against live source |
+| `pnpm build` | Builds every package in the right order |
+| `pnpm test` | Runs all the tests |
+| `pnpm lint` | Checks code style |
+| `pnpm typecheck` | Makes TypeScript happy |
+| `pnpm changeset` | Notes down your change for the next release |
+
+Want to work on just one package? Use `--filter`:
+
+```sh
+pnpm --filter @whatsaaaa/form-builder-schema test
+```
+
+## 🧭 How it fits together
+
+```
+📁 packages/     the framework-agnostic core
+📁 frameworks/   thin adapters for Vue (and later React, Angular…)
+📁 apps/         playground, builder, docs
+📁 fixtures/     sample JSON forms every test suite shares
+📁 schema/       JSON Schema for the definition format (editor autocomplete!)
+```
+
+There's one rule to keep things tidy. **Dependencies only flow downhill:**
+
+```
+apps  →  frameworks  →  packages
+```
+
+The core never imports Vue or Node built-ins, so it runs anywhere. ESLint will gently remind you if you forget.
+
+
+## 🌱 Status
+ 
+Early days! The JSON → Valibot builder is working, and everything else is on its way. Expect the API and the JSON format to change between `0.x` releases.
+
+## 🤝 Contributing
+ 
+Ideas, bug reports and PRs are all very welcome. Before opening a PR:
+ 
+- ✅ run `pnpm lint`, `pnpm typecheck` and `pnpm test`
+- 📝 add a changeset if you touched a published package
+
+Not sure where to start? Open an issue and say hi.
+ 
+## 📄 License
+ 
+[MIT](./LICENSE). Use it, fork it, build cool things with it.
+
+
+Built on top of [Formisch](https://formisch.dev") and [Valibot](https://valibot.dev)
