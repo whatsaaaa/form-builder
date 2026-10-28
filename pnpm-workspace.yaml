@@ -6,6 +6,6 @@ packages:
 catalog:
   '@types/node': ^24.13.4
   '@tsconfig/node24': ^24.0.5
-  typescript: ~6.0.0
+  typescript: ~6.0.3
   valibot: ^1.5.0
   vue-tsc: ^3.3.11

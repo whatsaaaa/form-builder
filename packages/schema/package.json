@@ -3,8 +3,22 @@
   "version": "0.0.0",
   "description": "Build Formisch-ready Valibot schemas from JSON form definitions.",
   "license": "MIT",
+  "author": "Whatsaaaa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/whatsaaaa/form-builder.git",
+    "directory": "packages/schema"
+  },
   "files": [
     "dist"
+  ],
+  "homepage": "https://github.com/whatsaaaa/form-builder",
+  "bugs": "https://github.com/whatsaaaa/form-builder/issues",
+  "keywords": [
+    "formisch",
+    "form",
+    "json",
+    "schema"
   ],
   "type": "module",
   "sideEffects": false,
@@ -12,6 +26,7 @@
     ".": "./src/index.ts"
   },
   "publishConfig": {
+    "access": "public",
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
@@ -23,9 +38,12 @@
     "build": "tsdown",
     "prepack": "tsdown",
     "test": "vitest run",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint:pkg": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "publint": "^0.3.25",
     "tsdown": "^0.23.2",
     "typescript": "catalog:",
     "valibot": "catalog:",
