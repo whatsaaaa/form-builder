@@ -19,7 +19,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm lint
+      - name: Fail if lint auto-fixed anything
+        run: git diff --exit-code
       - run: pnpm type-check
       - run: pnpm test
       - run: pnpm build
