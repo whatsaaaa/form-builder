@@ -13,10 +13,10 @@
 </p>
 
 <p align="center">
-    <a href="#whats-inside">Packages</a> ·
-    <a href="#getting-started">Getting started</a> ·
-    <a href="#how-it-fits-together">How it fits together</a> ·
-    <a href="#contributing">Contributing</a>
+    <a href="#-whats-inside">Packages</a> ·
+    <a href="#-getting-started">Getting started</a> ·
+    <a href="#-how-it-fits-together">How it fits together</a> ·
+    <a href="#-contributing">Contributing</a>
 </p>
 
 ---
