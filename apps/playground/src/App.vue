@@ -7,6 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <h1>Form Builder Playground</h1>
     <nav>
       <RouterLink to="/login">Login form</RouterLink>
+      <RouterLink to="/order">Order form</RouterLink>
     </nav>
   </header>
 
@@ -37,7 +38,12 @@ nav {
   gap: 1rem;
 }
 
-nav a.router-link-exact-active {
+nav a {
   color: var(--color-text);
+}
+
+nav a.router-link-exact-active {
+  color: hsla(160, 100%, 37%, 1);
+  font-weight: 600;
 }
 </style>

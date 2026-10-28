@@ -1,56 +1,58 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Field, Form, useForm } from '@formisch/vue'
-import { createSchemaBuilder, type JsonFormSchema } from '@whatsaaaa/form-builder-schema'
+import {
+  createSchemaBuilder,
+  type FieldType,
+  type JsonFormSchema,
+} from '@whatsaaaa/form-builder-schema'
 
-const jsonSchema: JsonFormSchema = {
-  version: '1',
-  fields: [
-    {
-      name: 'email',
-      type: 'email',
-      required: { message: 'Email is required' },
-      rules: [{ rule: 'email', message: "That doesn't look like an email" }],
-    },
-    {
-      name: 'password',
-      type: 'password',
-      required: true,
-      rules: [{ rule: 'minLength', value: 10, message: 'At least 10 characters' }],
-    },
-  ],
-}
+const { definition } = defineProps<{ definition: JsonFormSchema }>()
 
 const build = createSchemaBuilder()
-const schema = build(jsonSchema)
-const loginForm = useForm({ schema })
-
+const form = useForm({ schema: build(definition) })
 const submitted = ref<unknown>()
+
+const inputTypes: Record<FieldType, string> = {
+  text: 'text',
+  email: 'email',
+  password: 'password',
+  number: 'number',
+}
+
+const autocomplete: Partial<Record<FieldType, string>> = {
+  email: 'email',
+  password: 'current-password',
+}
+
+// `discountPercent` -> `Discount percent`
+const label = (name: string) => {
+  const words = name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
 </script>
 
 <template>
   <section class="example">
     <div class="panel">
       <h2>Form</h2>
-      <Form class="form" :of="loginForm" @submit="(output) => (submitted = output)">
-        <Field :of="loginForm" :path="['email']" v-slot="field">
+      <Form class="form" :of="form" @submit="(output) => (submitted = output)">
+        <Field
+          v-for="field in definition.fields"
+          :key="field.name"
+          :of="form"
+          :path="[field.name]"
+          v-slot="store"
+        >
           <label class="field">
-            <span>Email</span>
-            <input v-model="field.input" v-bind="field.props" type="text" autocomplete="email" />
-            <small v-if="field.errors" class="error">{{ field.errors[0] }}</small>
-          </label>
-        </Field>
-
-        <Field :of="loginForm" :path="['password']" v-slot="field">
-          <label class="field">
-            <span>Password</span>
+            <span>{{ label(field.name) }}</span>
             <input
-              v-model="field.input"
-              v-bind="field.props"
-              type="password"
-              autocomplete="current-password"
+              v-model="store.input"
+              v-bind="store.props"
+              :type="inputTypes[field.type]"
+              :autocomplete="autocomplete[field.type]"
             />
-            <small v-if="field.errors" class="error">{{ field.errors[0] }}</small>
+            <small v-if="store.errors" class="error">{{ store.errors[0] }}</small>
           </label>
         </Field>
 
@@ -60,7 +62,7 @@ const submitted = ref<unknown>()
 
     <div class="panel">
       <h2>JSON definition</h2>
-      <pre>{{ jsonSchema }}</pre>
+      <pre>{{ definition }}</pre>
 
       <h2>Submitted output</h2>
       <pre>{{ submitted === undefined ? 'Nothing submitted yet' : submitted }}</pre>
