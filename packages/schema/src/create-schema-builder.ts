@@ -59,13 +59,19 @@ export function createSchemaBuilder(opts: SchemaBuilderOptions = {}) {
       actions.push(buildAction(r, type.kind, `${at}.rules[${j}]`))
     })
 
-    const schema = actions.reduce<AnySchema>((s, a) => v.pipe(s, a), type.base(requiredMsg))
+    // An empty number input is not a number, so required ones report it via the type check.
+    const baseMsg = required && type.kind === 'number' ? (requiredMsg ?? 'Required') : requiredMsg
+    const schema = actions.reduce<AnySchema>((s, a) => v.pipe(s, a), type.base(baseMsg))
 
     if (required) return schema
+    if (type.kind === 'string') return v.optional(v.union([v.literal(''), schema]))
 
-    return type.kind === 'string'
-      ? v.optional(v.union([v.literal(''), schema]))
-      : v.optional(schema)
+    // A cleared number input holds '', which means "no value".
+    const empty = v.pipe(
+      v.literal(''),
+      v.transform(() => undefined),
+    )
+    return v.optional(v.union([empty, schema]))
   }
 
   return function build(json: JsonFormSchema) {

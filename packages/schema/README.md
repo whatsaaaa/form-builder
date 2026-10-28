@@ -30,6 +30,8 @@ const build = createSchemaBuilder()
 const schema = build(json) // v.ObjectSchema, ready for Formisch or v.parse
 ```
 
+Built-in field types are `text`, `email`, `password` and `number`. Empty inputs of optional `number` fields (`''` or `undefined`) produce `undefined`.
+
 Custom field types and rules can be passed to `createSchemaBuilder({ fieldTypes, rules })`. Use `defineRule` to get typed rule params.
 
 ## License

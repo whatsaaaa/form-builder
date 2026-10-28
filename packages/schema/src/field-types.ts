@@ -9,4 +9,5 @@ export const defaultFieldTypes = {
     base: (m) => v.string(m),
     defaultRules: [{ rule: 'email', message: 'Invalid email' }],
   },
+  number: { kind: 'number', base: (m) => v.number(m) },
 } satisfies Record<string, FieldTypeDef>

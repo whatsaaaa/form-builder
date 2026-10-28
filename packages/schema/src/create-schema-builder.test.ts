@@ -97,6 +97,61 @@ describe('createSchemaBuilder', () => {
     })
   })
 
+  describe('number fields', () => {
+    // Vue's v-model on <input type="number"> yields '' once cleared and undefined before input.
+    it.each([undefined, ''])('rejects %j when required', (empty) => {
+      const schema = build(form({ name: 'n', type: 'number', required: true }))
+
+      expect(issues(schema, { n: empty })).toEqual(['Required'])
+    })
+
+    it('uses the custom required message', () => {
+      const schema = build(
+        form({ name: 'n', type: 'number', required: { message: 'Enter a number' } }),
+      )
+
+      expect(issues(schema, { n: '' })).toEqual(['Enter a number'])
+    })
+
+    it.each([undefined, ''])('outputs undefined for %j when optional', (empty) => {
+      const schema = build(form({ name: 'n', type: 'number' }))
+
+      expect(v.parse(schema, { n: empty })).toEqual({ n: undefined })
+    })
+
+    it('rejects non-numbers', () => {
+      const schema = build(form({ name: 'n', type: 'number' }))
+
+      expect(issues(schema, { n: 'abc' })).not.toEqual([])
+      expect(issues(schema, { n: Number.NaN })).not.toEqual([])
+    })
+
+    it('applies number rules', () => {
+      const schema = build(
+        form({
+          name: 'n',
+          type: 'number',
+          rules: [
+            { rule: 'integer', message: 'Whole numbers only' },
+            { rule: 'minValue', value: 1, message: 'At least 1' },
+            { rule: 'maxValue', value: 10, message: 'At most 10' },
+          ],
+        }),
+      )
+
+      expect(issues(schema, { n: 1.5 })).toEqual(['Whole numbers only'])
+      expect(issues(schema, { n: 0 })).toEqual(['At least 1'])
+      expect(issues(schema, { n: 11 })).toEqual(['At most 10'])
+      expect(v.parse(schema, { n: 5 })).toEqual({ n: 5 })
+    })
+
+    it('throws on string rules', () => {
+      expect(() =>
+        build(form({ name: 'n', type: 'number', rules: [{ rule: 'minLength', value: 1 }] })),
+      ).toThrow(`rule "minLength" can't be used on number fields`)
+    })
+  })
+
   it('throws on unknown field types', () => {
     expect(() => build(form({ name: 'a', type: 'date' as FieldType }))).toThrow(
       'fields[0] "a": unknown field type "date"',
@@ -109,9 +164,8 @@ describe('createSchemaBuilder', () => {
     )
   })
 
-  it('accepts custom field types and rules', () => {
+  it('accepts custom rules', () => {
     const custom = createSchemaBuilder({
-      fieldTypes: { number: { kind: 'number', base: (m) => v.number(m) } },
       rules: {
         even: defineRule({
           kinds: ['number'],
@@ -131,5 +185,14 @@ describe('createSchemaBuilder', () => {
 
     expect(issues(schema, { n: 3 })).toEqual(['Odd'])
     expect(issues(schema, { n: 4 })).toEqual([])
+  })
+
+  it('lets custom field types override the defaults', () => {
+    const custom = createSchemaBuilder({
+      fieldTypes: { text: { kind: 'string', base: (m) => v.pipe(v.string(m), v.trim()) } },
+    })
+    const schema = custom(form({ name: 'a', type: 'text', required: true }))
+
+    expect(v.parse(schema, { a: '  hi  ' })).toEqual({ a: 'hi' })
   })
 })
