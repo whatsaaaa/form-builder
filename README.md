@@ -1,6 +1,6 @@
 <h1 align="center">form-builder</h1>
 <p align="center">
-    Describe your forms in JSON. Get real, validated <a href="https://formissch.dev">Formisch</a> forms out.
+    Describe your forms in JSON. Get real, validated <a href="https://formisch.dev">Formisch</a> forms out.
 </p>
 
 <p align="center">
@@ -29,3 +29,39 @@ edit them. Some come from an API. Some get dragged together in a visual editor.
 **form-builder** lets you write a form down as plain JSON and hands you back a working Formisch form, with fields and
 validation already wired up. The core doesn't care which framework you use. Small adapters handle the Vue, React or 
 Angular part on top of it.
+
+```json
+{
+  "version": 1,
+  "fields": [
+    { "name": "email", "type": "email", "required": true },
+    { "name": "password", "type": "password", "required": true, "rules": [{ "name": "minLength", "params": [8] }] }
+  ]
+}
+```
+
+That's a signup form. No components written by hand, no validation duplicated across files. 🎉
+
+## 📦 What's inside
+
+This repo is a **pnpm workspace**. Everything lives together so the packages can grow side by side.
+
+### Published packages
+
+| | Package | What it does | Status |
+| :-: | --- | --- | :-: |
+| 🧩 | [`@whatsaaaa/form-builder-schema`](./packages/schema) | The heart of it all. Reads and validates JSON definitions and turns them into Valibot schemas Formisch understands. | 🚧 |
+| 🔗 | [`@whatsaaaa/form-builder-affects`](./packages/affects) | Lets fields react to each other: show this when that's checked, make it required, change the options, compute a value. | 💭 |
+| ⚙️ | [`@whatsaaaa/form-builder-codegen`](./packages/codegen) | A CLI that turns your JSON into fully typed TypeScript, for when you know the form at build time. | 💭 |
+| 💚 | [`@whatsaaaa/form-builder-vue`](./frameworks/vue) | Drop in `<JsonForm>`, pass it a definition, and you have a rendered form. | 💭 |
+ 
+🚧 in progress · 💭 planned
+
+React, Angular and friends will sit next to the Vue adapter in `frameworks/` once the core settles down.
+
+### Apps (private, never published)
+
+| | App | What it's for |
+| :-: | --- | --- |
+| 🛝 | `apps/playground` | A Vite + Vue sandbox for poking at the packages while you work on them. |
+| 🏗️ | `apps/builder` | A visual form builder that spits out JSON definitions. |
