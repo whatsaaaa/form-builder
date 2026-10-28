@@ -16,6 +16,35 @@ This is useful when forms need to change without a redeploy, or when they come f
 
 Early work in progress. The initial JSON -> Formisch builder function is in place; the API and JSON format may change.
 
+## Packages
+
+| Package                                               | Description                                       |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| [`@whatsaaaa/form-builder-valibot`](packages/valibot) | Build Valibot schemas from JSON form definitions. |
+
+## Development
+
+This repository is a [pnpm workspace](https://pnpm.io/workspaces):
+
+```
+playground/        Vue app for trying out the packages locally (not published)
+packages/valibot/  @whatsaaaa/form-builder-valibot
+```
+
+Lint, format and TypeScript tooling is shared at the workspace root. Dependency versions used by more than one package are kept in the `catalog` in `pnpm-workspace.yaml`.
+
+Inside the workspace, packages are consumed straight from `src`, so changes show up in the playground without a build step. Publishing uses the built `dist` output (see `publishConfig` in each package).
+
+```sh
+pnpm install
+pnpm dev          # start the playground
+pnpm test         # run all package tests
+pnpm type-check   # type-check every package
+pnpm lint         # oxlint + eslint
+pnpm format       # oxfmt
+pnpm build        # build packages and the playground
+```
+
 ## License
 
 MIT
