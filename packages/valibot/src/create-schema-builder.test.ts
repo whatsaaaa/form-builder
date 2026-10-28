@@ -67,7 +67,12 @@ describe('createSchemaBuilder', () => {
 
     it('lets field rules override field type default rules', () => {
       const schema = build(
-        form({ name: 'a', type: 'email', required: true, rules: [{ rule: 'email', message: 'Bad' }] }),
+        form({
+          name: 'a',
+          type: 'email',
+          required: true,
+          rules: [{ rule: 'email', message: 'Bad' }],
+        }),
       )
 
       expect(issues(schema, { a: 'nope' })).toEqual(['Bad'])
@@ -116,7 +121,12 @@ describe('createSchemaBuilder', () => {
       },
     })
     const schema = custom(
-      form({ name: 'n', type: 'number', required: true, rules: [{ rule: 'even', message: 'Odd' }] }),
+      form({
+        name: 'n',
+        type: 'number',
+        required: true,
+        rules: [{ rule: 'even', message: 'Odd' }],
+      }),
     )
 
     expect(issues(schema, { n: 3 })).toEqual(['Odd'])
