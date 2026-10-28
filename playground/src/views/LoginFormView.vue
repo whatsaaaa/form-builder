@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Field, Form, useForm } from '@formisch/vue'
-import { createSchemaBuilder, type JsonFormSchema } from '@whatsaaaa/form-builder-valibot'
+import { createSchemaBuilder, type JsonFormSchema } from '@whatsaaaa/form-builder-schema'
 
 const jsonSchema: JsonFormSchema = {
   version: '1',

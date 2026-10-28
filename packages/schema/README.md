@@ -1,17 +1,17 @@
-# @whatsaaaa/form-builder-valibot
+# @whatsaaaa/form-builder-schema
 
-Build [Valibot](https://valibot.dev) schemas from JSON form definitions.
+Build [Valibot](https://valibot.dev) schemas from JSON form definitions, ready to use with [Formisch](https://formisch.dev).
 
 ## Install
 
 ```sh
-pnpm add @whatsaaaa/form-builder-valibot valibot
+pnpm add @whatsaaaa/form-builder-schema valibot
 ```
 
 ## Usage
 
 ```ts
-import { createSchemaBuilder, type JsonFormSchema } from '@whatsaaaa/form-builder-valibot'
+import { createSchemaBuilder, type JsonFormSchema } from '@whatsaaaa/form-builder-schema'
 
 const json: JsonFormSchema = {
   version: '1',

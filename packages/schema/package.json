@@ -1,7 +1,7 @@
 {
-  "name": "@whatsaaaa/form-builder-valibot",
+  "name": "@whatsaaaa/form-builder-schema",
   "version": "0.0.0",
-  "description": "Build Valibot schemas from JSON form definitions.",
+  "description": "Build Formisch-ready Valibot schemas from JSON form definitions.",
   "license": "MIT",
   "files": [
     "dist"
