@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "pnpm --filter playground dev",
     "build": "pnpm -r build",
+    "test": "pnpm -r test",
     "type-check": "tsc --noEmit && pnpm -r type-check",
     "lint": "run-s \"lint:*\"",
     "lint:oxlint": "oxlint . --fix",
