@@ -1,7 +1,7 @@
 import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
-import { createSchemaBuilder, defineRule } from './index'
-import type { FieldType, JsonField, JsonFormSchema } from './types'
+import { createSchemaBuilder, defineRule } from '@whatsaaaa/form-builder-schema'
+import type { FieldType, JsonField, JsonFormSchema } from '@whatsaaaa/form-builder-schema'
 
 const build = createSchemaBuilder()
 const form = (...fields: JsonField[]): JsonFormSchema => ({ version: '1', fields })

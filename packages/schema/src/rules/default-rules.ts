@@ -1,7 +1,6 @@
 import * as v from 'valibot'
-import type { AnySchema, RuleDef } from './types'
-
-export const defineRule = <T extends AnySchema>(def: RuleDef<T>): RuleDef<T> => def
+import { defineRule } from './define-rule'
+import type { RuleDef } from './rule-def'
 
 const nonNegInt = v.pipe(v.number(), v.integer(), v.minValue(0))
 const noParams = v.object({})

@@ -5,5 +5,5 @@ export default defineConfig({
   platform: 'neutral',
   dts: true,
   sourcemap: true,
-  clean: true
+  clean: true,
 })

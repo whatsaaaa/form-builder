@@ -2,6 +2,14 @@
   "name": "@whatsaaaa/form-builder-schema",
   "version": "0.1.0",
   "description": "Build Formisch-ready Valibot schemas from JSON form definitions.",
+  "keywords": [
+    "form",
+    "formisch",
+    "json",
+    "schema"
+  ],
+  "homepage": "https://github.com/whatsaaaa/form-builder",
+  "bugs": "https://github.com/whatsaaaa/form-builder/issues",
   "license": "MIT",
   "author": "Whatsaaaa",
   "repository": {
@@ -12,27 +20,19 @@
   "files": [
     "dist"
   ],
-  "homepage": "https://github.com/whatsaaaa/form-builder",
-  "bugs": "https://github.com/whatsaaaa/form-builder/issues",
-  "keywords": [
-    "formisch",
-    "form",
-    "json",
-    "schema"
-  ],
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
   "publishConfig": {
-    "access": "public",
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
-    }
+    },
+    "access": "public"
   },
   "scripts": {
     "build": "tsdown",
