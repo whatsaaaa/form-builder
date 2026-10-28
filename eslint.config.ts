@@ -15,10 +15,12 @@ import skipFormatting from 'eslint-config-prettier/flat'
 const packageFeatures: Record<string, Record<string, string[]>> = {
   schema: {
     shared: [],
+    errors: ['shared'],
+    kinds: ['shared'],
     definition: ['shared'],
     rules: ['shared', 'definition'],
-    'field-types': ['shared', 'definition'],
-    builder: ['shared', 'definition', 'rules', 'field-types'],
+    'field-types': ['shared', 'kinds', 'definition', 'errors'],
+    builder: ['shared', 'errors', 'kinds', 'definition', 'rules', 'field-types'],
   },
 }
 
