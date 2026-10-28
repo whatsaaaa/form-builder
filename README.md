@@ -1,50 +1,31 @@
-# Form Builder
+<h1 align="center">form-builder</h1>
+<p align="center">
+    Describe your forms in JSON. Get real, validated <a href="https://formissch.dev">Formisch</a> forms out.
+</p>
 
-Build [Formisch](https://formisch.dev) forms from JSON.
+<p align="center">
+    <img src="https://img.shields.io/badge/pnpm-workspace-F69220?logo=pnpm&amp;logoColor=white" alt="pnpm workspace">
+    <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript">
+    <img src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&amp;logoColor=white" alt="Vue">
+    <img src="https://img.shields.io/badge/validation-Valibot-0F172A" alt="Valibot">
+    <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT">
+    <img src="https://img.shields.io/badge/status-early%20days-orange" alt="Status: early days">
+</p>
 
-## What is a Form Builder?
+<p align="center">
+    <a href="#whats-inside">Packages</a> ·
+    <a href="#getting-started">Getting started</a> ·
+    <a href="#how-it-fits-together">How it fits together</a> ·
+    <a href="#contributing">Contributing</a>
+</p>
 
-A form builder lets you describe a form as **data** instead of writing it by hand in code. You define the fields, their types, labels and validation rules in JSON document, and the builder turns definition into a working form.
+---
 
-This is useful when forms need to change without a redeploy, or when they come from somewhere other than your source code:
+## 👋 Hey there
 
-- a database (forms managed by admins or customers)
-- a `.json` file in your project
-- an API response or a visual form editor
+Forms are everywhere, and a lot of them don't really belong in your source code. Some live in a database because admins
+edit them. Some come from an API. Some get dragged together in a visual editor.
 
-## Status
-
-Early work in progress. The initial JSON -> Formisch builder function is in place; the API and JSON format may change.
-
-## Packages
-
-| Package                                             | Description                                                      |
-| --------------------------------------------------- | ---------------------------------------------------------------- |
-| [`@whatsaaaa/form-builder-schema`](packages/schema) | Build Formisch-ready Valibot schemas from JSON form definitions. |
-
-## Development
-
-This repository is a [pnpm workspace](https://pnpm.io/workspaces):
-
-```
-apps/playground/   Vue app for trying out the packages locally (not published)
-packages/schema/   @whatsaaaa/form-builder-schema
-```
-
-Lint, format and TypeScript tooling is shared at the workspace root. Dependency versions used by more than one package are kept in the `catalog` in `pnpm-workspace.yaml`.
-
-Inside the workspace, packages are consumed straight from `src`, so changes show up in the playground without a build step. Publishing uses the built `dist` output (see `publishConfig` in each package).
-
-```sh
-pnpm install
-pnpm dev          # start the playground
-pnpm test         # run all package tests
-pnpm type-check   # type-check every package
-pnpm lint         # oxlint + eslint
-pnpm format       # oxfmt
-pnpm build        # build packages and the playground
-```
-
-## License
-
-MIT
+**form-builder** lets you write a form down as plain JSON and hands you back a working Formisch form, with fields and
+validation already wired up. The core doesn't care which framework you use. Small adapters handle the Vue, React or 
+Angular part on top of it.
