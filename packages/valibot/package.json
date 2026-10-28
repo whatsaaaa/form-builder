@@ -1,0 +1,35 @@
+{
+  "name": "@whatsaaaa/form-builder-valibot",
+  "version": "0.0.0",
+  "description": "Build Valibot schemas from JSON form definitions.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "prepack": "tsdown",
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "valibot": "^1.0.0"
+  },
+  "devDependencies": {
+    "tsdown": "^0.23.2",
+    "typescript": "catalog:",
+    "valibot": "catalog:"
+  }
+}
