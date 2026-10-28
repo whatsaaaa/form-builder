@@ -133,4 +133,4 @@ Not sure where to start? Open an issue and say hi.
 [MIT](./LICENSE). Use it, fork it, build cool things with it.
 
 
-Built on top of [Formisch](https://formisch.dev") and [Valibot](https://valibot.dev)
+Built on top of [Formisch](https://formisch.dev) and [Valibot](https://valibot.dev)
