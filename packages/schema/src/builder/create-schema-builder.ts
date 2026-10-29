@@ -1,31 +1,56 @@
 import * as v from 'valibot'
-import type { JsonFormSchema } from '../definition/json-form-schema'
-import { defaultFieldTypes } from '../field-types/default-field-types'
+import type { KindDef } from '../kinds/kind-def'
 import type { FieldTypeDef } from '../field-types/field-type-def'
-import { defaultRules } from '../rules/default-rules'
 import type { RuleDef } from '../rules/rule-def'
-import { buildFieldSchema } from './build-field-schema'
-import type { Registry } from './registry'
+import { buildFieldSchema, type MessageContext, type Messages } from './build-field-schema'
+import { mergeRegistry } from './registry'
+import { checkDefinition, checkRegistry } from './validate-definition'
+import { DefinitionError, type ValidateResult } from '../errors/definition-error'
+import type { JsonForm } from '../definition/json-form-schema'
 
 export interface SchemaBuilderOptions {
+  kinds?: Record<string, KindDef>
   fieldTypes?: Record<string, FieldTypeDef>
   rules?: Record<string, RuleDef>
+  messages?: { required?: string }
+  /**
+   * Called with every message from the definition and with `messages.required`, e.g. to treat
+   * them as i18n keys. Return undefined  to use the text as written.
+   */
+  resolveMessage?(key: string, ctx: MessageContext): string | undefined
 }
 
-export function createSchemaBuilder(opts: SchemaBuilderOptions = {}) {
-  const registry: Registry = {
-    fieldTypes: { ...defaultFieldTypes, ...opts.fieldTypes },
-    rules: { ...defaultRules, ...opts.rules },
+export function createSchemaBuilder(options: SchemaBuilderOptions = {}) {
+  const registry = mergeRegistry(options)
+  checkRegistry(registry)
+
+  const messages: Messages = {
+    required: options.messages?.required ?? 'Required',
+    resolve: (text, ctx) => options.resolveMessage?.(text, ctx) ?? text,
   }
 
-  return function build(json: JsonFormSchema) {
+  /** Every issue in the definition, in document order. Never throws on bad input. */
+  function validate(json: unknown): ValidateResult {
+    const { issues } = checkDefinition(json, registry)
+    return issues.length ? { success: false, issues } : { success: true, issues: [] }
+  }
+
+  function build(json: JsonForm) {
+    const { issues, fields } = checkDefinition(json, registry)
+    if (issues.length) throw new DefinitionError(issues)
+
     const entries: v.ObjectEntries = {}
-
-    json.fields.forEach((field, i) => {
-      if (field.name in entries) throw new Error(`fields[${i}]: duplicate name "${field.name}"`)
-      entries[field.name] = buildFieldSchema(field, i, registry)
-    })
-
+    for (const field of fields) {
+      entries[field.name] = buildFieldSchema(field, messages)
+    }
     return v.object(entries)
+  }
+
+  return {
+    build,
+    validate,
+    kinds: registry.kinds,
+    fieldTypes: registry.fieldTypes,
+    rules: registry.rules,
   }
 }

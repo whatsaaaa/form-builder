@@ -1,26 +1,27 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Field, Form, useForm } from '@formisch/vue'
-import {
-  createSchemaBuilder,
-  type FieldType,
-  type JsonFormSchema,
-} from '@whatsaaaa/form-builder-schema'
+import { createSchemaBuilder, type JsonField, type JsonForm } from '@whatsaaaa/form-builder-schema'
 
-const { definition } = defineProps<{ definition: JsonFormSchema }>()
+const { definition } = defineProps<{ definition: JsonForm }>()
 
-const build = createSchemaBuilder()
+const { build } = createSchemaBuilder()
 const form = useForm({ schema: build(definition) })
 const submitted = ref<unknown>()
 
-const inputTypes: Record<FieldType, string> = {
+// Fields without a name have no value (headings, dividers), so they get no input.
+const fields = definition.fields.filter(
+  (field): field is JsonField & { name: string } => field.name !== undefined,
+)
+
+const inputTypes: Record<string, string> = {
   text: 'text',
   email: 'email',
   password: 'password',
   number: 'number',
 }
 
-const autocomplete: Partial<Record<FieldType, string>> = {
+const autocomplete: Record<string, string> = {
   email: 'email',
   password: 'current-password',
 }
@@ -38,14 +39,14 @@ const label = (name: string) => {
       <h2>Form</h2>
       <Form class="form" :of="form" @submit="(output) => (submitted = output)">
         <Field
-          v-for="field in definition.fields"
+          v-for="field in fields"
           :key="field.name"
           :of="form"
           :path="[field.name]"
           v-slot="store"
         >
           <label class="field">
-            <span>{{ label(field.name) }}</span>
+            <span>{{ field.label ?? label(field.name) }}</span>
             <input
               v-model="store.input"
               v-bind="store.props"

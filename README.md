@@ -130,15 +130,20 @@ packages/schema/
 │   ├── index.ts                      the public API, and the only entry point
 │   ├── builder/                      one folder per feature
 │   │   ├── create-schema-builder.ts
+│   │   ├── validate-definition.ts
 │   │   ├── build-field-schema.ts
-│   │   └── build-rule-action.ts
+│   │   └── registry.ts
 │   ├── definition/                   the JSON format the package reads
+│   ├── errors/
 │   ├── field-types/
+│   ├── kinds/
 │   ├── rules/
 │   └── shared/                       small building blocks used by several features
 └── tests/                            mirrors src/
     └── builder/
-        └── create-schema-builder.test.ts
+        ├── build.test.ts
+        ├── extend.test.ts
+        └── validate.test.ts
 ```
 
 - 📁 **Features, not file kinds.** Folders are named after what the code does (`rules/`, `builder/`), never after
@@ -147,7 +152,7 @@ packages/schema/
   `buildFieldSchema` lives in `build-field-schema.ts`. If you can't name a file, it does too much.
 - 🚪 **One door in.** Only `src/index.ts` is public. Anything not exported there is internal and free to change.
   Feature folders don't get their own `index.ts`, so imports always point at the real file.
-- ⬇️ **Dependencies flow one way.** `shared` ← `definition` ← `rules`, `field-types` ← `builder` ← `index.ts`.
+- ⬇️ **Dependencies flow one way.** `shared` ← `errors`, `kinds`, `definition` ← `rules`, `field-types` ← `builder` ← `index.ts`.
   Each package lists its features and what they may import in `packageFeatures` in
   [`eslint.config.ts`](./eslint.config.ts). Add a new feature folder there, and lint will enforce the rest.
 - 🧪 **Tests live in `tests/`.** They mirror the `src/` tree, end in `.test.ts`, and import the package by its name

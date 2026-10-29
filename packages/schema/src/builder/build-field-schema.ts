@@ -1,45 +1,66 @@
 import * as v from 'valibot'
 import type { JsonField } from '../definition/json-form-schema'
+import type { DefinitionPath } from '../errors/definition-error'
+import type { CheckedField } from './validate-definition'
 import type { AnyAction, AnySchema } from '../shared/valibot-types'
-import { buildRuleAction } from './build-rule-action'
-import type { Registry } from './registry'
 
-export function buildFieldSchema(field: JsonField, i: number, registry: Registry): AnySchema {
-  const at = `fields[${i}] "${field.name}"`
-  const type = registry.fieldTypes[field.type]
-  if (!type) throw new Error(`${at}: unknown field type "${field.type}"`)
+export interface MessageContext {
+  field: JsonField
+  rule?: string
+  path: DefinitionPath
+}
 
-  const userRules = field.rules ?? []
-  const overridden = new Set(userRules.map((r) => r.rule))
-  const allRules = [
-    ...(type.defaultRules ?? []).filter((r) => !overridden.has(r.rule)),
-    ...userRules,
-  ]
+export interface Messages {
+  required: string
+  resolve(text: string, ctx: MessageContext): string
+}
 
+/**
+ * The schema runs in this order: empty check, base schema, normalize rules, required check,
+ * then the type's default rules and the field's rules.
+ */
+export function buildFieldSchema(checked: CheckedField, messages: Messages): AnySchema {
+  const { field, path, type, kind } = checked
   const required = !!field.required
-  const requiredMsg = typeof field.required === 'object' ? field.required.message : undefined
+  const requiredMessage = messages.resolve(
+    (typeof field.required === 'object' && field.required.message) || messages.required,
+    { field, path },
+  )
 
-  const actions: AnyAction[] = []
+  const normalize: AnyAction[] = []
+  const validate: AnyAction[] = []
 
-  if (required && type.kind === 'string') {
-    actions.push(v.nonEmpty(requiredMsg ?? 'Required'))
+  for (const rule of checked.rules) {
+    const message =
+      rule.message === undefined
+        ? undefined
+        : messages.resolve(rule.message, { field, rule: rule.name, path })
+    const action = rule.def.create(rule.params, message)
+    if (rule.def.stage === 'normalize') {
+      normalize.push(action)
+    } else {
+      validate.push(action)
+    }
   }
 
-  allRules.forEach((r, j) => {
-    actions.push(buildRuleAction(r, type.kind, registry, `${at}.rules[${j}]`))
-  })
+  const base = (type.schema as NonNullable<typeof type.schema>)(field, { path })
+  const requiredCheck = required ? kind.required?.(requiredMessage) : undefined
+  const head = pipe(base, requiredCheck ? [...normalize, requiredCheck] : normalize)
 
-  // An empty number input is not a number, so required ones report it via the type check.
-  const baseMsg = required && type.kind === 'number' ? (requiredMsg ?? 'Required') : requiredMsg
-  const schema = actions.reduce<AnySchema>((s, a) => v.pipe(s, a), type.base(baseMsg))
+  const empty = required
+    ? v.never(requiredMessage)
+    : v.pipe(
+        v.unknown(),
+        v.transform(() => undefined),
+      )
 
-  if (required) return schema
-  if (type.kind === 'string') return v.optional(v.union([v.literal(''), schema]))
+  const whenFilled = (schema: AnySchema): AnySchema =>
+    v.lazy((input) => (kind.isEmpty(input) ? empty : schema))
 
-  // A cleared number input holds '', which means "no value".
-  const empty = v.pipe(
-    v.literal(''),
-    v.transform(() => undefined),
-  )
-  return v.optional(v.union([empty, schema]))
+  const schema = whenFilled(v.pipe(head, whenFilled(pipe(v.unknown(), validate))))
+
+  return required ? schema : v.optional(schema)
 }
+
+const pipe = (schema: AnySchema, actions: readonly AnyAction[]): AnySchema =>
+  actions.reduce<AnySchema>((acc, action) => v.pipe(acc, action), schema)
