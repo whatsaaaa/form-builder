@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import type { JsonFormSchema } from '@whatsaaaa/form-builder-schema'
+import type { JsonForm } from '@whatsaaaa/form-builder-schema'
 import FormExample from '../components/FormExample.vue'
 
-const definition: JsonFormSchema = {
+const definition: JsonForm = {
   version: '1',
   fields: [
     {
       name: 'email',
       type: 'email',
+      label: 'Email address',
       required: { message: 'Email is required' },
-      rules: [{ rule: 'email', message: "That doesn't look like an email" }],
+      rules: [{ rule: 'trim' }, { rule: 'email', message: "That doesn't look like an email" }],
     },
     {
       name: 'password',
