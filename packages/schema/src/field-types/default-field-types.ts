@@ -1,5 +1,5 @@
-import * as v from "valibot";
-import type { FieldTypeDef } from "./field-type-def";
+import * as v from 'valibot'
+import type { FieldTypeDef } from './field-type-def'
 
 export const defaultFieldTypes = {
   text: { kind: 'string', schema: () => v.string() },

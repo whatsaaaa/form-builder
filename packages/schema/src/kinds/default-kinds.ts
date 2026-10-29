@@ -1,5 +1,5 @@
-import * as v from "valibot";
-import type { KindDef } from "./kind-def";
+import * as v from 'valibot'
+import type { KindDef } from './kind-def'
 
 const isNil = (input: unknown) => input === undefined || input === null
 

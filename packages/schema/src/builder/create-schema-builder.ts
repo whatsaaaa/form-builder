@@ -1,12 +1,12 @@
-import * as v from "valibot"
-import type { KindDef } from "../kinds/kind-def"
-import type { FieldTypeDef } from "../field-types/field-type-def"
-import type { RuleDef } from "../rules/rule-def"
-import { buildFieldSchema, type MessageContext, type Messages } from "./build-field-schema"
-import { mergeRegistry } from "./registry"
-import { checkDefinition, checkRegistry } from "./validate-definition"
-import { DefinitionError, type ValidateResult } from "../errors/definition-error"
-import type { JsonForm } from "../definition/json-form-schema"
+import * as v from 'valibot'
+import type { KindDef } from '../kinds/kind-def'
+import type { FieldTypeDef } from '../field-types/field-type-def'
+import type { RuleDef } from '../rules/rule-def'
+import { buildFieldSchema, type MessageContext, type Messages } from './build-field-schema'
+import { mergeRegistry } from './registry'
+import { checkDefinition, checkRegistry } from './validate-definition'
+import { DefinitionError, type ValidateResult } from '../errors/definition-error'
+import type { JsonForm } from '../definition/json-form-schema'
 
 export interface SchemaBuilderOptions {
   kinds?: Record<string, KindDef>
@@ -26,7 +26,7 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}) {
 
   const messages: Messages = {
     required: options.messages?.required ?? 'Required',
-    resolve: (text, ctx) => options.resolveMessage?.(text, ctx) ?? text
+    resolve: (text, ctx) => options.resolveMessage?.(text, ctx) ?? text,
   }
 
   /** Every issue in the definition, in document order. Never throws on bad input. */
@@ -51,6 +51,6 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}) {
     validate,
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,
-    rules: registry.rules
+    rules: registry.rules,
   }
 }

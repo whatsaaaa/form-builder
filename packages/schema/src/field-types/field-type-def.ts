@@ -1,8 +1,8 @@
-import type * as v from "valibot";
-import type { AnyObjectSchema, AnySchema } from "../shared/valibot-types";
-import type { ValueKind } from "../shared/value-kind";
-import type { JsonField, JsonRule } from "../definition/json-form-schema";
-import type { DefinitionPath } from "../errors/definition-error";
+import type * as v from 'valibot'
+import type { AnyObjectSchema, AnySchema } from '../shared/valibot-types'
+import type { ValueKind } from '../shared/value-kind'
+import type { JsonField, JsonRule } from '../definition/json-form-schema'
+import type { DefinitionPath } from '../errors/definition-error'
 
 export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> {
   kind: ValueKind
@@ -18,7 +18,8 @@ export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> 
 }
 
 /** A field with its type's props parsed and typed. */
-export type FieldWithProps<TProps extends AnyObjectSchema = AnyObjectSchema> = JsonField & v.InferOutput<TProps>
+export type FieldWithProps<TProps extends AnyObjectSchema = AnyObjectSchema> = JsonField &
+  v.InferOutput<TProps>
 
 export interface BuildContext {
   /** Where the field is in the definition, e.g. `['fields', 2]`. */

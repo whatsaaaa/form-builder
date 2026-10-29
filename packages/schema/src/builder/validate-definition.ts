@@ -1,12 +1,17 @@
-import * as v from "valibot";
-import type { JsonField, JsonRule } from "../definition/json-form-schema";
-import { type DefinitionPath, type DefinitionIssue, type DefinitionIssueCode, formatPath } from "../errors/definition-error";
-import type { FieldTypeDef } from "../field-types/field-type-def";
-import type { KindDef } from "../kinds/kind-def";
-import type { RuleDef } from "../rules/rule-def";
-import { lookup, type Registry } from "./registry";
-import { isReservedFieldKey, isReservedRuleKey } from "../shared/reserved-keys";
-import type { ValueKind } from "../shared/value-kind";
+import * as v from 'valibot'
+import type { JsonField, JsonRule } from '../definition/json-form-schema'
+import {
+  type DefinitionPath,
+  type DefinitionIssue,
+  type DefinitionIssueCode,
+  formatPath,
+} from '../errors/definition-error'
+import type { FieldTypeDef } from '../field-types/field-type-def'
+import type { KindDef } from '../kinds/kind-def'
+import type { RuleDef } from '../rules/rule-def'
+import { lookup, type Registry } from './registry'
+import { isReservedFieldKey, isReservedRuleKey } from '../shared/reserved-keys'
+import type { ValueKind } from '../shared/value-kind'
 
 export interface CheckedField {
   name: string
@@ -39,7 +44,7 @@ const fieldShape = v.looseObject({
   default: v.optional(v.unknown()),
   required: v.optional(v.union([v.boolean(), v.strictObject({ message: v.optional(v.string()) })])),
   rules: v.optional(v.array(v.unknown())),
-  ui: v.optional(v.record(v.string(), v.unknown()))
+  ui: v.optional(v.record(v.string(), v.unknown())),
 })
 const ruleShape = v.looseObject({ rule: v.string(), message: v.optional(v.string()) })
 const noParams = v.object({})
@@ -73,7 +78,7 @@ function checkField(
   path: DefinitionPath,
   registry: Registry,
   names: Set<string>,
-  issues: DefinitionIssue[]
+  issues: DefinitionIssue[],
 ): CheckedField | undefined {
   const shape = v.safeParse(fieldShape, raw)
   if (!shape.success) {
@@ -99,7 +104,7 @@ function checkField(
 
   if (!type) {
     issues.push(issue('unknown_type', [...path, 'type'], `Unknown field type "${field.type}"`))
-    return undefined;
+    return undefined
   }
 
   const props = checkProps(field, type, path, issues)
@@ -115,7 +120,7 @@ function checkField(
   }
 
   const fieldRules = (shape.output.rules ?? []).flatMap(
-    (rule, j) => checkRule(rule, type?.kind, [...path, 'rules', j], registry, issues) ?? []
+    (rule, j) => checkRule(rule, type?.kind, [...path, 'rules', j], registry, issues) ?? [],
   )
   if (issues.length > issueCount || !field.name) return undefined
 
@@ -130,7 +135,7 @@ function checkField(
     path,
     type,
     kind: registry.kinds[type?.kind] as KindDef,
-    rules: [...defaultRules, ...fieldRules]
+    rules: [...defaultRules, ...fieldRules],
   }
 }
 
@@ -138,7 +143,7 @@ function checkProps(
   field: JsonField,
   type: FieldTypeDef,
   path: DefinitionPath,
-  issues: DefinitionIssue[]
+  issues: DefinitionIssue[],
 ): Record<string, unknown> {
   const propKeys = Object.keys(type.props?.entries ?? {})
   const input: Record<string, unknown> = {}
@@ -148,7 +153,9 @@ function checkProps(
     if (propKeys.includes(key)) {
       input[key] = field[key]
     } else {
-      issues.push(issue('unknown_key', [...path, key], `Unknown key "${key}" on a "${field.type}" field`))
+      issues.push(
+        issue('unknown_key', [...path, key], `Unknown key "${key}" on a "${field.type}" field`),
+      )
     }
   }
 
@@ -164,7 +171,7 @@ export function checkRule(
   kind: ValueKind,
   path: DefinitionPath,
   registry: Registry,
-  issues: DefinitionIssue[]
+  issues: DefinitionIssue[],
 ): CheckedRule | undefined {
   const shape = v.safeParse(ruleShape, raw)
   if (!shape.success) {
@@ -192,7 +199,9 @@ export function checkRule(
     if (paramKeys.includes(key)) {
       input[key] = rule[key]
     } else {
-      issues.push(issue('unknown_param', [...path, key], `Rule "${rule.rule}" has no param "${key}"`))
+      issues.push(
+        issue('unknown_param', [...path, key], `Rule "${rule.rule}" has no param "${key}"`),
+      )
     }
   }
 
@@ -242,7 +251,7 @@ function issue(code: DefinitionIssueCode, path: DefinitionPath, message: string)
 function toIssues(
   code: DefinitionIssueCode,
   path: DefinitionPath,
-  valibotIssues: readonly v.BaseIssue<unknown>[]
+  valibotIssues: readonly v.BaseIssue<unknown>[],
 ): DefinitionIssue[] {
   return valibotIssues.map((valibotIssue) => {
     const keys = valibotIssue.path?.map((item) => item.key as string | number) ?? []

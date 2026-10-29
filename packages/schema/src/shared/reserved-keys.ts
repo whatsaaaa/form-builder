@@ -10,8 +10,8 @@ export const RESERVED_FIELD_KEYS = [
   'default',
   'required',
   'rules',
-  'ui'
-  ] as const
+  'ui',
+] as const
 
 /**
  * Rule keys this package own. A rule's params can't use them.

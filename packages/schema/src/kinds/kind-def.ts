@@ -1,4 +1,4 @@
-import type { AnyAction } from "../shared/valibot-types"
+import type { AnyAction } from '../shared/valibot-types'
 
 export interface KindDef {
   /** True when the input means "no value". */

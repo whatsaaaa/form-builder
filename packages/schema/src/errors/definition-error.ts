@@ -37,9 +37,11 @@ export class DefinitionError extends Error {
   readonly issues: readonly DefinitionIssue[]
 
   constructor(issues: readonly DefinitionIssue[]) {
-    const lines = issues.map((issue) => `   ${formatPath(issue.path) || '(root)'}: ${issue.message}`)
+    const lines = issues.map(
+      (issue) => `   ${formatPath(issue.path) || '(root)'}: ${issue.message}`,
+    )
     super(`Invalid form definition:\n${lines.join('\n')}`)
-    this.name = "DefinitionError"
+    this.name = 'DefinitionError'
     this.issues = issues
   }
 }

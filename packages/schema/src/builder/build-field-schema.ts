@@ -24,7 +24,7 @@ export function buildFieldSchema(checked: CheckedField, messages: Messages): Any
   const required = !!field.required
   const requiredMessage = messages.resolve(
     (typeof field.required === 'object' && field.required.message) || messages.required,
-    { field, path }
+    { field, path },
   )
 
   const normalize: AnyAction[] = []
@@ -50,9 +50,9 @@ export function buildFieldSchema(checked: CheckedField, messages: Messages): Any
   const empty = required
     ? v.never(requiredMessage)
     : v.pipe(
-      v.unknown(),
-      v.transform(() => undefined)
-    )
+        v.unknown(),
+        v.transform(() => undefined),
+      )
 
   const whenFilled = (schema: AnySchema): AnySchema =>
     v.lazy((input) => (kind.isEmpty(input) ? empty : schema))

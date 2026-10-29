@@ -14,24 +14,24 @@ export const defaultRules = {
   maxLength: defineRule({
     kinds: ['string'],
     params: v.object({ value: nonNegInt }),
-    create: (p, m) => v.maxLength(p.value, m)
+    create: (p, m) => v.maxLength(p.value, m),
   }),
   regex: defineRule({
     kinds: ['string'],
     params: v.object({ pattern: v.string(), flags: v.optional(v.string()) }),
-    create: (p, m) => v.regex(new RegExp(p.pattern, p.flags), m)
+    create: (p, m) => v.regex(new RegExp(p.pattern, p.flags), m),
   }),
   email: defineRule({ kinds: ['string'], create: (_, m) => v.email(m) }),
   url: defineRule({ kinds: ['string'], create: (_, m) => v.url(m) }),
   minValue: defineRule({
     kinds: ['number'],
     params: v.object({ value: v.number() }),
-    create: (p, m) => v.minValue(p.value, m)
+    create: (p, m) => v.minValue(p.value, m),
   }),
   maxValue: defineRule({
     kinds: ['number'],
     params: v.object({ value: v.number() }),
-    create: (p, m) => v.maxValue(p.value, m)
+    create: (p, m) => v.maxValue(p.value, m),
   }),
   integer: defineRule({ kinds: ['number'], create: (_, m) => v.integer(m) }),
 } satisfies Record<string, RuleDef>
