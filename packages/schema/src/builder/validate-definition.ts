@@ -188,7 +188,7 @@ export function checkRule(
 
   const issueCount = issues.length
   if (!def.kinds.includes(kind)) {
-    const message = `Rule "${rule.rule} can't be used on ${kind} fields`
+    const message = `Rule "${rule.rule}" can't be used on ${kind} fields`
     issues.push(issue('kind_mismatch', [...path, 'rule'], message))
   }
 
