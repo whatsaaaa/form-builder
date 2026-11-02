@@ -19,7 +19,7 @@ export interface Messages {
 
 /**
  * The schema runs in this order: empty check, base schema, normalize rules, required check,
- * then the type's default rules and the field's rules.
+ * then the type's default rules and the field's rules, and last the type's `finalize()`.
  */
 export function buildFieldSchema(checked: CheckedField, messages: Messages): AnySchema {
   const { field, path, type, kind } = checked
@@ -55,8 +55,16 @@ export function buildFieldSchema(checked: CheckedField, messages: Messages): Any
     whole.validate.unshift(eachItem(pipe(v.unknown(), each.validate)))
   }
 
+  const finalize = type.finalize?.(field)
+  if (finalize) whole.validate.push(finalize)
+
   const base = (type.schema as NonNullable<typeof type.schema>)(field, { path })
-  const requiredCheck = required ? kind.required?.(requiredMessage) : undefined
+  // The type can replace the kind's required check, e.g. a yes/no radio accepts false.
+  const requiredCheck = !required
+    ? undefined
+    : type.required
+      ? type.required(requiredMessage)
+      : kind.required?.(requiredMessage)
   const head = pipe(base, requiredCheck ? [...whole.normalize, requiredCheck] : whole.normalize)
 
   const empty = required
