@@ -7,11 +7,13 @@ import { mergeRegistry } from './registry'
 import { checkDefinition, checkRegistry } from './validate-definition'
 import { DefinitionError, type ValidateResult } from '../errors/definition-error'
 import type { JsonForm } from '../definition/json-form-schema'
+import type { ValueKind } from '../shared/value-kind'
 
 export interface SchemaBuilderOptions {
   kinds?: Record<string, KindDef>
   fieldTypes?: Record<string, FieldTypeDef>
   rules?: Record<string, RuleDef>
+  includeDefaultRules?: boolean
   messages?: { required?: string }
   /**
    * Called with every message from the definition and with `messages.required`, e.g. to treat
@@ -46,9 +48,17 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}) {
     return v.object(entries)
   }
 
+  /**
+   * The registered rules that can be used on a field of `kind`, e.g. for a rule picker.
+   */
+  function rulesForKind(kind: ValueKind): [name: string, def: RuleDef][] {
+    return Object.entries(registry.rules).filter(([, def]) => def.kinds.includes(kind))
+  }
+
   return {
     build,
     validate,
+    rulesForKind,
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,
     rules: registry.rules,
