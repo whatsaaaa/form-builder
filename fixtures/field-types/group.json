@@ -1,0 +1,51 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "address",
+      "type": "group",
+      "label": "Delivery address",
+      "fields": [
+        {
+          "name": "street",
+          "type": "text",
+          "label": "Street",
+          "required": true
+        },
+        {
+          "name": "city",
+          "type": "text",
+          "label": "City",
+          "required": true
+        },
+        {
+          "name": "zip",
+          "type": "text",
+          "label": "ZIP code",
+          "rules": [
+            {
+              "rule": "digits",
+              "message": "Digits only"
+            }
+          ]
+        },
+        {
+          "name": "country",
+          "type": "select",
+          "label": "Country",
+          "default": "rs",
+          "options": [
+            {
+              "value": "rs",
+              "label": "Serbia"
+            },
+            {
+              "value": "hr",
+              "label": "Croatia"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

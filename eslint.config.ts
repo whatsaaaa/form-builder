@@ -17,7 +17,7 @@ const packageFeatures: Record<string, Record<string, string[]>> = {
     shared: [],
     errors: ['shared'],
     kinds: ['shared'],
-    definition: ['shared'],
+    definition: ['shared', 'errors'],
     rules: ['shared', 'definition'],
     'field-types': ['shared', 'kinds', 'definition', 'errors'],
     builder: ['shared', 'errors', 'kinds', 'definition', 'rules', 'field-types'],

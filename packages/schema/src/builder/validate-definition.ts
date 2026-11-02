@@ -15,11 +15,14 @@ import { isReservedFieldKey, isReservedRuleKey } from '../shared/reserved-keys'
 import type { ValueKind } from '../shared/value-kind'
 
 export interface CheckedField {
-  name: string
+  /** Undefined for the field of a list's items, which has no name. */
+  name: string | undefined
   field: JsonField
   path: DefinitionPath
   type: FieldTypeDef
   kind: KindDef
+  /** The name of the kind, e.g. `'array'`. */
+  valueKind: ValueKind
   rules: CheckedRule[]
 }
 
@@ -38,12 +41,6 @@ export interface FieldKinds {
   itemKind?: ValueKind
 }
 
-interface CheckResult {
-  issues: DefinitionIssue[]
-  fields: CheckedField[]
-}
-
-const formShape = v.object({ version: v.string(), fields: v.array(v.unknown()) })
 const fieldShape = v.looseObject({
   name: v.optional(v.string()),
   type: v.string(),
@@ -59,34 +56,17 @@ const ruleShape = v.looseObject({ rule: v.string(), message: v.optional(v.string
 const noParams = v.object({})
 
 /**
- * Checks a whole definition and collects every issue, in document order. Never throws.
+ * Checks one field's shape, name, type, props and rules, and adds its issues to `issues`.
+ * Returns the field ready to build, or undefined when it has issues or no value.
+ *
+ * `names` holds the names used so far at this level. It is undefined for the field of a list's
+ * items, which needs no name.
  */
-export function checkDefinition(json: unknown, registry: Registry): CheckResult {
-  const issues: DefinitionIssue[] = []
-  const fields: CheckedField[] = []
-
-  const form = v.safeParse(formShape, json)
-  if (!form.success) return { issues: toIssues('invalid_shape', [], form.issues), fields }
-
-  if (form.output.version !== '1') {
-    const message = `Unsupported version "${form.output.version}". This package reads version '1'.`
-    return { issues: [{ code: 'unsupported_version', path: ['version'], message }], fields }
-  }
-
-  const names = new Set<string>()
-  form.output.fields.forEach((raw, i) => {
-    const field = checkField(raw, ['fields', i], registry, names, issues)
-    if (field) fields.push(field)
-  })
-
-  return { issues, fields }
-}
-
-function checkField(
+export function checkField(
   raw: unknown,
   path: DefinitionPath,
   registry: Registry,
-  names: Set<string>,
+  names: Set<string> | undefined,
   issues: DefinitionIssue[],
 ): CheckedField | undefined {
   const shape = v.safeParse(fieldShape, raw)
@@ -101,11 +81,19 @@ function checkField(
   // Only a fixed kind can be 'none'. A kind() function that returns it throws in kindDef.
   const hasValue = type?.kind !== 'none'
 
-  if (!field.name) {
+  if (!names) {
+    // The field of a list's items has no name.
+  } else if (!field.name) {
     if (type && hasValue) {
       issues.push(issue('missing_name', [...path, 'name'], 'A field needs a name'))
     }
   } else if (hasValue) {
+    // A name is one key of the value. Paths like 'address.city' and 'lines[0]' use these as
+    // separators.
+    if (/[.[\]]/.test(field.name)) {
+      const message = `Name "${field.name}" can't contain ".", "[" or "]"`
+      issues.push(issue('invalid_name', [...path, 'name'], message))
+    }
     if (names.has(field.name)) {
       issues.push(issue('duplicate_name', [...path, 'name'], `Duplicate name "${field.name}"`))
     }
@@ -126,6 +114,10 @@ function checkField(
         issues.push(issue('invalid_shape', [...path, key], message))
       }
     }
+    if (!names) {
+      const message = `A list's items need a value, and a "${field.type}" field has none`
+      issues.push(issue('invalid_shape', [...path, 'type'], message))
+    }
     return undefined
   }
 
@@ -139,10 +131,20 @@ function checkField(
     itemKind: kind === 'array' ? resolveKind(type.itemKind, withProps) : undefined,
   }
 
+  // A group is always there, and its fields decide what is required.
+  if (type.container && kind === 'object') {
+    for (const key of ['required', 'default'] as const) {
+      if (field[key] !== undefined) {
+        const message = `A "${field.type}" field is always there, so it can't have "${key}"`
+        issues.push(issue('invalid_shape', [...path, key], message))
+      }
+    }
+  }
+
   const fieldRules = (shape.output.rules ?? []).flatMap(
     (rule, j) => checkRule(rule, kinds, [...path, 'rules', j], registry, issues) ?? [],
   )
-  if (issues.length > issueCount || !field.name || !withProps) return undefined
+  if (issues.length > issueCount || (names && !field.name) || !withProps) return undefined
 
   const overridden = new Set(fieldRules.map((rule) => rule.name))
   const defaultRules = checkDefaultRules(field.type, type, kinds, registry).filter(
@@ -155,6 +157,7 @@ function checkField(
     path,
     type,
     kind: kindDef(field.type, kind, registry),
+    valueKind: kind,
     rules: [...defaultRules, ...fieldRules],
   }
 }
@@ -293,6 +296,9 @@ export function checkRegistry(registry: Registry): void {
         throw new TypeError(`${at}: kind "${kind}" is not registered`)
       }
     }
+    if (type.container && type.kind !== 'object' && type.kind !== 'array') {
+      throw new TypeError(`${at}: a container's kind must be 'object' or 'array'`)
+    }
     if (type.kind !== 'none' && !type.schema) {
       throw new TypeError(`${at}: schema() is required unless the kind is 'none'`)
     }
@@ -317,7 +323,7 @@ function issue(code: DefinitionIssueCode, path: DefinitionPath, message: string)
   return { code, path, message }
 }
 
-function toIssues(
+export function toIssues(
   code: DefinitionIssueCode,
   path: DefinitionPath,
   valibotIssues: readonly v.BaseIssue<unknown>[],

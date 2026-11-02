@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import type { JsonForm } from '@whatsaaaa/form-builder-schema'
 import FormExample from '../components/FormExample.vue'
+import array from '../../../../fixtures/field-types/array.json'
 import checkbox from '../../../../fixtures/field-types/checkbox.json'
 import date from '../../../../fixtures/field-types/date.json'
 import datetime from '../../../../fixtures/field-types/datetime.json'
 import divider from '../../../../fixtures/field-types/divider.json'
 import email from '../../../../fixtures/field-types/email.json'
 import file from '../../../../fixtures/field-types/file.json'
+import group from '../../../../fixtures/field-types/group.json'
 import heading from '../../../../fixtures/field-types/heading.json'
 import multiselect from '../../../../fixtures/field-types/multiselect.json'
 import number from '../../../../fixtures/field-types/number.json'
@@ -40,6 +42,8 @@ const fixtures = [
   radio,
   multiselect,
   file,
+  group,
+  array,
 ]
 
 const definition = {

@@ -36,7 +36,7 @@ Empty optional fields output `undefined`. Rules never run on empty values, and a
 
 ## Field types
 
-There is a type for every native control, plus three display elements. Anything more specific is a `ui.widget` variant of one of them, or your own type: a star rating is a `number` with `ui: { widget: 'rating' }`, and a colour picker is a `text` with a `hexColor` rule.
+There is a type for every native control, two types that hold other fields, and three display elements. Anything more specific is a `ui.widget` variant of one of them, or your own type: a star rating is a `number` with `ui: { widget: 'rating' }`, and a colour picker is a `text` with a `hexColor` rule.
 
 | Type                                  | Kind                                   | Value                               | Props                    | Checks                           |
 | ------------------------------------- | -------------------------------------- | ----------------------------------- | ------------------------ | -------------------------------- |
@@ -68,6 +68,29 @@ There is a type for every native control, plus three display elements. Anything 
 | `divider`   |                                          |
 
 They need no `name`, add no output key, and can't have `rules` or `required`. Their `text` can be an i18n key: renderers resolve it with the same function you pass as `resolveMessage`. Whether a paragraph renders markdown is up to the renderer.
+
+### Groups and arrays
+
+| Type    | Kind   | Value                                  | Props                            |
+| ------- | ------ | -------------------------------------- | -------------------------------- |
+| `group` | object | an object with a key for each field    | `fields`                         |
+| `array` | array  | a list of single values, or of objects | exactly one of `of` and `fields` |
+
+```json
+{
+  "name": "address",
+  "type": "group",
+  "fields": [
+    { "name": "city", "type": "text", "required": true },
+    { "name": "zip", "type": "text" }
+  ]
+}
+```
+
+- **A group** builds `{ address: { city, zip } }`, so Formisch's path for the city is `['address', 'city']`. It is always there and its fields decide what is required, so it can't have `required` or `default`.
+- **An array with `of`** is a list of single values, such as tags. `of` is the field each item uses, and it needs no `name`. **An array with `fields`** is a list of objects, such as order lines.
+- **Rules on an array**, like `minLength`, count its items. A required array needs at least one item. A missing array is read as `[]`, so its rules still run.
+- Display elements can go inside both. A name only has to be unique among the fields next to it.
 
 ## Rules
 
@@ -128,7 +151,10 @@ if (!result.success) {
 }
 ```
 
-`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `duplicate_name`, `invalid_props`, `unknown_rule`, `unknown_param`, `invalid_params` and `kind_mismatch`.
+`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params` and `kind_mismatch`. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
+
+- **Names** are one key of the value, so a name with `.`, `[` or `]` is `invalid_name`.
+- **Defaults** must pass the field's own schema, rules included, or they are `invalid_default`. An empty default, like `''`, counts as none.
 
 Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, which is never checked.
 
@@ -165,7 +191,32 @@ const { build } = createSchemaBuilder({ fieldTypes: { tags }, rules: { even } })
   })
   ```
 
+- A **field type whose value holds other fields** sets `container: true` and builds them with `ctx.buildFields(fields, path)`, or `ctx.buildField(field, path)` for the items of a list. The builder checks those fields like any others, so their issues have their full path. A container's kind is `object` or `array`, its value is never empty, and Formisch keeps a field for each child.
+- To **test a field type on its own**, give its `schema()` a context from `createBuildContext()`. Its `buildFields` and `buildField` use the default registries and throw a `DefinitionError` when the child fields have issues:
+
+  ```ts
+  const schema = myType.schema?.(field, createBuildContext({ path: ['fields', 0] }))
+  ```
+
 - Mistakes in the registry, such as an unknown kind or a reserved props key, throw a `TypeError` from `createSchemaBuilder`.
+
+## Initial input and walking fields
+
+Two plain functions read a definition without a builder, for renderers and adapters:
+
+```ts
+import { getInitialInput, walkFields } from '@whatsaaaa/form-builder-schema'
+
+const form = useForm({ schema: build(json), initialInput: getInitialInput(json) })
+
+for (const { field, dataPath, definitionPath, depth } of walkFields(json)) {
+  // e.g. dataPath ['lines', '*', 'quantity'], definitionPath ['fields', 2, 'fields', 1], depth 1
+}
+```
+
+- `getInitialInput` gives each field's `default`, nested the way the value is. A group gives an object, and an array without a default gives `[]`. Other fields without a default are left out.
+- `walkFields` yields every field at every depth, in document order, with a group or array before its fields. The fields of an array's items come once, with `'*'` in place of the index. A field without a name, like a heading, has its parent's `dataPath`.
+- Both know the built-in `group` and `array` types only, and neither checks the definition, so run `validate()` first.
 
 ## Messages
 

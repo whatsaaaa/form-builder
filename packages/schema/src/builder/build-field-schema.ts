@@ -1,6 +1,7 @@
 import * as v from 'valibot'
 import type { JsonField } from '../definition/json-form-schema'
 import type { DefinitionPath } from '../errors/definition-error'
+import type { BuildContext } from '../field-types/field-type-def'
 import type { RuleStage } from '../rules/rule-def'
 import type { CheckedField } from './validate-definition'
 import { eachItem } from '../shared/each-item'
@@ -20,9 +21,14 @@ export interface Messages {
 /**
  * The schema runs in this order: empty check, base schema, normalize rules, required check,
  * then the type's default rules and the field's rules, and last the type's `finalize()`.
+ * A container has no empty check: its value is never empty.
  */
-export function buildFieldSchema(checked: CheckedField, messages: Messages): AnySchema {
-  const { field, path, type, kind } = checked
+export function buildFieldSchema(
+  checked: CheckedField,
+  messages: Messages,
+  ctx: BuildContext,
+): AnySchema {
+  const { field, path, type, kind, valueKind } = checked
   const required = !!field.required
   const requiredMessage = messages.resolve(
     (typeof field.required === 'object' && field.required.message) || messages.required,
@@ -58,7 +64,7 @@ export function buildFieldSchema(checked: CheckedField, messages: Messages): Any
   const finalize = type.finalize?.(field)
   if (finalize) whole.validate.push(finalize)
 
-  const base = (type.schema as NonNullable<typeof type.schema>)(field, { path })
+  const base = (type.schema as NonNullable<typeof type.schema>)(field, ctx)
   // The type can replace the kind's required check, e.g. a yes/no radio accepts false.
   const requiredCheck = !required
     ? undefined
@@ -66,6 +72,14 @@ export function buildFieldSchema(checked: CheckedField, messages: Messages): Any
       ? type.required(requiredMessage)
       : kind.required?.(requiredMessage)
   const head = pipe(base, requiredCheck ? [...whole.normalize, requiredCheck] : whole.normalize)
+
+  if (type.container) {
+    // Formisch reads the object or array schema to keep a field for each child, so nothing may
+    // wrap it but optional. A missing value is read as an empty one, and the rules still run.
+    // They sit in a nested pipe, so an empty required list reports only the required message.
+    const rules = whole.validate.length ? [pipe(v.unknown(), whole.validate)] : []
+    return v.optional(pipe(head, rules), valueKind === 'object' ? () => ({}) : () => [])
+  }
 
   const empty = required
     ? v.never(requiredMessage)

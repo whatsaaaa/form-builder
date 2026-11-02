@@ -31,6 +31,13 @@ export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> 
   required?(message: string): AnyAction | null
   /** Runs last, after every rule, e.g. to turn an ISO string into a `Date`. */
   finalize?(field: FieldWithProps<TProps>): AnyAction | undefined
+  /**
+   * True for a type whose value holds other fields, built with `ctx.buildFields` or
+   * `ctx.buildField`. Its kind must be `'object'` or `'array'`. The value is never empty: a
+   * missing one becomes `{}` or `[]`, and the rules always run. Formisch then sees the object or
+   * array schema itself, so it keeps a field for each child.
+   */
+  container?: boolean
 }
 
 /**
@@ -47,4 +54,12 @@ export type FieldWithProps<TProps extends AnyObjectSchema = AnyObjectSchema> = J
 export interface BuildContext {
   /** Where the field is in the definition, e.g. `['fields', 2]`. */
   readonly path: DefinitionPath
+  /**
+   * Checks and builds child fields with the same registries, and returns their object schema.
+   * Their issues land in the same `validate()` result. `path` is where the list is in the
+   * definition, e.g. `[...ctx.path, 'fields']`.
+   */
+  buildFields(fields: readonly JsonField[], path: DefinitionPath): AnyObjectSchema
+  /** Checks and builds one field for the items of a list. Its name isn't needed or used. */
+  buildField(field: JsonField, path: DefinitionPath): AnySchema
 }
