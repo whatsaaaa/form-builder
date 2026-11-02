@@ -27,3 +27,4 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm -r --filter "./packages/*" lint:pkg
+      - run: pnpm --filter @whatsaaaa/form-builder-schema size

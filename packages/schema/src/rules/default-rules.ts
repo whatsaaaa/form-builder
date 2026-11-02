@@ -1,37 +1,22 @@
-import * as v from 'valibot'
-import { defineRule } from './define-rule'
-import type { RuleDef } from './rule-def'
+import { comparisonRules } from './comparison-rules'
+import { contentRules } from './content-rules'
+import { dateRules } from './date-rules'
+import { fileRules } from './file-rules'
+import { formatRules } from './format-rules'
+import { lengthRules } from './length-rules'
+import { normalizeRules } from './normalize-rules'
+import { numberRules } from './number-rules'
+import { textUnitRules } from './text-unit-rules'
 
-const nonNegInt = v.pipe(v.number(), v.integer(), v.minValue(0))
-
+/** Every built-in rule. Register single families with `includeDefaultRules: false`. */
 export const defaultRules = {
-  trim: defineRule({ kinds: ['string'], stage: 'normalize', create: () => v.trim() }),
-  minLength: defineRule({
-    kinds: ['string'],
-    params: v.object({ value: nonNegInt }),
-    create: (p, m) => v.minLength(p.value, m),
-  }),
-  maxLength: defineRule({
-    kinds: ['string'],
-    params: v.object({ value: nonNegInt }),
-    create: (p, m) => v.maxLength(p.value, m),
-  }),
-  regex: defineRule({
-    kinds: ['string'],
-    params: v.object({ pattern: v.string(), flags: v.optional(v.string()) }),
-    create: (p, m) => v.regex(new RegExp(p.pattern, p.flags), m),
-  }),
-  email: defineRule({ kinds: ['string'], create: (_, m) => v.email(m) }),
-  url: defineRule({ kinds: ['string'], create: (_, m) => v.url(m) }),
-  minValue: defineRule({
-    kinds: ['number'],
-    params: v.object({ value: v.number() }),
-    create: (p, m) => v.minValue(p.value, m),
-  }),
-  maxValue: defineRule({
-    kinds: ['number'],
-    params: v.object({ value: v.number() }),
-    create: (p, m) => v.maxValue(p.value, m),
-  }),
-  integer: defineRule({ kinds: ['number'], create: (_, m) => v.integer(m) }),
-} satisfies Record<string, RuleDef>
+  ...lengthRules,
+  ...textUnitRules,
+  ...contentRules,
+  ...formatRules,
+  ...dateRules,
+  ...comparisonRules,
+  ...numberRules,
+  ...fileRules,
+  ...normalizeRules,
+}

@@ -11,12 +11,18 @@ export interface Registry {
   readonly rules: Readonly<Record<string, RuleDef>>
 }
 
+export interface RegistryOptions extends Partial<Registry> {
+  /** With false, only the consumer's own rules are registered. Defaults to true. */
+  includeDefaultRules?: boolean
+}
+
 /** Consumer entries replace defaults with the same key. */
-export function mergeRegistry(custom: Partial<Registry>): Registry {
+export function mergeRegistry(custom: RegistryOptions): Registry {
+  const rules = custom.includeDefaultRules === false ? {} : defaultRules
   return {
     kinds: Object.freeze({ ...defaultKinds, ...custom.kinds }),
     fieldTypes: Object.freeze({ ...defaultFieldTypes, ...custom.fieldTypes }),
-    rules: Object.freeze({ ...defaultRules, ...custom.rules }),
+    rules: Object.freeze({ ...rules, ...custom.rules }),
   }
 }
 
