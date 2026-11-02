@@ -28,3 +28,20 @@ jobs:
       - run: pnpm build
       - run: pnpm -r --filter "./packages/*" lint:pkg
       - run: pnpm --filter @whatsaaaa/form-builder-schema size
+
+  # The schema tests again, with the lowest Valibot the peer range allows.
+  valibot-min:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4 # use the latest major
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install with Valibot 1.3.0
+        working-directory: packages/schema
+        run: |
+          npm pkg set devDependencies.valibot=1.3.0
+          pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-schema test
