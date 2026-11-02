@@ -12,24 +12,24 @@ export const lengthRules = {
     kinds,
     params: countParams,
     meta: meta('Exact length'),
-    create: (p, m) => v.length(p.value, m)
+    create: (p, m) => v.length(p.value, m),
   }),
   minLength: defineRule({
     kinds,
     params: countParams,
     meta: meta('Minimum length'),
-    create: (p, m) => v.minLength(p.value, m)
+    create: (p, m) => v.minLength(p.value, m),
   }),
   maxLength: defineRule({
     kinds,
     params: countParams,
     meta: meta('Maximum length'),
-    create: (p, m) => v.maxLength(p.value, m)
+    create: (p, m) => v.maxLength(p.value, m),
   }),
   notLength: defineRule({
     kinds,
     params: countParams,
     meta: meta('Not this length'),
-    create: (p, m) => v.notLength(p.value, m)
-  })
+    create: (p, m) => v.notLength(p.value, m),
+  }),
 } satisfies Record<string, RuleDef>

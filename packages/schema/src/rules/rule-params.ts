@@ -1,6 +1,6 @@
-import type { AnyObjectSchema } from "../shared/valibot-types";
-import type { ValueKind } from "../shared/value-kind";
-import type { RuleDef } from "./rule-def";
+import type { AnyObjectSchema } from '../shared/valibot-types'
+import type { ValueKind } from '../shared/value-kind'
+import type { RuleDef } from './rule-def'
 
 const cache = new WeakMap<RuleDef, Map<ValueKind, AnyObjectSchema>>()
 

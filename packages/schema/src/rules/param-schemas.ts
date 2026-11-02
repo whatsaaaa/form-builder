@@ -10,7 +10,10 @@ const isIsoValue = (input: string) =>
   v.ISO_DATE_REGEX.test(input) || v.ISO_DATE_TIME_REGEX.test(input) || v.ISO_TIME_REGEX.test(input)
 
 /** Valibot compares dates as ISO strings, so the param must be one too. */
-export const isoValue = v.pipe(v.string(), v.check(isIsoValue, 'Use an ISO date, date-time or time, such as 2026-01-01'))
+export const isoValue = v.pipe(
+  v.string(),
+  v.check(isIsoValue, 'Use an ISO date, date-time or time, such as 2026-01-01'),
+)
 
 export const valueSchema = (kind: ValueKind) => {
   switch (kind) {

@@ -7,7 +7,7 @@ const iso = (label: string, description: string, create: (message?: string) => A
   defineRule({
     kinds: ['string', 'date'],
     meta: { label, description, category: 'date' },
-    create: (_, message) => create(message)
+    create: (_, message) => create(message),
   })
 
 export const dateRules = {
@@ -16,5 +16,5 @@ export const dateRules = {
   isoTime: iso('ISO time', 'Like 14:30', (m) => v.isoTime(m)),
   isoTimeSecond: iso('ISO time with seconds', 'Like 14:30:15', (m) => v.isoTimeSecond(m)),
   isoTimestamp: iso('ISO timestamp', 'Like 2026-10-28T14:30:15.000z', (m) => v.isoTimestamp(m)),
-  isoWeek: iso('ISO week', 'Like 2026-W44', (m) => v.isoWeek(m))
+  isoWeek: iso('ISO week', 'Like 2026-W44', (m) => v.isoWeek(m)),
 } satisfies Record<string, RuleDef>

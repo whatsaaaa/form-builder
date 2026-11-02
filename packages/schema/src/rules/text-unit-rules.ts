@@ -19,7 +19,7 @@ const wordsParams = v.object({
   locale: v.optional(
     v.pipe(v.string(), v.check(isLocale, 'Use a language tag, such as en or sr-Latn')),
   ),
-  value: count
+  value: count,
 })
 
 const graphemesInfo = 'Counts characters as people see them, so an emoji is one.'
@@ -30,7 +30,7 @@ export const textUnitRules = {
     kinds,
     params: countParams,
     meta: meta('Exact characters', graphemesInfo),
-    create: (p, m) => v.graphemes(p.value, m)
+    create: (p, m) => v.graphemes(p.value, m),
   }),
   minGraphemes: defineRule({
     kinds,
@@ -97,5 +97,5 @@ export const textUnitRules = {
     params: countParams,
     meta: meta('Not this many bytes', bytesInfo),
     create: (p, m) => v.notBytes(p.value, m),
-  })
+  }),
 } satisfies Record<string, RuleDef>
