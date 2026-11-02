@@ -21,6 +21,8 @@ export interface CheckedField {
   path: DefinitionPath
   type: FieldTypeDef
   kind: KindDef
+  /** The name of the kind, e.g. `'array'`. */
+  valueKind: ValueKind
   rules: CheckedRule[]
 }
 
@@ -123,6 +125,16 @@ export function checkField(
     itemKind: kind === 'array' ? resolveKind(type.itemKind, withProps) : undefined,
   }
 
+  // A group is always there, and its fields decide what is required.
+  if (type.container && kind === 'object') {
+    for (const key of ['required', 'default'] as const) {
+      if (field[key] !== undefined) {
+        const message = `A "${field.type}" field is always there, so it can't have "${key}"`
+        issues.push(issue('invalid_shape', [...path, key], message))
+      }
+    }
+  }
+
   const fieldRules = (shape.output.rules ?? []).flatMap(
     (rule, j) => checkRule(rule, kinds, [...path, 'rules', j], registry, issues) ?? [],
   )
@@ -139,6 +151,7 @@ export function checkField(
     path,
     type,
     kind: kindDef(field.type, kind, registry),
+    valueKind: kind,
     rules: [...defaultRules, ...fieldRules],
   }
 }
@@ -276,6 +289,9 @@ export function checkRegistry(registry: Registry): void {
       if (typeof kind === 'string' && !lookup(registry.kinds, kind)) {
         throw new TypeError(`${at}: kind "${kind}" is not registered`)
       }
+    }
+    if (type.container && type.kind !== 'object' && type.kind !== 'array') {
+      throw new TypeError(`${at}: a container's kind must be 'object' or 'array'`)
     }
     if (type.kind !== 'none' && !type.schema) {
       throw new TypeError(`${at}: schema() is required unless the kind is 'none'`)

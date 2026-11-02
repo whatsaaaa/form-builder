@@ -31,6 +31,13 @@ export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> 
   required?(message: string): AnyAction | null
   /** Runs last, after every rule, e.g. to turn an ISO string into a `Date`. */
   finalize?(field: FieldWithProps<TProps>): AnyAction | undefined
+  /**
+   * True for a type whose value holds other fields, built with `ctx.buildFields` or
+   * `ctx.buildField`. Its kind must be `'object'` or `'array'`. The value is never empty: a
+   * missing one becomes `{}` or `[]`, and the rules always run. Formisch then sees the object or
+   * array schema itself, so it keeps a field for each child.
+   */
+  container?: boolean
 }
 
 /**
