@@ -19,6 +19,11 @@ const router = createRouter({
       name: 'signup',
       component: () => import('../views/SignupFormView.vue'),
     },
+    {
+      path: '/field-types',
+      name: 'field-types',
+      component: () => import('../views/FieldTypesView.vue'),
+    },
   ],
 })
 
