@@ -7,7 +7,14 @@ The field types catalog: a built-in type for every native control, plus three di
 **New value types:** `textarea`, `url`, `tel`, `checkbox`, `date`, `time`, `datetime`, `select`, `radio`, `multiselect` and `file`, next to `text`, `email`, `password` and `number`.
 
 ```json
-{ "name": "size", "type": "select", "options": [{ "value": 1, "label": "Small" }, { "value": 2, "label": "Large" }] }
+{
+  "name": "size",
+  "type": "select",
+  "options": [
+    { "value": 1, "label": "Small" },
+    { "value": 2, "label": "Large" }
+  ]
+}
 ```
 
 - `select`, `radio` and `multiselect` take `options` as `{ value, label }[]`. The options' value type sets the kind, so a select with number options rejects `'1'`. A `select` without options takes any value of its `valueType`.
