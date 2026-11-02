@@ -1,0 +1,36 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "newsletter",
+      "type": "radio",
+      "label": "Send me the newsletter",
+      "required": true,
+      "options": [
+        {
+          "value": true,
+          "label": "Yes"
+        },
+        {
+          "value": false,
+          "label": "No"
+        }
+      ]
+    },
+    {
+      "name": "contactBy",
+      "type": "radio",
+      "label": "Contact me by",
+      "options": [
+        {
+          "value": "email",
+          "label": "Email"
+        },
+        {
+          "value": "phone",
+          "label": "Phone"
+        }
+      ]
+    }
+  ]
+}

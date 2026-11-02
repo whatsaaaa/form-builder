@@ -32,7 +32,42 @@ const { build, validate } = createSchemaBuilder()
 const schema = build(json) // v.ObjectSchema, ready for Formisch or v.parse
 ```
 
-Built-in field types are `text`, `email`, `password` and `number`. Empty optional fields output `undefined`. Rules never run on empty values, and a required empty field reports only the required message.
+Empty optional fields output `undefined`. Rules never run on empty values, and a required empty field reports only the required message.
+
+## Field types
+
+There is a type for every native control, plus three display elements. Anything more specific is a `ui.widget` variant of one of them, or your own type: a star rating is a `number` with `ui: { widget: 'rating' }`, and a colour picker is a `text` with a `hexColor` rule.
+
+| Type                                  | Kind                                   | Value                               | Props                    | Checks                           |
+| ------------------------------------- | -------------------------------------- | ----------------------------------- | ------------------------ | -------------------------------- |
+| `text`, `textarea`, `password`, `tel` | string                                 | `string`                            |                          |                                  |
+| `email`, `url`                        | string                                 | `string`                            |                          | the `email` or `url` rule        |
+| `number`                              | number                                 | `number`                            |                          |                                  |
+| `checkbox`                            | boolean                                | `boolean`                           |                          | required means ticked            |
+| `date`                                | date                                   | `'2026-10-28'`                      | `output?`                | ISO date                         |
+| `time`                                | date                                   | `'14:30'`                           |                          | ISO time                         |
+| `datetime`                            | date                                   | `'2026-10-28T14:30'`                | `output?`                | ISO date and time                |
+| `select`                              | from the options                       | `string \| number`                  | `options?`, `valueType?` | one of the options               |
+| `radio`                               | from the options                       | `string \| number \| boolean`       | `options`                | one of the options               |
+| `multiselect`                         | array, items from the options          | `(string \| number)[]`              | `options`                | every item is one of the options |
+| `file`                                | file, or array of file with `multiple` | `File`, or `File[]` with `multiple` | `multiple?`, `accept?`   | MIME type from `accept`          |
+
+- **Options** are `{ value, label }[]`: at least one, every value different and of the same type. A select with number options has kind `number`, so it rejects `'1'` and takes rules like `minValue`.
+- **A select without `options`**, because they load from an API, takes any value of its `valueType` (`'string'`, the default, or `'number'`). With `options`, `valueType` is ignored.
+- **Dates stay ISO strings** by default. `output: 'date'` turns the value into a `Date` after every rule, so comparison rules still compare ISO strings. A `datetime` has no time zone, so its `Date` is in local time.
+- **A required radio** accepts any option, `false` included. **A required multiselect** needs at least one item; add `minLength: 2` for "pick at least two". Rules for the options' kind, like `maxValue`, run on each item.
+- **A checkbox group** is a `multiselect` with `ui: { widget: 'checkboxes' }`.
+- **Files.** `accept` takes MIME types separated by commas, such as `image/png,image/jpeg`. A `File` only carries its MIME type, so extensions (`.pdf`) and wildcards (`image/*`) are `invalid_props`. With `multiple`, file rules like `maxSize` check each file and `maxLength` limits the count. The schema reads the `File` global only while parsing, so the package loads in SSR.
+
+### Display elements
+
+| Type        | Props                                    |
+| ----------- | ---------------------------------------- |
+| `heading`   | `text`, `level?` from 1 to 6 (default 2) |
+| `paragraph` | `text`, plain text                       |
+| `divider`   |                                          |
+
+They need no `name`, add no output key, and can't have `rules` or `required`. Their `text` can be an i18n key: renderers resolve it with the same function you pass as `resolveMessage`. Whether a paragraph renders markdown is up to the renderer.
 
 ## Rules
 
@@ -71,7 +106,7 @@ const { build } = createSchemaBuilder({
 })
 ```
 
-The built-in `email` type uses the `email` rule, so keep `formatRules` (or replace the `email` type), or `createSchemaBuilder` throws a `TypeError`.
+The built-in `email` and `url` types use the `email` and `url` rules, so keep `formatRules` (or replace those types), or `createSchemaBuilder` throws a `TypeError`.
 
 ### Listing rules
 
@@ -102,10 +137,11 @@ Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its ty
 `createSchemaBuilder({ kinds, fieldTypes, rules })` merges your entries over the defaults by key. The merged registries are returned as `kinds`, `fieldTypes` and `rules`.
 
 ```ts
-const select = defineFieldType({
-  kind: 'string',
-  props: v.object({ options: v.array(v.string()) }),
-  schema: (field) => v.picklist(field.options), // field.options is typed
+const tags = defineFieldType({
+  kind: 'array',
+  itemKind: 'string',
+  props: v.object({ max: v.optional(v.number()) }),
+  schema: (field) => v.pipe(v.array(v.string()), v.maxLength(field.max ?? 10)), // field.max is typed
 })
 
 const even = defineRule({
@@ -113,10 +149,11 @@ const even = defineRule({
   create: (_, message) => v.check((n: number) => n % 2 === 0, message),
 })
 
-const { build } = createSchemaBuilder({ fieldTypes: { select }, rules: { even } })
+const { build } = createSchemaBuilder({ fieldTypes: { tags }, rules: { even } })
 ```
 
 - A **kind** says what "empty" means for a value (`isEmpty`) and adds an optional extra `required` check. Built-in kinds are `string`, `number`, `boolean`, `date`, `array`, `file`, `object` and `none`. A type with kind `none` has no value, like a heading.
+- A **field type** names the kind of its value. `kind` can also be a function of the field with its props parsed (`KindOf`), for a kind that depends on them, like a select's options. `itemKind` names the kind of each item of an array value: a rule for that kind but not for `array` then runs on each item, and reports its issues on the field. Two optional hooks fine-tune the pipeline: `required(message)` replaces the kind's required check (return `null` for none), and `finalize(field)` returns an action that runs after every rule, like `v.toDate()`.
 - A **rule** with `stage: 'normalize'` runs before the required check. Its `params` schema lists the only keys the rule accepts. `params` can also be a function of the field's kind, for params whose type depends on it:
 
   ```ts

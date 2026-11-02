@@ -1,0 +1,21 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "age",
+      "type": "number",
+      "label": "Age",
+      "rules": [
+        {
+          "rule": "integer",
+          "message": "Whole years"
+        },
+        {
+          "rule": "minValue",
+          "value": 16,
+          "message": "16 or older"
+        }
+      ]
+    }
+  ]
+}

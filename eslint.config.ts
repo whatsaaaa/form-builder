@@ -52,6 +52,8 @@ export default defineConfigWithVueTs(
         // Files directly in src/ (index.ts) that are not inside a feature folder.
         { type: 'package-entry', pattern: 'packages/*/src', capture: ['pkg'] },
         { type: 'package-tests', pattern: 'packages/*/tests', capture: ['pkg'] },
+        // Sample JSON forms that tests and apps share.
+        { type: 'fixtures', pattern: 'fixtures' },
       ],
     },
     rules: {
@@ -121,6 +123,10 @@ export default defineConfigWithVueTs(
                   },
                 },
               },
+            },
+            {
+              from: { element: { types: ['app', 'framework', 'package-tests'] } },
+              allow: { to: { element: { type: 'fixtures' } } },
             },
             {
               from: { element: { types: ['package-entry', 'package-feature'] } },

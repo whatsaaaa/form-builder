@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "callTime",
+      "type": "time",
+      "label": "Best time to call",
+      "rules": [
+        {
+          "rule": "minValue",
+          "value": "09:00",
+          "message": "From 09:00"
+        },
+        {
+          "rule": "maxValue",
+          "value": "17:00",
+          "message": "Until 17:00"
+        }
+      ]
+    }
+  ]
+}

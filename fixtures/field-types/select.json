@@ -1,0 +1,51 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "country",
+      "type": "select",
+      "label": "Country",
+      "required": true,
+      "options": [
+        {
+          "value": "rs",
+          "label": "Serbia"
+        },
+        {
+          "value": "hr",
+          "label": "Croatia"
+        },
+        {
+          "value": "si",
+          "label": "Slovenia"
+        }
+      ]
+    },
+    {
+      "name": "seats",
+      "type": "select",
+      "label": "Seats",
+      "options": [
+        {
+          "value": 1,
+          "label": "One"
+        },
+        {
+          "value": 2,
+          "label": "Two"
+        },
+        {
+          "value": 4,
+          "label": "Four"
+        }
+      ]
+    },
+    {
+      "name": "city",
+      "type": "select",
+      "label": "City",
+      "description": "Options load from an API, so the definition has none.",
+      "valueType": "string"
+    }
+  ]
+}
