@@ -46,6 +46,7 @@ describe('value types', () => {
       'heading',
       'paragraph',
       'divider',
+      'group',
     ])
   })
 

@@ -22,6 +22,7 @@ import file from '../../../../fixtures/field-types/file.json'
 import heading from '../../../../fixtures/field-types/heading.json'
 import paragraph from '../../../../fixtures/field-types/paragraph.json'
 import divider from '../../../../fixtures/field-types/divider.json'
+import group from '../../../../fixtures/field-types/group.json'
 
 // The shared fixtures, one per built-in type. The Vue adapter renders the same files.
 type Fixture = { fields: readonly { type: string }[] }
@@ -45,6 +46,7 @@ const fixtures: Record<string, Fixture> = {
   heading,
   paragraph,
   divider,
+  group,
 }
 
 const { build, validate } = createSchemaBuilder()
