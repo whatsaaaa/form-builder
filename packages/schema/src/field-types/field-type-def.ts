@@ -5,7 +5,7 @@ import type { JsonField, JsonRule } from '../definition/json-form-schema'
 import type { DefinitionPath } from '../errors/definition-error'
 
 export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> {
-  kind: ValueKind
+  kind: ValueKind | KindOf<TProps>
   /** Extra keys this type accepts on a field, e.g. `options` on a select. */
   props?: TProps
   /**
@@ -16,6 +16,10 @@ export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> 
   /** Rules every field of this type gets. A field rule with the same name replaces one. */
   defaultRules?: readonly JsonRule[]
 }
+
+export type KindOf<TProps extends AnyObjectSchema = AnyObjectSchema> = {
+  bivariant(field: FieldWithProps<TProps>): ValueKind
+}['bivariant']
 
 /** A field with its type's props parsed and typed. */
 export type FieldWithProps<TProps extends AnyObjectSchema = AnyObjectSchema> = JsonField &
