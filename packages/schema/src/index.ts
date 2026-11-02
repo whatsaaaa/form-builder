@@ -1,4 +1,5 @@
 // Public API. Everything a consumer can import is exported here and nowhere else.
+export { createBuildContext } from './builder/build-context'
 export { createSchemaBuilder } from './builder/create-schema-builder'
 export type { MessageContext } from './builder/build-field-schema'
 export type { SchemaBuilderOptions } from './builder/create-schema-builder'
