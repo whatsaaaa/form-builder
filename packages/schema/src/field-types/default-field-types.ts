@@ -1,4 +1,5 @@
 import { basicTypes } from './basic-types'
+import { choiceTypes } from './choice-types'
 import { dateTypes } from './date-types'
 import type { FieldTypeDef } from './field-type-def'
 
@@ -6,4 +7,5 @@ import type { FieldTypeDef } from './field-type-def'
 export const defaultFieldTypes = {
   ...basicTypes,
   ...dateTypes,
+  ...choiceTypes,
 } satisfies Record<string, FieldTypeDef>
