@@ -88,6 +88,12 @@ export function checkField(
       issues.push(issue('missing_name', [...path, 'name'], 'A field needs a name'))
     }
   } else if (hasValue) {
+    // A name is one key of the value. Paths like 'address.city' and 'lines[0]' use these as
+    // separators.
+    if (/[.[\]]/.test(field.name)) {
+      const message = `Name "${field.name}" can't contain ".", "[" or "]"`
+      issues.push(issue('invalid_name', [...path, 'name'], message))
+    }
     if (names.has(field.name)) {
       issues.push(issue('duplicate_name', [...path, 'name'], `Duplicate name "${field.name}"`))
     }

@@ -8,6 +8,7 @@ export type DefinitionIssueCode =
   | 'unknown_key'
   | 'unknown_type'
   | 'missing_name'
+  | 'invalid_name'
   | 'duplicate_name'
   | 'invalid_props'
   | 'unknown_rule'
