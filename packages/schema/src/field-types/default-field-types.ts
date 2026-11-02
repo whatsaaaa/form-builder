@@ -1,9 +1,7 @@
-import * as v from 'valibot'
+import { basicTypes } from './basic-types'
 import type { FieldTypeDef } from './field-type-def'
 
+/** Every built-in field type. */
 export const defaultFieldTypes = {
-  text: { kind: 'string', schema: () => v.string() },
-  password: { kind: 'string', schema: () => v.string() },
-  email: { kind: 'string', schema: () => v.string(), defaultRules: [{ rule: 'email' }] },
-  number: { kind: 'number', schema: () => v.number() },
+  ...basicTypes,
 } satisfies Record<string, FieldTypeDef>

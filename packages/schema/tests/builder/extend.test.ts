@@ -2,6 +2,7 @@ import * as v from 'valibot'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import {
   createSchemaBuilder,
+  defaultFieldTypes,
   defineFieldType,
   defineRule,
   type JsonField,
@@ -74,11 +75,11 @@ describe('extending the builder', () => {
 
   it('exposes the merged registries', () => {
     const { kinds, fieldTypes, rules } = createSchemaBuilder({
-      fieldTypes: { heading: { kind: 'none' } },
+      fieldTypes: { banner: { kind: 'none' } },
     })
 
     expect(Object.keys(kinds)).toContain('string')
-    expect(Object.keys(fieldTypes)).toEqual(['text', 'password', 'email', 'number', 'heading'])
+    expect(Object.keys(fieldTypes)).toEqual([...Object.keys(defaultFieldTypes), 'banner'])
     expect(Object.keys(rules)).toContain('trim')
     expect(Object.isFrozen(rules)).toBe(true)
   })
