@@ -31,8 +31,12 @@ export interface RuleDef<TParams extends AnyObjectSchema = AnyObjectSchema> {
   kinds: readonly ValueKind[]
   /** Defaults to `'validate'`. */
   stage?: RuleStage
-  /** The params the rule takes. Omit it for rules without params. Unknown params are rejected. */
-  params?: TParams
+  /**
+   * The params the rule takes. Omit it for rules without params. Unknown params are rejected.
+   * A function gets the field's kind, for params that depend on it (`minValue` takes a number
+   * on a number field, and an ISO string on a date field). It is called once per kind.
+   */
+  params?: TParams | ((kind: ValueKind) => TParams)
   meta?: RuleMeta
   /** Method syntax keeps `create` bivariant, so specific rules fit in a `Record<string, RuleDef>`. */
   create(params: v.InferOutput<TParams>, message?: string): AnyAction

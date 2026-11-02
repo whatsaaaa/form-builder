@@ -9,6 +9,7 @@ import {
 import type { FieldTypeDef } from '../field-types/field-type-def'
 import type { KindDef } from '../kinds/kind-def'
 import type { RuleDef } from '../rules/rule-def'
+import { paramsFor } from '../rules/rule-params'
 import { lookup, type Registry } from './registry'
 import { isReservedFieldKey, isReservedRuleKey } from '../shared/reserved-keys'
 import type { ValueKind } from '../shared/value-kind'
@@ -186,13 +187,16 @@ export function checkRule(
     return undefined
   }
 
-  const issueCount = issues.length
+  // Params can depend on the kind, so they can't be checked for a kind the rule doesn't support.
   if (!def.kinds.includes(kind)) {
     const message = `Rule "${rule.rule}" can't be used on ${kind} fields`
     issues.push(issue('kind_mismatch', [...path, 'rule'], message))
+    return undefined
   }
 
-  const paramKeys = Object.keys(def.params?.entries ?? {})
+  const issueCount = issues.length
+  const params = paramsFor(def, kind)
+  const paramKeys = Object.keys(params?.entries ?? {})
   const input: Record<string, unknown> = {}
   for (const key of Object.keys(rule)) {
     if (isReservedRuleKey(key)) continue
@@ -205,7 +209,7 @@ export function checkRule(
     }
   }
 
-  const parsed = v.safeParse(def.params ?? noParams, input)
+  const parsed = v.safeParse(params ?? noParams, input)
   if (!parsed.success) issues.push(...toIssues('invalid_params', path, parsed.issues))
   if (!parsed.success || issues.length > issueCount) return undefined
 
@@ -214,9 +218,12 @@ export function checkRule(
 
 export function checkRegistry(registry: Registry): void {
   for (const [name, rule] of Object.entries(registry.rules)) {
-    for (const key of Object.keys(rule.params?.entries ?? {})) {
-      if (isReservedRuleKey(key)) {
-        throw new TypeError(`Rule "${name}": params can't use the reserved key "${key}"`)
+    // Params can depend on the kind, so check them for every kind the rule supports.
+    for (const kind of rule.kinds) {
+      for (const key of Object.keys(paramsFor(rule, kind)?.entries ?? {})) {
+        if (isReservedRuleKey(key)) {
+          throw new TypeError(`Rule "${name}": params can't use the reserved key "${key}"`)
+        }
       }
     }
   }
