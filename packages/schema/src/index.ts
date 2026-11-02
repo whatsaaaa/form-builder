@@ -4,6 +4,8 @@ export { createSchemaBuilder } from './builder/create-schema-builder'
 export type { MessageContext } from './builder/build-field-schema'
 export type { SchemaBuilderOptions } from './builder/create-schema-builder'
 export type { JsonField, JsonForm, JsonRule } from './definition/json-form-schema'
+export { walkFields } from './definition/walk-fields'
+export type { WalkedField } from './definition/walk-fields'
 export { DefinitionError, formatPath } from './errors/definition-error'
 export type {
   DefinitionIssue,
