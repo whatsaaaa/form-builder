@@ -14,7 +14,7 @@ export interface JsonField {
   rules?: readonly JsonRule[]
   /** For renderers. This package never reads or checks it. */
   ui?: Record<string, unknown>
-  /** Validated by the field type's props schema, */
+  /** Validated by the field type's props schema. */
   [prop: string]: unknown
 }
 

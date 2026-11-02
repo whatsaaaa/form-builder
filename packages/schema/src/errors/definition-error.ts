@@ -1,7 +1,7 @@
 /** Where something is in a definition, e.g. `['fields', 0, 'rules', 1]`. */
 export type DefinitionPath = readonly (string | number)[]
 
-/** Public API: adding a code is a minor change, renaming one is breaking, */
+/** Public API: adding a code is a minor change, renaming one is breaking. */
 export type DefinitionIssueCode =
   | 'invalid_shape'
   | 'unsupported_version'

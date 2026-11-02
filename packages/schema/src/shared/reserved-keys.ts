@@ -14,7 +14,7 @@ export const RESERVED_FIELD_KEYS = [
 ] as const
 
 /**
- * Rule keys this package own. A rule's params can't use them.
+ * Rule keys this package owns. A rule's params can't use them.
  */
 export const RESERVED_RULE_KEYS = ['rule', 'message'] as const
 
