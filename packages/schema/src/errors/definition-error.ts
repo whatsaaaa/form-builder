@@ -11,6 +11,7 @@ export type DefinitionIssueCode =
   | 'invalid_name'
   | 'duplicate_name'
   | 'invalid_props'
+  | 'invalid_default'
   | 'unknown_rule'
   | 'unknown_param'
   | 'invalid_params'

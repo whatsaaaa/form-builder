@@ -80,8 +80,24 @@ export function createCompiler(
     return checked ? build(checked) : v.never()
   }
 
-  const build = (checked: CheckedField): AnySchema =>
-    buildFieldSchema(checked, messages, context(checked.path))
+  function build(checked: CheckedField): AnySchema {
+    const schema = buildFieldSchema(checked, messages, context(checked.path))
+    checkDefault(checked, schema, issues)
+    return schema
+  }
 
   return { fields, field }
+}
+
+/** A default must be a value the field accepts. An empty one is the same as none. */
+function checkDefault(
+  { field, kind, path }: CheckedField,
+  schema: AnySchema,
+  issues: DefinitionIssue[],
+): void {
+  if (field.default === undefined || kind.isEmpty(field.default)) return
+  const result = v.safeParse(schema, field.default)
+  if (!result.success) {
+    issues.push(...toIssues('invalid_default', [...path, 'default'], result.issues))
+  }
 }
