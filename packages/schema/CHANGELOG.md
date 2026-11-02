@@ -4,12 +4,7 @@
 
 ### Minor Changes
 
-- [#4](https://github.com/whatsaaaa/form-builder/pull/4) [`2a2970e`](https://github.com/whatsaaaa/form-builder/commit/2a2970e2534ce643ae455d46d9d3a9b71210e2f4) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - ---
-
-  '@whatsaaaa/form-builder-schema': minor
-  ---
-
-  The Valibot rule catalog: every Valibot action whose arguments fit in JSON is now a rule with the same name, 80 in all.
+- [#4](https://github.com/whatsaaaa/form-builder/pull/4) [`2a2970e`](https://github.com/whatsaaaa/form-builder/commit/2a2970e2534ce643ae455d46d9d3a9b71210e2f4) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - The Valibot rule catalog: every Valibot action whose arguments fit in JSON is now a rule with the same name, 80 in all.
 
   **Rules come in families** you can register on their own: `lengthRules`, `textUnitRules`, `contentRules`, `formatRules`, `dateRules`, `comparisonRules`, `numberRules`, `fileRules` and `normalizeRules`. `defaultRules` spreads all of them.
 
@@ -30,7 +25,7 @@
   - `regex` checks its `pattern` and `flags` together: a pattern `RegExp` rejects is an `invalid_params` issue instead of an error from `build()`. The `g` and `y` flags are ignored.
   - A rule used on a kind it doesn't support reports only `kind_mismatch`. Its params are no longer checked, because they can depend on the kind.
 
-  **Valibot 1.3 or later is required**
+  **Valibot 1.3 or later is required**, because `domain` and `isrc` first shipped in 1.3. Every other action exists in 1.3, so none was left out. The rule for Valibot's `nanoid` action is named `nanoid`, as in Valibot.
 
 ## 0.2.0
 
