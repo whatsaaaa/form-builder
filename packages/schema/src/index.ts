@@ -12,7 +12,12 @@ export type {
 } from './errors/definition-error'
 export { defaultFieldTypes } from './field-types/default-field-types'
 export { defineFieldType } from './field-types/define-field-type'
-export type { BuildContext, FieldTypeDef, FieldWithProps, KindOf } from './field-types/field-type-def'
+export type {
+  BuildContext,
+  FieldTypeDef,
+  FieldWithProps,
+  KindOf,
+} from './field-types/field-type-def'
 export { defaultKinds } from './kinds/default-kinds'
 export type { KindDef } from './kinds/kind-def'
 export { comparisonRules } from './rules/comparison-rules'

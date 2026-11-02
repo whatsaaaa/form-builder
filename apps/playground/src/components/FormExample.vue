@@ -44,7 +44,7 @@ const inputType = (field: JsonField) => {
 }
 
 const autocomplete: Record<string, string> = {
-  email: 'email',
+  email: 'auto-email',
   password: 'current-password',
 }
 
