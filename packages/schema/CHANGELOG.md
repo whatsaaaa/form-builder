@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-schema
 
+## 0.4.1
+
+### Patch Changes
+
+- [#9](https://github.com/whatsaaaa/form-builder/pull/9) [`c4439b9`](https://github.com/whatsaaaa/form-builder/commit/c4439b986e870c0d2e3f794ca3569234d22a1dbf) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `peerDependencies.valibot` is now `^1.3.0`. Since 0.3.0 the package has needed Valibot 1.3 for the `domain` and `isrc` rules, but the range still allowed 1.0.
+
 ## 0.4.0
 
 ### Minor Changes
