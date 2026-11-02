@@ -47,4 +47,12 @@ export type FieldWithProps<TProps extends AnyObjectSchema = AnyObjectSchema> = J
 export interface BuildContext {
   /** Where the field is in the definition, e.g. `['fields', 2]`. */
   readonly path: DefinitionPath
+  /**
+   * Checks and builds child fields with the same registries, and returns their object schema.
+   * Their issues land in the same `validate()` result. `path` is where the list is in the
+   * definition, e.g. `[...ctx.path, 'fields']`.
+   */
+  buildFields(fields: readonly JsonField[], path: DefinitionPath): AnyObjectSchema
+  /** Checks and builds one field for the items of a list. Its name isn't needed or used. */
+  buildField(field: JsonField, path: DefinitionPath): AnySchema
 }

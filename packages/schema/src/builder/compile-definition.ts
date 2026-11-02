@@ -1,9 +1,10 @@
 import * as v from 'valibot'
 import type { DefinitionIssue, DefinitionPath } from '../errors/definition-error'
 import type { BuildContext } from '../field-types/field-type-def'
+import type { AnySchema } from '../shared/valibot-types'
 import { buildFieldSchema, type Messages } from './build-field-schema'
 import type { Registry } from './registry'
-import { checkField, toIssues } from './validate-definition'
+import { type CheckedField, checkField, toIssues } from './validate-definition'
 
 export interface CompileResult {
   /** Every issue in the definition, in document order. */
@@ -46,6 +47,8 @@ export function compileDefinition(
 export interface Compiler {
   /** Checks and builds a list of fields. `path` is where the list is, e.g. `['fields']`. */
   fields(fields: readonly unknown[], path: DefinitionPath): FieldsSchema
+  /** Checks and builds the field of a list's items, which needs no name. */
+  field(field: unknown, path: DefinitionPath): AnySchema
 }
 
 /** Every field the compiler checks adds its issues to `issues`. */
@@ -54,19 +57,31 @@ export function createCompiler(
   messages: Messages,
   issues: DefinitionIssue[],
 ): Compiler {
-  const context = (path: DefinitionPath): BuildContext => ({ path })
+  // A field type builds its child fields through these, so it never imports the builder.
+  const context = (path: DefinitionPath): BuildContext => ({
+    path,
+    buildFields: fields,
+    buildField: field,
+  })
 
   function fields(list: readonly unknown[], path: DefinitionPath): FieldsSchema {
     const entries: v.ObjectEntries = {}
     const names = new Set<string>()
     list.forEach((raw, i) => {
       const checked = checkField(raw, [...path, i], registry, names, issues)
-      if (checked) {
-        entries[checked.name] = buildFieldSchema(checked, messages, context(checked.path))
-      }
+      if (checked?.name) entries[checked.name] = build(checked)
     })
     return v.object(entries)
   }
 
-  return { fields }
+  function field(raw: unknown, path: DefinitionPath): AnySchema {
+    const checked = checkField(raw, path, registry, undefined, issues)
+    // A field with issues gets no schema. build() throws before anything parses with it.
+    return checked ? build(checked) : v.never()
+  }
+
+  const build = (checked: CheckedField): AnySchema =>
+    buildFieldSchema(checked, messages, context(checked.path))
+
+  return { fields, field }
 }

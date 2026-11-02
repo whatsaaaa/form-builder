@@ -15,7 +15,8 @@ import { isReservedFieldKey, isReservedRuleKey } from '../shared/reserved-keys'
 import type { ValueKind } from '../shared/value-kind'
 
 export interface CheckedField {
-  name: string
+  /** Undefined for the field of a list's items, which has no name. */
+  name: string | undefined
   field: JsonField
   path: DefinitionPath
   type: FieldTypeDef
@@ -55,12 +56,15 @@ const noParams = v.object({})
 /**
  * Checks one field's shape, name, type, props and rules, and adds its issues to `issues`.
  * Returns the field ready to build, or undefined when it has issues or no value.
+ *
+ * `names` holds the names used so far at this level. It is undefined for the field of a list's
+ * items, which needs no name.
  */
 export function checkField(
   raw: unknown,
   path: DefinitionPath,
   registry: Registry,
-  names: Set<string>,
+  names: Set<string> | undefined,
   issues: DefinitionIssue[],
 ): CheckedField | undefined {
   const shape = v.safeParse(fieldShape, raw)
@@ -75,7 +79,9 @@ export function checkField(
   // Only a fixed kind can be 'none'. A kind() function that returns it throws in kindDef.
   const hasValue = type?.kind !== 'none'
 
-  if (!field.name) {
+  if (!names) {
+    // The field of a list's items has no name.
+  } else if (!field.name) {
     if (type && hasValue) {
       issues.push(issue('missing_name', [...path, 'name'], 'A field needs a name'))
     }
@@ -100,6 +106,10 @@ export function checkField(
         issues.push(issue('invalid_shape', [...path, key], message))
       }
     }
+    if (!names) {
+      const message = `A list's items need a value, and a "${field.type}" field has none`
+      issues.push(issue('invalid_shape', [...path, 'type'], message))
+    }
     return undefined
   }
 
@@ -116,7 +126,7 @@ export function checkField(
   const fieldRules = (shape.output.rules ?? []).flatMap(
     (rule, j) => checkRule(rule, kinds, [...path, 'rules', j], registry, issues) ?? [],
   )
-  if (issues.length > issueCount || !field.name || !withProps) return undefined
+  if (issues.length > issueCount || (names && !field.name) || !withProps) return undefined
 
   const overridden = new Set(fieldRules.map((rule) => rule.name))
   const defaultRules = checkDefaultRules(field.type, type, kinds, registry).filter(
