@@ -15,4 +15,23 @@ export const containerTypes = {
     props: v.object({ fields: v.array(childField) }),
     schema: (field, ctx) => ctx.buildFields(field.fields, [...ctx.path, 'fields']),
   }),
+  // A list. `of` is the field of a list of single values, such as tags; its name isn't used.
+  // `fields` makes a list of objects, such as order lines. Rules like minLength count the items.
+  array: defineFieldType({
+    kind: 'array',
+    container: true,
+    props: v.pipe(
+      v.object({ of: v.optional(childField), fields: v.optional(v.array(childField)) }),
+      v.check(
+        (props) => (props.of === undefined) !== (props.fields === undefined),
+        'Give exactly one of "of" and "fields"',
+      ),
+    ),
+    schema: (field, ctx) =>
+      v.array(
+        field.of
+          ? ctx.buildField(field.of, [...ctx.path, 'of'])
+          : ctx.buildFields(field.fields ?? [], [...ctx.path, 'fields']),
+      ),
+  }),
 } satisfies Record<string, FieldTypeDef>

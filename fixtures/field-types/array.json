@@ -1,0 +1,60 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "tags",
+      "type": "array",
+      "label": "Tags",
+      "default": ["new"],
+      "rules": [
+        {
+          "rule": "maxLength",
+          "value": 5,
+          "message": "At most 5 tags"
+        }
+      ],
+      "of": {
+        "type": "text",
+        "label": "Tag",
+        "required": true,
+        "rules": [
+          {
+            "rule": "trim"
+          }
+        ]
+      }
+    },
+    {
+      "name": "lines",
+      "type": "array",
+      "label": "Order lines",
+      "required": { "message": "Add at least one product" },
+      "fields": [
+        {
+          "name": "product",
+          "type": "text",
+          "label": "Product",
+          "required": true
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "label": "Quantity",
+          "default": 1,
+          "required": true,
+          "rules": [
+            {
+              "rule": "integer",
+              "message": "Whole numbers only"
+            },
+            {
+              "rule": "minValue",
+              "value": 1,
+              "message": "At least 1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
