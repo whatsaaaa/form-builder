@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "message",
+      "type": "textarea",
+      "label": "Message",
+      "description": "What can we help with?",
+      "rules": [
+        {
+          "rule": "maxLength",
+          "value": 500,
+          "message": "500 characters at most"
+        }
+      ]
+    }
+  ]
+}

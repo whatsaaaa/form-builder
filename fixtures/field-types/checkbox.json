@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "terms",
+      "type": "checkbox",
+      "label": "I accept the terms",
+      "required": {
+        "message": "Please accept the terms"
+      }
+    }
+  ]
+}

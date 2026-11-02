@@ -1,0 +1,14 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "type": "heading",
+      "text": "About you"
+    },
+    {
+      "type": "heading",
+      "text": "Contact details",
+      "level": 3
+    }
+  ]
+}

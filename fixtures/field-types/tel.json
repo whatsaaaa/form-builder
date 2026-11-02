@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "phone",
+      "type": "tel",
+      "label": "Phone",
+      "rules": [
+        {
+          "rule": "regex",
+          "pattern": "^\\+?[0-9 ()-]{6,20}$",
+          "message": "Digits, spaces and + only"
+        }
+      ]
+    }
+  ]
+}

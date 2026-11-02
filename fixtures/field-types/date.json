@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "birthday",
+      "type": "date",
+      "label": "Birthday",
+      "output": "date",
+      "rules": [
+        {
+          "rule": "maxValue",
+          "value": "2026-01-01",
+          "message": "Before 2026"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "email",
+      "type": "email",
+      "label": "Email",
+      "required": true,
+      "rules": [
+        {
+          "rule": "trim"
+        }
+      ]
+    }
+  ]
+}

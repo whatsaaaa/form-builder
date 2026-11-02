@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "appointment",
+      "type": "datetime",
+      "label": "Appointment",
+      "required": true,
+      "rules": [
+        {
+          "rule": "minValue",
+          "value": "2026-01-01T00:00",
+          "message": "From 2026 on"
+        }
+      ]
+    }
+  ]
+}

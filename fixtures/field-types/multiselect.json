@@ -1,0 +1,62 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "toppings",
+      "type": "multiselect",
+      "label": "Toppings",
+      "ui": {
+        "widget": "checkboxes"
+      },
+      "required": true,
+      "options": [
+        {
+          "value": "cheese",
+          "label": "Cheese"
+        },
+        {
+          "value": "ham",
+          "label": "Ham"
+        },
+        {
+          "value": "mushrooms",
+          "label": "Mushrooms"
+        }
+      ],
+      "rules": [
+        {
+          "rule": "minLength",
+          "value": 2,
+          "message": "Pick at least two"
+        }
+      ]
+    },
+    {
+      "name": "weekdays",
+      "type": "multiselect",
+      "label": "Weekdays",
+      "options": [
+        {
+          "value": 1,
+          "label": "Monday"
+        },
+        {
+          "value": 2,
+          "label": "Tuesday"
+        },
+        {
+          "value": 3,
+          "label": "Wednesday"
+        },
+        {
+          "value": 4,
+          "label": "Thursday"
+        },
+        {
+          "value": 5,
+          "label": "Friday"
+        }
+      ]
+    }
+  ]
+}

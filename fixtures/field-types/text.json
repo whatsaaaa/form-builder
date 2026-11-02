@@ -1,0 +1,22 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "fullName",
+      "type": "text",
+      "label": "Full name",
+      "placeholder": "Ana Petrović",
+      "required": true,
+      "rules": [
+        {
+          "rule": "trim"
+        },
+        {
+          "rule": "minLength",
+          "value": 2,
+          "message": "At least 2 characters"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "website",
+      "type": "url",
+      "label": "Website",
+      "placeholder": "https://"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "version": "1",
+  "fields": [
+    {
+      "name": "avatar",
+      "type": "file",
+      "label": "Avatar",
+      "accept": "image/png,image/jpeg",
+      "rules": [
+        {
+          "rule": "maxSize",
+          "value": 1048576,
+          "message": "1 MiB at most"
+        }
+      ]
+    },
+    {
+      "name": "attachments",
+      "type": "file",
+      "label": "Attachments",
+      "multiple": true,
+      "rules": [
+        {
+          "rule": "maxSize",
+          "value": 5242880,
+          "message": "5 MiB per file at most"
+        },
+        {
+          "rule": "maxLength",
+          "value": 3,
+          "message": "3 files at most"
+        }
+      ]
+    }
+  ]
+}
