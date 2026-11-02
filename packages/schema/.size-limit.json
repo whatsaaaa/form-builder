@@ -1,0 +1,14 @@
+[
+  {
+    "name": "createSchemaBuilder with every default rule",
+    "path": "dist/index.js",
+    "import": "{ createSchemaBuilder }",
+    "limit": "12 kB"
+  },
+  {
+    "name": "createSchemaBuilder with formatRules only",
+    "path": "dist/index.js",
+    "import": "{ createSchemaBuilder, formatRules }",
+    "limit": "12 kB"
+  }
+]
