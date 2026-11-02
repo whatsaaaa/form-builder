@@ -38,12 +38,6 @@ export interface FieldKinds {
   itemKind?: ValueKind
 }
 
-interface CheckResult {
-  issues: DefinitionIssue[]
-  fields: CheckedField[]
-}
-
-const formShape = v.object({ version: v.string(), fields: v.array(v.unknown()) })
 const fieldShape = v.looseObject({
   name: v.optional(v.string()),
   type: v.string(),
@@ -59,30 +53,10 @@ const ruleShape = v.looseObject({ rule: v.string(), message: v.optional(v.string
 const noParams = v.object({})
 
 /**
- * Checks a whole definition and collects every issue, in document order. Never throws.
+ * Checks one field's shape, name, type, props and rules, and adds its issues to `issues`.
+ * Returns the field ready to build, or undefined when it has issues or no value.
  */
-export function checkDefinition(json: unknown, registry: Registry): CheckResult {
-  const issues: DefinitionIssue[] = []
-  const fields: CheckedField[] = []
-
-  const form = v.safeParse(formShape, json)
-  if (!form.success) return { issues: toIssues('invalid_shape', [], form.issues), fields }
-
-  if (form.output.version !== '1') {
-    const message = `Unsupported version "${form.output.version}". This package reads version '1'.`
-    return { issues: [{ code: 'unsupported_version', path: ['version'], message }], fields }
-  }
-
-  const names = new Set<string>()
-  form.output.fields.forEach((raw, i) => {
-    const field = checkField(raw, ['fields', i], registry, names, issues)
-    if (field) fields.push(field)
-  })
-
-  return { issues, fields }
-}
-
-function checkField(
+export function checkField(
   raw: unknown,
   path: DefinitionPath,
   registry: Registry,
@@ -317,7 +291,7 @@ function issue(code: DefinitionIssueCode, path: DefinitionPath, message: string)
   return { code, path, message }
 }
 
-function toIssues(
+export function toIssues(
   code: DefinitionIssueCode,
   path: DefinitionPath,
   valibotIssues: readonly v.BaseIssue<unknown>[],

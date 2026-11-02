@@ -1,6 +1,7 @@
 import * as v from 'valibot'
 import type { JsonField } from '../definition/json-form-schema'
 import type { DefinitionPath } from '../errors/definition-error'
+import type { BuildContext } from '../field-types/field-type-def'
 import type { RuleStage } from '../rules/rule-def'
 import type { CheckedField } from './validate-definition'
 import { eachItem } from '../shared/each-item'
@@ -21,7 +22,11 @@ export interface Messages {
  * The schema runs in this order: empty check, base schema, normalize rules, required check,
  * then the type's default rules and the field's rules, and last the type's `finalize()`.
  */
-export function buildFieldSchema(checked: CheckedField, messages: Messages): AnySchema {
+export function buildFieldSchema(
+  checked: CheckedField,
+  messages: Messages,
+  ctx: BuildContext,
+): AnySchema {
   const { field, path, type, kind } = checked
   const required = !!field.required
   const requiredMessage = messages.resolve(
@@ -58,7 +63,7 @@ export function buildFieldSchema(checked: CheckedField, messages: Messages): Any
   const finalize = type.finalize?.(field)
   if (finalize) whole.validate.push(finalize)
 
-  const base = (type.schema as NonNullable<typeof type.schema>)(field, { path })
+  const base = (type.schema as NonNullable<typeof type.schema>)(field, ctx)
   // The type can replace the kind's required check, e.g. a yes/no radio accepts false.
   const requiredCheck = !required
     ? undefined
