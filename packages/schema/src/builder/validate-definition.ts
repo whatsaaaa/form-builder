@@ -11,7 +11,11 @@ import type { KindDef } from '../kinds/kind-def'
 import type { RuleDef } from '../rules/rule-def'
 import { paramsFor } from '../rules/rule-params'
 import { lookup, type Registry } from './registry'
-import { isReservedFieldKey, isReservedRuleKey } from '../shared/reserved-keys'
+import {
+  isReservedFieldKey,
+  isReservedFormRuleKey,
+  isReservedRuleKey,
+} from '../shared/reserved-keys'
 import type { ValueKind } from '../shared/value-kind'
 
 export interface CheckedField {
@@ -285,6 +289,14 @@ export function checkRegistry(registry: Registry): void {
         if (isReservedRuleKey(key)) {
           throw new TypeError(`Rule "${name}": params can't use the reserved key "${key}"`)
         }
+      }
+    }
+  }
+
+  for (const [name, rule] of Object.entries(registry.formRules)) {
+    for (const key of Object.keys(rule.params?.entries ?? {})) {
+      if (isReservedFormRuleKey(key)) {
+        throw new TypeError(`Form rule "${name}": params can't use the reserved key "${key}"`)
       }
     }
   }

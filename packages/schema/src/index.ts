@@ -39,6 +39,10 @@ export { normalizeRules } from './rules/normalize-rules'
 export { numberRules } from './rules/number-rules'
 export type { RuleCategory, RuleDef, RuleMeta, RuleStage } from './rules/rule-def'
 export { textUnitRules } from './rules/text-unit-rules'
-export { RESERVED_FIELD_KEYS, RESERVED_RULE_KEYS } from './shared/reserved-keys'
+export {
+  RESERVED_FIELD_KEYS,
+  RESERVED_FORM_RULE_KEYS,
+  RESERVED_RULE_KEYS,
+} from './shared/reserved-keys'
 export type { AnyAction, AnyObjectSchema, AnySchema } from './shared/valibot-types'
 export type { ValueKind } from './shared/value-kind'
