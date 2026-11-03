@@ -16,6 +16,7 @@ import {
   isReservedFormRuleKey,
   isReservedRuleKey,
 } from '../shared/reserved-keys'
+import type { AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 
 export interface CheckedField {
@@ -259,26 +260,48 @@ export function checkRule(
     return undefined
   }
 
+  const params = checkParams(
+    rule,
+    paramsFor(def, each ? (itemKind as ValueKind) : kind),
+    isReservedRuleKey,
+    `Rule "${rule.rule}"`,
+    path,
+    issues,
+  )
+  if (!params) return undefined
+
+  return { name: rule.rule, def, params, message: rule.message, each }
+}
+
+/**
+ * Checks the params of a rule or a form rule. Every key that isn't reserved must be one of
+ * `params`, and together they must pass it. Returns the parsed params, or undefined when they
+ * have issues. `at` names the rule in messages, e.g. `Rule "minLength"`.
+ */
+export function checkParams(
+  raw: Record<string, unknown>,
+  params: AnyObjectSchema | undefined,
+  isReserved: (key: string) => boolean,
+  at: string,
+  path: DefinitionPath,
+  issues: DefinitionIssue[],
+): Record<string, unknown> | undefined {
   const issueCount = issues.length
-  const params = paramsFor(def, each ? (itemKind as ValueKind) : kind)
   const paramKeys = Object.keys(params?.entries ?? {})
   const input: Record<string, unknown> = {}
-  for (const key of Object.keys(rule)) {
-    if (isReservedRuleKey(key)) continue
+  for (const key of Object.keys(raw)) {
+    if (isReserved(key)) continue
     if (paramKeys.includes(key)) {
-      input[key] = rule[key]
+      input[key] = raw[key]
     } else {
-      issues.push(
-        issue('unknown_param', [...path, key], `Rule "${rule.rule}" has no param "${key}"`),
-      )
+      issues.push(issue('unknown_param', [...path, key], `${at} has no param "${key}"`))
     }
   }
 
   const parsed = v.safeParse(params ?? noParams, input)
   if (!parsed.success) issues.push(...toIssues('invalid_params', path, parsed.issues))
   if (!parsed.success || issues.length > issueCount) return undefined
-
-  return { name: rule.rule, def, params: parsed.output, message: rule.message, each }
+  return parsed.output
 }
 
 export function checkRegistry(registry: Registry): void {
