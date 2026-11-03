@@ -354,7 +354,11 @@ export function checkRegistry(registry: Registry): void {
   }
 }
 
-function issue(code: DefinitionIssueCode, path: DefinitionPath, message: string): DefinitionIssue {
+export function issue(
+  code: DefinitionIssueCode,
+  path: DefinitionPath,
+  message: string,
+): DefinitionIssue {
   return { code, path, message }
 }
 

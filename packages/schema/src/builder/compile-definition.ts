@@ -3,6 +3,7 @@ import type { DefinitionIssue, DefinitionPath } from '../errors/definition-error
 import type { BuildContext } from '../field-types/field-type-def'
 import type { AnySchema } from '../shared/valibot-types'
 import { buildFieldSchema, type Messages } from './build-field-schema'
+import { checkFormRules } from './check-form-rules'
 import { lookup, type Registry } from './registry'
 import { type CheckedField, checkField, toIssues } from './validate-definition'
 
@@ -16,7 +17,11 @@ export interface CompileResult {
 /** The schema of a list of fields: an object with a key for each field that has a value. */
 export type FieldsSchema = v.ObjectSchema<v.ObjectEntries, undefined>
 
-const formShape = v.object({ version: v.string(), fields: v.array(v.unknown()) })
+const formShape = v.object({
+  version: v.string(),
+  fields: v.array(v.unknown()),
+  formRules: v.optional(v.array(v.unknown())),
+})
 
 /**
  * Checks a definition and builds its schema in the same pass, so `validate()` and `build()`
@@ -41,7 +46,9 @@ export function compileDefinition(
   }
 
   const compiler = createCompiler(registry, messages, issues)
-  return { issues, schema: compiler.fields(form.output.fields, ['fields']) }
+  const schema = compiler.fields(form.output.fields, ['fields'])
+  checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
+  return { issues, schema }
 }
 
 export interface Compiler {
