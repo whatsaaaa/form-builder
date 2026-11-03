@@ -129,7 +129,7 @@ const { build } = createSchemaBuilder({
 })
 ```
 
-The built-in `email` and `url` types use the `email` and `url` rules, so keep `formatRules` (or replace those types), or `createSchemaBuilder` throws a `TypeError`.
+The built-in `email` and `url` types use the `email` and `url` rules, so keep `formatRules` (or replace those types), or `createSchemaBuilder` throws a `TypeError`. `includeDefaultRules: false` leaves out the built-in form rules too; add them back with `formRules: defaultFormRules`.
 
 ### Listing rules
 
@@ -139,6 +139,43 @@ Every built-in rule has `meta` with a `label`, a `category` and sometimes a `des
 const { rulesForKind } = createSchemaBuilder()
 rulesForKind('file').map(([name, def]) => def.meta?.label) // ['Minimum size', …]
 ```
+
+## Form rules
+
+A form rule checks a field against other fields, such as a repeated password or a date range. Form rules go in `formRules`, next to `fields`, and each one names the `field` its error shows on:
+
+```json
+{
+  "version": "1",
+  "fields": [
+    { "name": "password", "type": "password", "required": true },
+    { "name": "password2", "type": "password", "required": true },
+    { "name": "start", "type": "date" },
+    { "name": "end", "type": "date" }
+  ],
+  "formRules": [
+    { "rule": "sameAs", "field": "password2", "other": "password", "message": "Passwords differ" },
+    {
+      "rule": "compare",
+      "field": "end",
+      "op": "gt",
+      "other": "start",
+      "message": "After the start"
+    }
+  ]
+}
+```
+
+| Rule            | Params                                     | Kinds                         | Passes when       |
+| --------------- | ------------------------------------------ | ----------------------------- | ----------------- |
+| `sameAs`        | `other`                                    | string, number, boolean, date | `field === other` |
+| `differentFrom` | `other`                                    | string, number, boolean, date | `field !== other` |
+| `compare`       | `op` (`lt`, `lte`, `gt` or `gte`), `other` | number, date                  | `field op other`  |
+
+- **Paths** name fields by their value: `'password2'`, `'address.zip'` for a field in a group, and `'lines.*.qty'` for a field in the items of an array. A rule on a path with `*` runs once per item, and its error shows on that item's field. A path it reads with `*` means the same item, so `{ "field": "lines.*.qty", "op": "lte", "other": "lines.*.stock" }` compares each line with itself.
+- **A form rule runs last**, after every field's own rules, and only when the fields it reads have no issues. So a password that is too short never also shows "Passwords differ". It never runs on an empty value either: make the fields required when they must be filled.
+- **`message` is required.** It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
+- The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` is compared by its time, so compare it with another date that has `output: 'date'`.
 
 ## Checking definitions
 
@@ -151,16 +188,17 @@ if (!result.success) {
 }
 ```
 
-`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params` and `kind_mismatch`. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
+`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params`, `kind_mismatch` and `unknown_field`. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
 
 - **Names** are one key of the value, so a name with `.`, `[` or `]` is `invalid_name`.
 - **Defaults** must pass the field's own schema, rules included, or they are `invalid_default`. An empty default, like `''`, counts as none.
+- **Form rules** report on `['formRules', 0]` and below. A `field` path that names no field with a value is `unknown_field` on `['formRules', 0, 'field']`, and a path the rule reads gets it on `['formRules', 0]`. When a field the rule reads has issues of its own, the rule adds none.
 
 Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, which is never checked.
 
 ## Extending
 
-`createSchemaBuilder({ kinds, fieldTypes, rules })` merges your entries over the defaults by key. The merged registries are returned as `kinds`, `fieldTypes` and `rules`.
+`createSchemaBuilder({ kinds, fieldTypes, rules, formRules })` merges your entries over the defaults by key. The merged registries are returned as `kinds`, `fieldTypes`, `rules` and `formRules`.
 
 ```ts
 const tags = defineFieldType({
@@ -197,6 +235,22 @@ const { build } = createSchemaBuilder({ fieldTypes: { tags }, rules: { even } })
   ```ts
   const schema = myType.schema?.(field, createBuildContext({ path: ['fields', 0] }))
   ```
+
+- A **form rule** lists the paths it reads besides `field`, and checks their values with a plain function. The builder checks that the fields exist and have one of `kinds`, and runs `check` only when none of them has an issue or is empty:
+
+  ```ts
+  const sameZip = defineFormRule({
+    params: v.object({ others: v.array(v.string()) }),
+    reads: (params) => params.others,
+    kinds: ['string'],
+    check: (values) => new Set(values).size === 1, // the value of `field`, then the others
+    meta: { label: 'Same ZIP', category: 'comparison' },
+  })
+
+  const { build } = createSchemaBuilder({ formRules: { sameZip } })
+  ```
+
+  `sameKind: true` requires every field it reads to have the same kind. `rule`, `field` and `message` are reserved (`RESERVED_FORM_RULE_KEYS`), so params can't use them.
 
 - Mistakes in the registry, such as an unknown kind or a reserved props key, throw a `TypeError` from `createSchemaBuilder`.
 
