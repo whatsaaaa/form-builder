@@ -4,6 +4,7 @@ import type { BuildContext } from '../field-types/field-type-def'
 import type { AnySchema } from '../shared/valibot-types'
 import { buildFieldSchema, type Messages } from './build-field-schema'
 import { checkFormRules } from './check-form-rules'
+import { formRuleAction } from './form-rule-action'
 import { lookup, type Registry } from './registry'
 import { type CheckedField, checkField, toIssues } from './validate-definition'
 
@@ -47,8 +48,16 @@ export function compileDefinition(
 
   const compiler = createCompiler(registry, messages, issues)
   const schema = compiler.fields(form.output.fields, ['fields'])
-  checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
-  return { issues, schema }
+  const rules = checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
+  if (issues.length || !rules.length) return { issues, schema }
+
+  // Form rules run after every field's schema, on the whole value. They only check, so the schema
+  // keeps the object's type, entries and output, and Formisch still keeps a field for each entry.
+  const withRules = rules.reduce<AnySchema>((acc, rule) => {
+    const ctx = { field: rule.field, rule: rule.name, path: rule.path }
+    return v.pipe(acc, formRuleAction(rule, messages.resolve(rule.message, ctx)))
+  }, schema)
+  return { issues, schema: withRules as FieldsSchema }
 }
 
 export interface Compiler {
