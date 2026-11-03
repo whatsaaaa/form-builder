@@ -2,6 +2,8 @@ import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import {
   createSchemaBuilder,
+  defaultFormRules,
+  defineFormRule,
   defineRule,
   fileRules,
   formatRules,
@@ -99,4 +101,40 @@ describe('rule registry', () => {
     expect(v.parse(schema, { code: 'ABC' })).toEqual({ code: 'abc' })
     expect(messages(schema, { code: '' })).toEqual(['Required'])
   })
+
+  it('registers the built-in form rules and merges your own over them', () => {
+    const before = defineFormRule({ reads: () => [], check: () => true })
+    const sameAs = defineFormRule({ reads: () => [], check: () => false })
+
+    const { formRules } = createSchemaBuilder({ formRules: { before, sameAs } })
+
+    expect(Object.keys(formRules)).toEqual([...Object.keys(defaultFormRules), 'before'])
+    expect(formRules.sameAs).toBe(sameAs)
+  })
+
+  it('registers only your own form rules without the defaults', () => {
+    const before = defineFormRule({ reads: () => [], check: () => true })
+
+    // The built-in email and url types need formatRules.
+    const { formRules } = createSchemaBuilder({
+      includeDefaultRules: false,
+      rules: formatRules,
+      formRules: { before },
+    })
+
+    expect(Object.keys(formRules)).toEqual(['before'])
+  })
+
+  it.each(['rule', 'field', 'message'])(
+    'throws for the reserved key %s in form rule params',
+    (key) => {
+      const bad = defineFormRule({
+        params: v.object({ [key]: v.string() }),
+        reads: () => [],
+        check: () => true,
+      })
+
+      expect(() => createSchemaBuilder({ formRules: { bad } })).toThrow(TypeError)
+    },
+  )
 })

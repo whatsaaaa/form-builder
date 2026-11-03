@@ -1,0 +1,243 @@
+import * as v from 'valibot'
+import { describe, expect, it } from 'vitest'
+import {
+  createSchemaBuilder,
+  defineFormRule,
+  type JsonField,
+  type JsonForm,
+  type JsonFormRule,
+} from '@whatsaaaa/form-builder-schema'
+
+const { build } = createSchemaBuilder()
+
+const formWith = (fields: JsonField[], ...formRules: JsonFormRule[]): JsonForm => ({
+  version: '1',
+  fields,
+  formRules,
+})
+
+/** Each issue's message and its path, as Formisch reads it. */
+const issuesOf = (schema: v.GenericSchema, input: unknown) =>
+  v.safeParse(schema, input).issues?.map((issue) => ({
+    path: issue.path?.map((item) => item.key) ?? [],
+    message: issue.message,
+  })) ?? []
+
+const passwords = build(
+  formWith(
+    [
+      {
+        name: 'password',
+        type: 'password',
+        required: true,
+        rules: [{ rule: 'minLength', value: 8 }],
+      },
+      { name: 'password2', type: 'password', required: true },
+    ],
+    { rule: 'sameAs', field: 'password2', other: 'password', message: 'Passwords differ' },
+  ),
+)
+
+describe('running form rules', () => {
+  it('puts the issue on its field only', () => {
+    expect(issuesOf(passwords, { password: 'secret123', password2: 'secret124' })).toEqual([
+      { path: ['password2'], message: 'Passwords differ' },
+    ])
+    expect(v.parse(passwords, { password: 'secret123', password2: 'secret123' })).toEqual({
+      password: 'secret123',
+      password2: 'secret123',
+    })
+  })
+
+  it('runs only when the fields it reads are valid', () => {
+    expect(issuesOf(passwords, { password: 'short', password2: 'other' })).toEqual([
+      { path: ['password'], message: 'Invalid length: Expected >=8 but received 5' },
+    ])
+    expect(issuesOf(passwords, { password: 'secret123', password2: '' })).toEqual([
+      { path: ['password2'], message: 'Required' },
+    ])
+  })
+
+  it('never runs on an empty value', () => {
+    const schema = build(
+      formWith(
+        [
+          { name: 'start', type: 'date' },
+          { name: 'end', type: 'date' },
+        ],
+        { rule: 'compare', field: 'end', op: 'gt', other: 'start', message: 'After the start' },
+      ),
+    )
+
+    expect(issuesOf(schema, { start: '2026-03-01', end: '' })).toEqual([])
+    expect(issuesOf(schema, { start: '', end: '2026-03-01' })).toEqual([])
+  })
+
+  it.each([
+    ['2026-03-02', []],
+    ['2026-03-01', [{ path: ['end'], message: 'After the start' }]],
+    ['2026-02-28', [{ path: ['end'], message: 'After the start' }]],
+  ])('compares ISO dates: end %s', (end, issues) => {
+    const schema = build(
+      formWith(
+        [
+          { name: 'start', type: 'date', required: true },
+          { name: 'end', type: 'date', required: true },
+        ],
+        { rule: 'compare', field: 'end', op: 'gt', other: 'start', message: 'After the start' },
+      ),
+    )
+
+    expect(issuesOf(schema, { start: '2026-03-01', end })).toEqual(issues)
+  })
+
+  it('compares dates with output: date', () => {
+    const schema = build(
+      formWith(
+        [
+          { name: 'start', type: 'date', output: 'date' },
+          { name: 'end', type: 'date', output: 'date' },
+        ],
+        { rule: 'sameAs', field: 'end', other: 'start', message: 'Same day' },
+      ),
+    )
+
+    expect(issuesOf(schema, { start: '2026-03-01', end: '2026-03-01' })).toEqual([])
+    expect(issuesOf(schema, { start: '2026-03-01', end: '2026-03-02' })).toEqual([
+      { path: ['end'], message: 'Same day' },
+    ])
+  })
+
+  it('runs your own rule on a nested path', () => {
+    const sameCountry = defineFormRule({
+      params: v.object({ others: v.array(v.string()) }),
+      reads: (params) => params.others,
+      check: (values) => new Set(values).size === 1,
+    })
+    const { build } = createSchemaBuilder({ formRules: { sameCountry } })
+    const country: JsonField = { name: 'country', type: 'text' }
+    const schema = build(
+      formWith(
+        [
+          { name: 'shipping', type: 'group', fields: [country] },
+          { name: 'billing', type: 'group', fields: [country] },
+        ],
+        {
+          rule: 'sameCountry',
+          field: 'billing.country',
+          others: ['shipping.country'],
+          message: 'We ship to your billing country only',
+        },
+      ),
+    )
+
+    const input = (a: string, b: string) => ({ shipping: { country: a }, billing: { country: b } })
+    expect(issuesOf(schema, input('RS', 'RS'))).toEqual([])
+    expect(issuesOf(schema, input('RS', 'HR'))).toEqual([
+      { path: ['billing', 'country'], message: 'We ship to your billing country only' },
+    ])
+  })
+
+  describe('in the items of a list', () => {
+    const lines: JsonField = {
+      name: 'lines',
+      type: 'array',
+      fields: [
+        { name: 'qty', type: 'number', required: true },
+        { name: 'stock', type: 'number', required: true },
+      ],
+    }
+    const atMost = (other: string): JsonFormRule => ({
+      rule: 'compare',
+      field: 'lines.*.qty',
+      op: 'lte',
+      other,
+      message: 'Not enough in stock',
+    })
+    const line = (qty: number, stock: number) => ({ qty, stock })
+
+    it('runs once per item and reports on its index', () => {
+      const schema = build(formWith([lines], atMost('lines.*.stock')))
+
+      expect(issuesOf(schema, { lines: [line(5, 3), line(1, 3), line(9, 3), line(3, 3)] })).toEqual(
+        [
+          { path: ['lines', 0, 'qty'], message: 'Not enough in stock' },
+          { path: ['lines', 2, 'qty'], message: 'Not enough in stock' },
+        ],
+      )
+      expect(issuesOf(schema, { lines: [] })).toEqual([])
+    })
+
+    it('skips an item whose fields have issues', () => {
+      const schema = build(formWith([lines], atMost('lines.*.stock')))
+
+      expect(issuesOf(schema, { lines: [line(5, 3), { qty: 9, stock: '' }] })).toEqual([
+        { path: ['lines', 1, 'stock'], message: 'Required' },
+        { path: ['lines', 0, 'qty'], message: 'Not enough in stock' },
+      ])
+    })
+
+    it('reads a field outside the list for every item', () => {
+      const schema = build(formWith([lines, { name: 'max', type: 'number' }], atMost('max')))
+
+      expect(issuesOf(schema, { lines: [line(2, 0), line(7, 0)], max: 5 })).toEqual([
+        { path: ['lines', 1, 'qty'], message: 'Not enough in stock' },
+      ])
+    })
+
+    it('runs in lists inside lists', () => {
+      const schema = build(
+        formWith([{ name: 'orders', type: 'array', fields: [lines] }], {
+          ...atMost('orders.*.lines.*.stock'),
+          field: 'orders.*.lines.*.qty',
+        }),
+      )
+
+      const orders = [{ lines: [line(1, 1)] }, { lines: [line(1, 1), line(2, 1)] }]
+      expect(issuesOf(schema, { orders })).toEqual([
+        { path: ['orders', 1, 'lines', 1, 'qty'], message: 'Not enough in stock' },
+      ])
+    })
+
+    it('runs on the items of a list of single values', () => {
+      const schema = build(
+        formWith(
+          [
+            { name: 'tags', type: 'array', of: { type: 'text' } },
+            { name: 'banned', type: 'text' },
+          ],
+          { rule: 'differentFrom', field: 'tags.*', other: 'banned', message: 'Not allowed' },
+        ),
+      )
+
+      expect(issuesOf(schema, { tags: ['a', 'b', 'a'], banned: 'a' })).toEqual([
+        { path: ['tags', 0], message: 'Not allowed' },
+        { path: ['tags', 2], message: 'Not allowed' },
+      ])
+    })
+  })
+
+  it('resolves its message like every other message', () => {
+    const { build } = createSchemaBuilder({
+      resolveMessage: (key, ctx) => `${key}|${ctx.rule}|${ctx.field.name}|${ctx.path.join('.')}`,
+    })
+    const schema = build(
+      formWith(
+        [
+          { name: 'a', type: 'text' },
+          { name: 'b', type: 'text' },
+        ],
+        { rule: 'sameAs', field: 'b', other: 'a', message: 'errors.differ' },
+      ),
+    )
+
+    expect(issuesOf(schema, { a: 'x', b: 'y' })).toEqual([
+      { path: ['b'], message: 'errors.differ|sameAs|b|formRules.0' },
+    ])
+  })
+
+  it('keeps the object schema that Formisch reads', () => {
+    expect(passwords.type).toBe('object')
+    expect(Object.keys(passwords.entries)).toEqual(['password', 'password2'])
+  })
+})

@@ -18,6 +18,13 @@ const definition: JsonForm = {
       ],
     },
     {
+      name: 'password',
+      type: 'password',
+      required: true,
+      rules: [{ rule: 'minLength', value: 10, message: 'At least 10 characters' }],
+    },
+    { name: 'confirmPassword', type: 'password', label: 'Repeat the password', required: true },
+    {
       name: 'website',
       type: 'text',
       rules: [{ rule: 'trim' }, { rule: 'url', message: 'Start with https://' }],
@@ -45,6 +52,15 @@ const definition: JsonForm = {
         { rule: 'toMaxValue', value: 120 },
       ],
     },
+  ],
+  formRules: [
+    {
+      rule: 'differentFrom',
+      field: 'password',
+      other: 'username',
+      message: "Don't use your username as the password",
+    },
+    { rule: 'sameAs', field: 'confirmPassword', other: 'password', message: 'Passwords differ' },
   ],
 }
 </script>

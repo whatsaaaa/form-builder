@@ -1,6 +1,8 @@
 export interface JsonForm {
   version: '1'
   fields: readonly JsonField[]
+  /** Rules that check a field against other fields. They run after every field's own rules. */
+  formRules?: readonly JsonFormRule[]
 }
 
 export interface JsonField {
@@ -21,5 +23,13 @@ export interface JsonField {
 export interface JsonRule {
   rule: string
   message?: string
+  [param: string]: unknown
+}
+
+export interface JsonFormRule {
+  rule: string
+  /** Where the error shows, as a dot path: `'password2'`, `'address.zip'` or `'lines.*.qty'`. */
+  field: string
+  message: string
   [param: string]: unknown
 }

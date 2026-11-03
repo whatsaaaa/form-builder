@@ -1,5 +1,6 @@
 import type { KindDef } from '../kinds/kind-def'
 import type { FieldTypeDef } from '../field-types/field-type-def'
+import type { FormRuleDef } from '../rules/form-rule-def'
 import type { RuleDef } from '../rules/rule-def'
 import type { MessageContext, Messages } from './build-field-schema'
 import { compileDefinition } from './compile-definition'
@@ -13,6 +14,8 @@ export interface SchemaBuilderOptions {
   kinds?: Record<string, KindDef>
   fieldTypes?: Record<string, FieldTypeDef>
   rules?: Record<string, RuleDef>
+  formRules?: Record<string, FormRuleDef>
+  /** With false, only your own rules and form rules are registered. Defaults to true. */
   includeDefaultRules?: boolean
   messages?: { required?: string }
   /**
@@ -57,5 +60,6 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}) {
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,
     rules: registry.rules,
+    formRules: registry.formRules,
   }
 }

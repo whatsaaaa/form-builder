@@ -3,7 +3,9 @@ import type { DefinitionIssue, DefinitionPath } from '../errors/definition-error
 import type { BuildContext } from '../field-types/field-type-def'
 import type { AnySchema } from '../shared/valibot-types'
 import { buildFieldSchema, type Messages } from './build-field-schema'
-import type { Registry } from './registry'
+import { checkFormRules } from './check-form-rules'
+import { formRuleAction } from './form-rule-action'
+import { lookup, type Registry } from './registry'
 import { type CheckedField, checkField, toIssues } from './validate-definition'
 
 export interface CompileResult {
@@ -16,7 +18,11 @@ export interface CompileResult {
 /** The schema of a list of fields: an object with a key for each field that has a value. */
 export type FieldsSchema = v.ObjectSchema<v.ObjectEntries, undefined>
 
-const formShape = v.object({ version: v.string(), fields: v.array(v.unknown()) })
+const formShape = v.object({
+  version: v.string(),
+  fields: v.array(v.unknown()),
+  formRules: v.optional(v.array(v.unknown())),
+})
 
 /**
  * Checks a definition and builds its schema in the same pass, so `validate()` and `build()`
@@ -41,7 +47,17 @@ export function compileDefinition(
   }
 
   const compiler = createCompiler(registry, messages, issues)
-  return { issues, schema: compiler.fields(form.output.fields, ['fields']) }
+  const schema = compiler.fields(form.output.fields, ['fields'])
+  const rules = checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
+  if (issues.length || !rules.length) return { issues, schema }
+
+  // Form rules run after every field's schema, on the whole value. They only check, so the schema
+  // keeps the object's type, entries and output, and Formisch still keeps a field for each entry.
+  const withRules = rules.reduce<AnySchema>((acc, rule) => {
+    const ctx = { field: rule.field, rule: rule.name, path: rule.path }
+    return v.pipe(acc, formRuleAction(rule, messages.resolve(rule.message, ctx)))
+  }, schema)
+  return { issues, schema: withRules as FieldsSchema }
 }
 
 export interface Compiler {
@@ -49,6 +65,12 @@ export interface Compiler {
   fields(fields: readonly unknown[], path: DefinitionPath): FieldsSchema
   /** Checks and builds the field of a list's items, which needs no name. */
   field(field: unknown, path: DefinitionPath): AnySchema
+  /**
+   * Every field with a value that the compiler has seen, by where its value is, as a dot path:
+   * `'address.city'`, or `'lines.*.quantity'` for the fields of a list's items. A field with
+   * issues is null.
+   */
+  readonly fieldsByPath: ReadonlyMap<string, CheckedField | null>
 }
 
 /** Every field the compiler checks adds its issues to `issues`. */
@@ -64,30 +86,69 @@ export function createCompiler(
     buildField: field,
   })
 
+  const fieldsByPath = new Map<string, CheckedField | null>()
+  // Where the values of the child fields go, for each container whose schema() is running.
+  const parents: DataPath[] = []
+  const parentPath = (): DataPath => parents.at(-1) ?? []
+
   function fields(list: readonly unknown[], path: DefinitionPath): FieldsSchema {
     const entries: v.ObjectEntries = {}
     const names = new Set<string>()
     list.forEach((raw, i) => {
       const checked = checkField(raw, [...path, i], registry, names, issues)
-      if (checked?.name) entries[checked.name] = build(checked)
+      const name = checked ? checked.name : nameOf(raw)
+      if (name === undefined) return
+      const dataPath = [...parentPath(), name]
+      remember(raw, checked, dataPath)
+      if (checked) entries[name] = build(checked, dataPath)
     })
     return v.object(entries)
   }
 
   function field(raw: unknown, path: DefinitionPath): AnySchema {
     const checked = checkField(raw, path, registry, undefined, issues)
+    // The field of a list's items has no name: its value is the item itself.
+    const dataPath = parentPath()
+    remember(raw, checked, dataPath)
     // A field with issues gets no schema. build() throws before anything parses with it.
-    return checked ? build(checked) : v.never()
+    return checked ? build(checked, dataPath) : v.never()
   }
 
-  function build(checked: CheckedField): AnySchema {
-    const schema = buildFieldSchema(checked, messages, context(checked.path))
-    checkDefault(checked, schema, issues)
-    return schema
+  function build(checked: CheckedField, dataPath: DataPath): AnySchema {
+    // The fields of a list's items have no fixed index, so their paths have '*' in its place.
+    parents.push(checked.valueKind === 'array' ? [...dataPath, '*'] : dataPath)
+    try {
+      const schema = buildFieldSchema(checked, messages, context(checked.path))
+      checkDefault(checked, schema, issues)
+      return schema
+    } finally {
+      parents.pop()
+    }
   }
 
-  return { fields, field }
+  /** The first field at a path wins, as with duplicate names. Display elements are left out. */
+  function remember(raw: unknown, checked: CheckedField | undefined, dataPath: DataPath): void {
+    const key = dataPath.join('.')
+    if (fieldsByPath.has(key) || (!checked && !hasValue(raw, registry))) return
+    fieldsByPath.set(key, checked ?? null)
+  }
+
+  return { fields, field, fieldsByPath }
 }
+
+type DataPath = readonly string[]
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const nameOf = (raw: unknown) =>
+  isRecord(raw) && typeof raw.name === 'string' ? raw.name : undefined
+
+/** An unknown type counts as one with a value, so a form rule that reads the field is fine. */
+const hasValue = (raw: unknown, registry: Registry) =>
+  isRecord(raw) &&
+  typeof raw.type === 'string' &&
+  lookup(registry.fieldTypes, raw.type)?.kind !== 'none'
 
 /** A default must be a value the field accepts. An empty one is the same as none. */
 function checkDefault(

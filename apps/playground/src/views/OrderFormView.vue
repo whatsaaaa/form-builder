@@ -23,6 +23,35 @@ const definition: JsonForm = {
         { rule: 'maxValue', value: 100, message: 'Cannot exceed 100' },
       ],
     },
+    { name: 'deliverFrom', type: 'date', label: 'Deliver from' },
+    { name: 'deliverBy', type: 'date', label: 'Deliver by' },
+    {
+      name: 'lines',
+      type: 'array',
+      label: 'Order lines',
+      rules: [{ rule: 'minLength', value: 1, message: 'Add at least one line' }],
+      fields: [
+        { name: 'product', type: 'text', required: true },
+        { name: 'quantity', type: 'number', required: true, rules: [{ rule: 'integer' }] },
+        { name: 'giftWrapped', type: 'number', label: 'How many gift-wrapped' },
+      ],
+    },
+  ],
+  formRules: [
+    {
+      rule: 'compare',
+      field: 'deliverBy',
+      op: 'gte',
+      other: 'deliverFrom',
+      message: "Can't be before the first day",
+    },
+    {
+      rule: 'compare',
+      field: 'lines.*.giftWrapped',
+      op: 'lte',
+      other: 'lines.*.quantity',
+      message: "Can't wrap more than you order",
+    },
   ],
 }
 </script>
