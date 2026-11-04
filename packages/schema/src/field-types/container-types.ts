@@ -1,10 +1,7 @@
 import * as v from 'valibot'
-import type { JsonField } from '../definition/json-form-schema'
+import { childField, itemField } from './child-fields'
 import { defineFieldType } from './define-field-type'
 import type { FieldTypeDef } from './field-type-def'
-
-// The builder checks child fields itself, at their own paths, so the props take any value here.
-const childField = v.custom<JsonField>(() => true)
 
 /** Types whose value holds other fields. Display elements can go inside them too. */
 export const containerTypes = {
@@ -22,7 +19,7 @@ export const containerTypes = {
     kind: 'array',
     container: true,
     props: v.pipe(
-      v.object({ of: v.optional(childField), fields: v.optional(v.array(childField)) }),
+      v.object({ of: v.optional(itemField), fields: v.optional(v.array(childField)) }),
       v.check(
         (props) => (props.of === undefined) !== (props.fields === undefined),
         'Give exactly one of "of" and "fields"',
