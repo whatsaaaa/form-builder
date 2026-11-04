@@ -7,7 +7,7 @@ import FormExample from '../components/FormExample.vue'
 const { defineForm } = createSchemaBuilder()
 
 const definition = defineForm({
-  version: "1",
+  version: '1',
   fields: [
     {
       name: 'email',
