@@ -8,7 +8,7 @@ Build [Valibot](https://valibot.dev) schemas from JSON form definitions, ready t
 pnpm add @whatsaaaa/form-builder-schema valibot
 ```
 
-Valibot 1.3 or later is required.
+Valibot 1.3 or later is required. To make a JSON Schema for your own registries, also add `@valibot/to-json-schema` 1.6 or later (see [JSON Schema](#json-schema)).
 
 ## Usage
 
@@ -33,6 +33,8 @@ const schema = build(json) // v.ObjectSchema, ready for Formisch or v.parse
 ```
 
 Empty optional fields output `undefined`. Rules never run on empty values, and a required empty field reports only the required message.
+
+Each field's schema carries its `label` as `v.title()` and its `description` as `v.description()`, both through `resolveMessage`. So `v.getTitle(schema.entries.email)` is `'Email'`, for renderers and other tools that only have the schema.
 
 ## Field types
 
@@ -194,7 +196,65 @@ if (!result.success) {
 - **Defaults** must pass the field's own schema, rules included, or they are `invalid_default`. An empty default, like `''`, counts as none.
 - **Form rules** report on `['formRules', 0]` and below. A `field` path that names no field with a value is `unknown_field` on `['formRules', 0, 'field']`, and a path the rule reads gets it on `['formRules', 0]`. When a field the rule reads has issues of its own, the rule adds none.
 
-Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, which is never checked.
+Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, which is never checked. `$schema` at the top of a definition is allowed and never read.
+
+## Writing definitions in TypeScript
+
+`defineForm` types a definition against the builder's registries, your own types and rules included. It returns the definition unchanged:
+
+```ts
+const money = defineFieldType({
+  kind: 'number',
+  props: v.object({ currency: v.picklist(['EUR', 'RSD']) }),
+  schema: () => v.number(),
+})
+
+const { defineForm, build } = createSchemaBuilder({ fieldTypes: { money } })
+
+const form = defineForm({
+  version: '1',
+  fields: [
+    { name: 'email', type: 'email', rules: [{ rule: 'maxLength', value: 120 }] },
+    { name: 'price', type: 'money', currency: 'EUR' }, // currency is typed by money's props
+  ],
+})
+
+const schema = build(form)
+```
+
+- **Compile errors:** an unknown `type`, `rule` or form rule, a key that is neither reserved nor a prop, and a prop or param of the wrong type, such as `value: '120'`. Child fields of groups and arrays are checked the same way.
+- **Not checked:** whether a rule fits the field's kind, names, defaults and form rule paths. Run `validate()` for those.
+- The builder knows your entries by key when you pass them in the options. Options typed as `SchemaBuilderOptions` have no known keys, so `defineForm` then takes any name.
+- **The output type isn't inferred.** A field type's `schema()` returns any Valibot schema, so the definition doesn't say what type its value has. `v.InferOutput<typeof schema>` stays an object of `unknown` values. Inferring it would need every field type to declare its output type, so it isn't part of 0.7.
+
+## JSON Schema
+
+The package ships `definition.schema.json`, the JSON Schema (draft-07) of definitions for the default registries. Point a definition at it with `$schema`, and VS Code and other editors suggest types, rules and their params, and mark mistakes:
+
+```json
+{
+  "$schema": "./node_modules/@whatsaaaa/form-builder-schema/definition.schema.json",
+  "version": "1",
+  "fields": [{ "name": "email", "type": "email" }]
+}
+```
+
+For your own registries, make the schema with `toJsonSchema`. It needs the optional peer `@valibot/to-json-schema`, so it has its own entry:
+
+```ts
+import { toJsonSchema } from '@whatsaaaa/form-builder-schema/json-schema'
+
+const builder = createSchemaBuilder({ fieldTypes: { money } })
+writeFileSync('form.schema.json', JSON.stringify(toJsonSchema(builder), null, 2))
+```
+
+- **It checks** type names, the keys and props of each type, the rules that fit a type's kind and their params, and form rule names and params. `meta.label` and `meta.description` become each type's and rule's `title` and `description`.
+- **It can't check** what only `validate()` does: duplicate names, defaults, form rule paths, and checks with no JSON Schema keyword, such as options having different values. Run `validate()` on definitions you store.
+- A props or params schema that has no JSON Schema form, such as `v.custom()` or `v.instance()`, lets that type or rule take any keys, and `toJsonSchema` logs a warning.
+
+## Reference
+
+[Rules](docs/rules.md) and [field types](docs/field-types.md) list every built-in entry with its kinds, params, props and description. `pnpm docs:gen` writes them, and `definition.schema.json`, from the registry, and CI fails when they are out of date.
 
 ## Extending
 
@@ -252,6 +312,7 @@ const { build } = createSchemaBuilder({ fieldTypes: { tags }, rules: { even } })
 
   `sameKind: true` requires every field it reads to have the same kind. `rule`, `field` and `message` are reserved (`RESERVED_FORM_RULE_KEYS`), so params can't use them.
 
+- A field type's `meta` (`label` and an optional `description`) describes it to people, like a rule's. The JSON Schema and the docs use it.
 - Mistakes in the registry, such as an unknown kind or a reserved props key, throw a `TypeError` from `createSchemaBuilder`.
 
 ## Initial input and walking fields
@@ -277,7 +338,7 @@ for (const { field, dataPath, definitionPath, depth } of walkFields(json)) {
 ```ts
 createSchemaBuilder({
   messages: { required: 'Obavezno' },
-  resolveMessage: (key) => t(key), // every message from the definition, and messages.required
+  resolveMessage: (key) => t(key), // every message, label and description, and messages.required
 })
 ```
 
