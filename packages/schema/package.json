@@ -18,13 +18,15 @@
     "directory": "packages/schema"
   },
   "files": [
-    "dist"
+    "dist",
+    "definition.schema.json"
   ],
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./json-schema": "./src/json-schema.ts"
+    "./json-schema": "./src/json-schema.ts",
+    "./definition.schema.json": "./definition.schema.json"
   },
   "publishConfig": {
     "exports": {
@@ -35,7 +37,8 @@
       "./json-schema": {
         "types": "./dist/json-schema.d.ts",
         "default": "./dist/json-schema.js"
-      }
+      },
+      "./definition.schema.json": "./definition.schema.json"
     },
     "access": "public"
   },
@@ -45,7 +48,7 @@
     "test": "vitest run",
     "type-check": "tsc --noEmit && tsc --noEmit -p scripts",
     "docs:gen": "jiti scripts/generate.ts",
-    "lint:pkg": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only",
+    "lint:pkg": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only --exclude-entrypoints definition.schema.json",
     "size": "size-limit"
   },
   "devDependencies": {
