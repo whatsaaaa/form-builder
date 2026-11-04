@@ -61,10 +61,14 @@ describe('toJsonSchema', () => {
       },
       'rule.regex': { title: 'Matches pattern' },
       formRule: {
-        allOf: [{
-          // oxlint-disable-next-line unicorn/no-thenable -- JSON Schema conditional keyword
-          then: { title: 'Same as' }
-        }, {}, {}]
+        allOf: [
+          {
+            // oxlint-disable-next-line unicorn/no-thenable -- JSON Schema conditional keyword
+            then: { title: 'Same as' },
+          },
+          {},
+          {},
+        ],
       },
     })
   })
