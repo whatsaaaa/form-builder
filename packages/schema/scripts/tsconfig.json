@@ -1,0 +1,8 @@
+// The scripts run in Node, so unlike src and tests they get Node's types.
+{
+  "extends": "../tsconfig.json",
+  "include": ["."],
+  "compilerOptions": {
+    "types": ["node"]
+  }
+}

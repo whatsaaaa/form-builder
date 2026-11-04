@@ -43,7 +43,8 @@
     "build": "tsdown",
     "prepack": "tsdown",
     "test": "vitest run",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --noEmit && tsc --noEmit -p scripts",
+    "docs:gen": "jiti scripts/generate.ts",
     "lint:pkg": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only",
     "size": "size-limit"
   },
