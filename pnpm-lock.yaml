@@ -139,7 +139,7 @@ importers:
         specifier: ^1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@6.0.3))
       ajv:
-        specifier: ^8.20.0
+        specifier: ^8.18.0
         version: 8.20.0
       jiti:
         specifier: ^2.7.0
