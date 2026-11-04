@@ -19,6 +19,7 @@ export interface CompileResult {
 export type FieldsSchema = v.ObjectSchema<v.ObjectEntries, undefined>
 
 const formShape = v.object({
+  $schema: v.optional(v.string()),
   version: v.string(),
   fields: v.array(v.unknown()),
   formRules: v.optional(v.array(v.unknown())),

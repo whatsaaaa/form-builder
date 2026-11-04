@@ -92,6 +92,7 @@ export type TypedForm<
   TRules extends Record<string, RuleDef>,
   TFormRules extends Record<string, FormRuleDef>,
 > = {
+  $schema?: string
   version: '1'
   fields: readonly TypedField<TFieldTypes, TRules>[]
   formRules?: readonly TypedFormRule<TFormRules>[]
