@@ -22,13 +22,22 @@ export const dateTypes = {
     props: outputProps,
     schema: () => v.pipe(v.string(), v.isoDate()),
     finalize,
+    meta: { label: 'Date', description: 'An ISO date, such as 2026-10-28' },
   }),
-  time: { kind: 'date', schema: () => v.pipe(v.string(), v.isoTime()) },
+  time: {
+    kind: 'date',
+    schema: () => v.pipe(v.string(), v.isoTime()),
+    meta: { label: 'Time', description: 'An ISO time, such as 14:30' },
+  },
   // A local date and time without a time zone, e.g. 2026-10-28T14:30.
   datetime: defineFieldType({
     kind: 'date',
     props: outputProps,
     schema: () => v.pipe(v.string(), v.isoDateTime()),
     finalize,
+    meta: {
+      label: 'Date and time',
+      description: 'A local ISO date and time, such as 2026-10-28T14:30',
+    },
   }),
 } satisfies Record<string, FieldTypeDef>

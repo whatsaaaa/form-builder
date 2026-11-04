@@ -37,4 +37,5 @@ export const fileType = defineFieldType({
     // Checking each file after the array keeps the issues on the field, not on its items.
     return field.accept ? v.pipe(v.array(v.file()), eachItem(file)) : v.array(file)
   },
+  meta: { label: 'File', description: 'A file, or a list of files with multiple' },
 })

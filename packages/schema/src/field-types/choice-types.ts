@@ -44,6 +44,7 @@ export const choiceTypes = {
       if (field.options) return oneOf(field.options)
       return field.valueType === 'number' ? v.number() : v.string()
     },
+    meta: { label: 'Select', description: 'One of the options, or any value while they load' },
   }),
   radio: defineFieldType({
     kind: (field) => kindOf(field.options),
@@ -52,6 +53,7 @@ export const choiceTypes = {
     // Any option counts as an answer, so a required yes/no radio accepts "no". The empty check
     // already rejects a radio with nothing picked.
     required: () => null,
+    meta: { label: 'Radio buttons', description: 'One of the options' },
   }),
   // A checkbox group is a multiselect with `ui: { widget: 'checkboxes' }`.
   multiselect: defineFieldType({
@@ -59,5 +61,6 @@ export const choiceTypes = {
     itemKind: (field) => kindOf(field.options),
     props: v.object({ options: options(stringOrNumber) }),
     schema: (field) => v.array(oneOf(field.options)),
+    meta: { label: 'Multiselect', description: 'Any number of the options' },
   }),
 } satisfies Record<string, FieldTypeDef>

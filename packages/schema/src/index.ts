@@ -20,6 +20,7 @@ export { defineFieldType } from './field-types/define-field-type'
 export type {
   BuildContext,
   FieldTypeDef,
+  FieldTypeMeta,
   FieldWithProps,
   KindOf,
 } from './field-types/field-type-def'

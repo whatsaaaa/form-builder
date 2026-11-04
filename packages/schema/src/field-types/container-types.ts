@@ -14,6 +14,7 @@ export const containerTypes = {
     container: true,
     props: v.object({ fields: v.array(childField) }),
     schema: (field, ctx) => ctx.buildFields(field.fields, [...ctx.path, 'fields']),
+    meta: { label: 'Group', description: 'An object with a key for each of its fields' },
   }),
   // A list. `of` is the field of a list of single values, such as tags; its name isn't used.
   // `fields` makes a list of objects, such as order lines. Rules like minLength count the items.
@@ -33,5 +34,9 @@ export const containerTypes = {
           ? ctx.buildField(field.of, [...ctx.path, 'of'])
           : ctx.buildFields(field.fields ?? [], [...ctx.path, 'fields']),
       ),
+    meta: {
+      label: 'List',
+      description: 'A list of single values with of, or of objects with fields',
+    },
   }),
 } satisfies Record<string, FieldTypeDef>

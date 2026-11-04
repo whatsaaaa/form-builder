@@ -38,6 +38,13 @@ export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> 
    * array schema itself, so it keeps a field for each child.
    */
   container?: boolean
+  meta?: FieldTypeMeta
+}
+
+/** Describes a field type to people, e.g. in the builder app's type picker and the docs. */
+export interface FieldTypeMeta {
+  label: string
+  description?: string
 }
 
 /**
