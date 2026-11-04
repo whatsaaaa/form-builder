@@ -19,8 +19,9 @@ export interface SchemaBuilderOptions {
   includeDefaultRules?: boolean
   messages?: { required?: string }
   /**
-   * Called with every message from the definition and with `messages.required`, e.g. to treat
-   * them as i18n keys. Return undefined  to use the text as written.
+   * Called with every message from the definition, each field's label and description, and
+   * `messages.required`, e.g. to treat them as i18n keys. Return undefined to use the text as
+   * written.
    */
   resolveMessage?(key: string, ctx: MessageContext): string | undefined
 }

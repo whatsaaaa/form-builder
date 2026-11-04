@@ -21,7 +21,8 @@ export interface Messages {
 /**
  * The schema runs in this order: empty check, base schema, normalize rules, required check,
  * then the type's default rules and the field's rules, and last the type's `finalize()`.
- * A container has no empty check: its value is never empty.
+ * A container has no empty check: its value is never empty. The field's label and description
+ * go on the outside as metadata.
  */
 export function buildFieldSchema(
   checked: CheckedField,
@@ -78,7 +79,8 @@ export function buildFieldSchema(
     // wrap it but optional. A missing value is read as an empty one, and the rules still run.
     // They sit in a nested pipe, so an empty required list reports only the required message.
     const rules = whole.validate.length ? [pipe(v.unknown(), whole.validate)] : []
-    return v.optional(pipe(head, rules), valueKind === 'object' ? () => ({}) : () => [])
+    const schema = v.optional(pipe(head, rules), valueKind === 'object' ? () => ({}) : () => [])
+    return withMetadata(schema, field, path, messages)
   }
 
   const empty = required
@@ -93,7 +95,27 @@ export function buildFieldSchema(
 
   const schema = whenFilled(v.pipe(head, whenFilled(pipe(v.unknown(), whole.validate))))
 
-  return required ? schema : v.optional(schema)
+  return withMetadata(required ? schema : v.optional(schema), field, path, messages)
+}
+
+/**
+ * Adds the label as `v.title()` and the description as `v.description()`, after
+ * `resolveMessage`, so `v.getTitle()` and JSON Schema converters can read them. They only
+ * describe the value, so the schema still parses the same way, and Formisch still sees the
+ * object, array or optional schema inside.
+ */
+function withMetadata(
+  schema: AnySchema,
+  field: JsonField,
+  path: DefinitionPath,
+  messages: Messages,
+): AnySchema {
+  const metadata: AnyAction[] = []
+  if (field.label) metadata.push(v.title(messages.resolve(field.label, { field, path })))
+  if (field.description) {
+    metadata.push(v.description(messages.resolve(field.description, { field, path })))
+  }
+  return pipe(schema, metadata)
 }
 
 /** An action, or a schema that runs on the value so far, e.g. on each item of an array. */
