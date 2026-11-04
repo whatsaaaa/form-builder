@@ -25,11 +25,15 @@ jobs:
         run: git diff --exit-code
       - run: pnpm type-check
       - run: pnpm test
+      - run: pnpm --filter @whatsaaaa/form-builder-schema docs:gen
+      - name: Fail if the generated files are out of date
+        run: git diff --exit-code
       - run: pnpm build
       - run: pnpm -r --filter "./packages/*" lint:pkg
       - run: pnpm --filter @whatsaaaa/form-builder-schema size
 
-  # The schema tests again, with the lowest Valibot the peer range allows.
+  # The schema tests again, with the lowest Valibot and @valibot/to-json-schema the peer ranges
+  # allow.
   valibot-min:
     runs-on: ubuntu-latest
     steps:
@@ -39,9 +43,10 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - name: Install with Valibot 1.3.0
+      - name: Install with Valibot 1.3.0 and @valibot/to-json-schema 1.6.0
         working-directory: packages/schema
         run: |
           npm pkg set devDependencies.valibot=1.3.0
+          npm pkg set devDependencies.@valibot/to-json-schema=1.6.0
           pnpm install --no-frozen-lockfile
       - run: pnpm --filter @whatsaaaa/form-builder-schema test

@@ -21,6 +21,7 @@ const packageFeatures: Record<string, Record<string, string[]>> = {
     rules: ['shared', 'definition'],
     'field-types': ['shared', 'kinds', 'definition', 'errors'],
     builder: ['shared', 'errors', 'kinds', 'definition', 'rules', 'field-types'],
+    'json-schema': ['shared', 'rules', 'field-types'],
   },
 }
 

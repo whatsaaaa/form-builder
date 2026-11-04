@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import type { JsonForm } from '@whatsaaaa/form-builder-schema'
+import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
 import FormExample from '../components/FormExample.vue'
 
-const definition: JsonForm = {
+// defineForm checks types, rules and their params as you type, and returns the definition
+// unchanged. Try a typo, such as rule: 'minLenght'.
+const { defineForm } = createSchemaBuilder()
+
+const definition = defineForm({
   version: '1',
   fields: [
     {
@@ -19,7 +23,7 @@ const definition: JsonForm = {
       rules: [{ rule: 'minLength', value: 10, message: 'At least 10 characters' }],
     },
   ],
-}
+})
 </script>
 
 <template>

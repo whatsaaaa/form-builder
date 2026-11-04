@@ -2,7 +2,8 @@
 export { createBuildContext } from './builder/build-context'
 export { createSchemaBuilder } from './builder/create-schema-builder'
 export type { MessageContext } from './builder/build-field-schema'
-export type { SchemaBuilderOptions } from './builder/create-schema-builder'
+export type { SchemaBuilder, SchemaBuilderOptions } from './builder/create-schema-builder'
+export type { TypedField, TypedForm, TypedFormRule, TypedRule } from './builder/typed-form'
 export { getInitialInput } from './definition/initial-input'
 export type { JsonField, JsonForm, JsonFormRule, JsonRule } from './definition/json-form-schema'
 export { walkFields } from './definition/walk-fields'
@@ -19,6 +20,7 @@ export { defineFieldType } from './field-types/define-field-type'
 export type {
   BuildContext,
   FieldTypeDef,
+  FieldTypeMeta,
   FieldWithProps,
   KindOf,
 } from './field-types/field-type-def'

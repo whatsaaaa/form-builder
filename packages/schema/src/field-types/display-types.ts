@@ -14,8 +14,16 @@ export const displayTypes = {
       /** 1 to 6. Defaults to 2. */
       level: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(6))),
     }),
+    meta: { label: 'Heading', description: 'A title between fields. It has no value' },
   }),
   // Plain text. Whether to render markdown is up to the renderer.
-  paragraph: defineFieldType({ kind: 'none', props: v.object({ text: v.string() }) }),
-  divider: { kind: 'none' },
+  paragraph: defineFieldType({
+    kind: 'none',
+    props: v.object({ text: v.string() }),
+    meta: { label: 'Paragraph', description: 'Plain text between fields. It has no value' },
+  }),
+  divider: {
+    kind: 'none',
+    meta: { label: 'Divider', description: 'A line between fields. It has no value' },
+  },
 } satisfies Record<string, FieldTypeDef>

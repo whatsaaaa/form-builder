@@ -1,4 +1,6 @@
 export interface JsonForm {
+  /** Where the definition's JSON Schema is, for editors. This package never reads it. */
+  $schema?: string
   version: '1'
   fields: readonly JsonField[]
   /** Rules that check a field against other fields. They run after every field's own rules. */

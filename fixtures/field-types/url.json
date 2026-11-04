@@ -1,4 +1,5 @@
 {
+  "$schema": "../../packages/schema/definition.schema.json",
   "version": "1",
   "fields": [
     {
