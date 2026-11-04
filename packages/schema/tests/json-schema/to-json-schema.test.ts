@@ -60,7 +60,12 @@ describe('toJsonSchema', () => {
         description: 'An email address, checked by the email rule',
       },
       'rule.regex': { title: 'Matches pattern' },
-      formRule: { allOf: [{ then: { title: 'Same as' } }, {}, {}] },
+      formRule: {
+        allOf: [{
+          // oxlint-disable-next-line unicorn/no-thenable -- JSON Schema conditional keyword
+          then: { title: 'Same as' }
+        }, {}, {}]
+      },
     })
   })
 

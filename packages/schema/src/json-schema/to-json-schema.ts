@@ -105,6 +105,7 @@ function byName(
     required: [key],
     allOf: schemas.map(([name, schema]) => ({
       if: { properties: { [key]: { const: name } }, required: [key] },
+      // oxlint-disable-next-line unicorn/no-thenable -- JSON Schema conditional keyword
       then: schema,
     })),
   }
