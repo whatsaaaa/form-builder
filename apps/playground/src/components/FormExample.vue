@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Form, useForm } from '@formisch/vue'
-import {
-  createSchemaBuilder,
-  getInitialInput,
-  type JsonField,
-  type JsonForm,
-} from '@whatsaaaa/form-builder-schema'
+import { createSchemaBuilder, type JsonField, type JsonForm } from '@whatsaaaa/form-builder-schema'
 import FormField from './FormField.vue'
 
 const { definition } = defineProps<{ definition: JsonForm }>()
 
-const { build } = createSchemaBuilder()
+const { build, getInitialInput } = createSchemaBuilder()
 
 const hasName = (field: JsonField): field is JsonField & { name: string } =>
   field.name !== undefined
