@@ -25,7 +25,7 @@ const wordsParams = v.object({
 const graphemesInfo = 'Counts characters as people see them, so an emoji is one.'
 const bytesInfo = 'Counts UTF-8 bytes, e.g. to fit a database column.'
 
-export const textUnitRules = {
+export const textRules = {
   graphemes: defineRule({
     kinds,
     params: countParams,

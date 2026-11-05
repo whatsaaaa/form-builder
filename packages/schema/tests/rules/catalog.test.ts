@@ -64,7 +64,7 @@ const validation: ValidationCase[] = [
     bad: { value: '2' },
   },
   { rule: 'notLength', type: 'text', params: { value: 2 }, pass: 'abc', fail: 'ab', bad: {} },
-  // textUnitRules: '👍' is one grapheme, two UTF-16 units and four bytes. 'é' is two bytes.
+  // textRules: '👍' is one grapheme, two UTF-16 units and four bytes. 'é' is two bytes.
   {
     rule: 'graphemes',
     type: 'text',
