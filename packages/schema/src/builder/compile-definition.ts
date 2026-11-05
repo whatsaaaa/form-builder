@@ -1,4 +1,6 @@
 import * as v from 'valibot'
+import type { JsonField } from '../definition/json-form-schema'
+import type { WalkedField } from '../definition/walk-fields'
 import type { DefinitionIssue, DefinitionPath } from '../errors/definition-error'
 import type { BuildContext } from '../field-types/field-type-def'
 import type { AnySchema } from '../shared/valibot-types'
@@ -13,6 +15,10 @@ export interface CompileResult {
   issues: DefinitionIssue[]
   /** The form's schema. Only complete when there are no issues. */
   schema: FieldsSchema
+  /** Every field the compiler read, as `walkFields` yields them, your own containers included. */
+  walked: WalkedField[]
+  /** Formisch's `initialInput`, as `getInitialInput` gives it, your own containers included. */
+  initialInput: Record<string, unknown>
 }
 
 /** The schema of a list of fields: an object with a key for each field that has a value. */
@@ -35,22 +41,24 @@ export function compileDefinition(
   messages: Messages,
 ): CompileResult {
   const issues: DefinitionIssue[] = []
+  const empty = { schema: v.object({}), walked: [], initialInput: {} }
 
   const form = v.safeParse(formShape, json)
   if (!form.success) {
-    return { issues: toIssues('invalid_shape', [], form.issues), schema: v.object({}) }
+    return { ...empty, issues: toIssues('invalid_shape', [], form.issues) }
   }
 
   if (form.output.version !== '1') {
     const message = `Unsupported version "${form.output.version}". This package reads version '1'.`
     issues.push({ code: 'unsupported_version', path: ['version'], message })
-    return { issues, schema: v.object({}) }
+    return { ...empty, issues }
   }
 
   const compiler = createCompiler(registry, messages, issues)
-  const schema = compiler.fields(form.output.fields, ['fields'])
+  const { schema, input } = compiler.list(form.output.fields, ['fields'])
+  const walked = [...compiler.walked]
   const rules = checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
-  if (issues.length || !rules.length) return { issues, schema }
+  if (issues.length || !rules.length) return { issues, schema, walked, initialInput: input }
 
   // Form rules run after every field's schema, on the whole value. They only check, so the schema
   // keeps the object's type, entries and output, and Formisch still keeps a field for each entry.
@@ -58,12 +66,17 @@ export function compileDefinition(
     const ctx = { field: rule.field, rule: rule.name, path: rule.path }
     return v.pipe(acc, formRuleAction(rule, messages.resolve(rule.message, ctx)))
   }, schema)
-  return { issues, schema: withRules as FieldsSchema }
+  return { issues, schema: withRules as FieldsSchema, walked, initialInput: input }
 }
 
 export interface Compiler {
   /** Checks and builds a list of fields. `path` is where the list is, e.g. `['fields']`. */
   fields(fields: readonly unknown[], path: DefinitionPath): FieldsSchema
+  /** Like `fields`, and also gives the list's initial input. */
+  list(
+    fields: readonly unknown[],
+    path: DefinitionPath,
+  ): { schema: FieldsSchema; input: Record<string, unknown> }
   /** Checks and builds the field of a list's items, which needs no name. */
   field(field: unknown, path: DefinitionPath): AnySchema
   /**
@@ -72,6 +85,12 @@ export interface Compiler {
    * issues is null.
    */
   readonly fieldsByPath: ReadonlyMap<string, CheckedField | null>
+  /**
+   * Every field the compiler has read, in document order, with a container before its fields.
+   * Display elements and fields with issues are in it too, but a container with issues isn't
+   * built, so the fields inside it aren't.
+   */
+  readonly walked: readonly WalkedField[]
 }
 
 /** Every field the compiler checks adds its issues to `issues`. */
@@ -88,43 +107,70 @@ export function createCompiler(
   })
 
   const fieldsByPath = new Map<string, CheckedField | null>()
+  const walked: WalkedField[] = []
   // Where the values of the child fields go, for each container whose schema() is running.
   const parents: DataPath[] = []
   const parentPath = (): DataPath => parents.at(-1) ?? []
+  // The initial input of the fields each running container builds. A container of kind
+  // `object` gets the input of the first list it builds.
+  const childInputs: (Record<string, unknown> | undefined)[] = []
 
-  function fields(list: readonly unknown[], path: DefinitionPath): FieldsSchema {
+  function list(raws: readonly unknown[], path: DefinitionPath) {
     const entries: v.ObjectEntries = {}
+    const input: Record<string, unknown> = {}
     const names = new Set<string>()
-    list.forEach((raw, i) => {
+    raws.forEach((raw, i) => {
       const checked = checkField(raw, [...path, i], registry, names, issues)
       const name = checked ? checked.name : nameOf(raw)
+      // A field without a name, like a heading, has its parent's path.
+      const dataPath = name === undefined ? parentPath() : [...parentPath(), name]
+      walk(raw, [...path, i], dataPath)
       if (name === undefined) return
-      const dataPath = [...parentPath(), name]
       remember(raw, checked, dataPath)
-      if (checked) entries[name] = build(checked, dataPath)
+      if (!checked) return
+      const built = build(checked, dataPath)
+      entries[name] = built.schema
+      if (built.input !== undefined) input[name] = built.input
     })
-    return v.object(entries)
+    if (childInputs.length && childInputs.at(-1) === undefined) {
+      childInputs[childInputs.length - 1] = input
+    }
+    return { schema: v.object(entries), input }
+  }
+
+  function fields(raws: readonly unknown[], path: DefinitionPath): FieldsSchema {
+    return list(raws, path).schema
   }
 
   function field(raw: unknown, path: DefinitionPath): AnySchema {
     const checked = checkField(raw, path, registry, undefined, issues)
     // The field of a list's items has no name: its value is the item itself.
     const dataPath = parentPath()
+    walk(raw, path, dataPath)
     remember(raw, checked, dataPath)
     // A field with issues gets no schema. build() throws before anything parses with it.
-    return checked ? build(checked, dataPath) : v.never()
+    return checked ? build(checked, dataPath).schema : v.never()
   }
 
-  function build(checked: CheckedField, dataPath: DataPath): AnySchema {
+  function build(checked: CheckedField, dataPath: DataPath) {
     // The fields of a list's items have no fixed index, so their paths have '*' in its place.
     parents.push(checked.valueKind === 'array' ? [...dataPath, '*'] : dataPath)
+    childInputs.push(undefined)
     try {
       const schema = buildFieldSchema(checked, messages, context(checked.path))
       checkDefault(checked, schema, issues)
-      return schema
+      return { schema, input: initialValue(checked, childInputs.at(-1)) }
     } finally {
       parents.pop()
+      childInputs.pop()
     }
+  }
+
+  /** Anything shaped like a field counts, so a field with issues is still walked. */
+  function walk(raw: unknown, definitionPath: DefinitionPath, dataPath: DataPath): void {
+    if (!isRecord(raw) || typeof raw.type !== 'string') return
+    const field = raw as JsonField
+    walked.push({ field, type: raw.type, dataPath, definitionPath, depth: parents.length })
   }
 
   /** The first field at a path wins, as with duplicate names. Display elements are left out. */
@@ -134,7 +180,7 @@ export function createCompiler(
     fieldsByPath.set(key, checked ?? null)
   }
 
-  return { fields, field, fieldsByPath }
+  return { fields, list, field, fieldsByPath, walked }
 }
 
 type DataPath = readonly string[]
@@ -150,6 +196,19 @@ const hasValue = (raw: unknown, registry: Registry) =>
   isRecord(raw) &&
   typeof raw.type === 'string' &&
   lookup(registry.fieldTypes, raw.type)?.kind !== 'none'
+
+/**
+ * A field's value in `initialInput`. A container of kind `object` gets the input of its fields,
+ * one of kind `array` gets `[]` without a default, and any other field gets its default.
+ */
+function initialValue(
+  { field, type, valueKind }: CheckedField,
+  children: Record<string, unknown> | undefined,
+): unknown {
+  if (type.container && valueKind === 'object') return children ?? {}
+  if (type.container && valueKind === 'array') return field.default ?? []
+  return field.default
+}
 
 /** A default must be a value the field accepts. An empty one is the same as none. */
 function checkDefault(
