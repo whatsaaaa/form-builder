@@ -333,6 +333,17 @@ for (const { field, dataPath, definitionPath, depth } of walkFields(json)) {
 - `walkFields` yields every field at every depth, in document order, with a group or array before its fields. The fields of an array's items come once, with `'*'` in place of the index. A field without a name, like a heading, has its parent's `dataPath`.
 - Both know the built-in `group` and `array` types only, and neither checks the definition, so run `validate()` first.
 
+With your own container types, use the builder's methods of the same name instead. They read every container the builder knows, and give the same results for the built-in ones:
+
+```ts
+const { build, getInitialInput, walkFields } = createSchemaBuilder({ fieldTypes: { section } })
+
+const form = useForm({ schema: build(json), initialInput: getInitialInput(json) })
+```
+
+- A container of kind `object` gives an object of its fields' input, and one of kind `array` without a default gives `[]`.
+- They never throw. A container with issues isn't built, so the fields inside it are left out of both, and a field with issues is left out of the initial input.
+
 ## Messages
 
 ```ts

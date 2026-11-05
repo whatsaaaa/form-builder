@@ -22,7 +22,7 @@ export interface WalkedField {
  * Every field of a definition, at every depth, in document order. A group or an array comes
  * before its fields, and the fields of an array's items come once. It reads the built-in
  * `group` and `array` types and needs no builder, so it doesn't check the definition: run
- * `validate()` first.
+ * `validate()` first. For your own container types, use the builder's `walkFields`.
  */
 export function* walkFields(definition: JsonForm): Generator<WalkedField, void, undefined> {
   yield* walkList(definition.fields, ['fields'], [], 0)

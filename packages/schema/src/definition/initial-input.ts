@@ -4,7 +4,7 @@ import type { JsonField, JsonForm } from './json-form-schema'
  * Formisch's `initialInput` for a definition: each field's `default`, nested the way the value
  * is. A group gives an object, and an array without a default gives `[]`. Other fields without
  * a default are left out. Like `walkFields`, it reads the built-in `group` and `array` types
- * and needs no builder.
+ * and needs no builder. For your own container types, use the builder's `getInitialInput`.
  */
 export function getInitialInput(definition: JsonForm): Record<string, unknown> {
   return inputOf(definition.fields)
