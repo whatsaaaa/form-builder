@@ -135,7 +135,7 @@ The built-in `email` and `url` types use the `email` and `url` rules, so keep `f
 
 ### Listing rules
 
-Every built-in rule has `meta` with a `label`, a `category` and sometimes a `description`, for a rule picker. `rulesForKind(kind)` returns the `[name, def]` pairs that fit a kind:
+Every built-in rule has `meta` with a `label`, a `category` and sometimes a `description`, for a rule picker. Your own rules can use a built-in category or a new one, so a picker should group unknown categories too. `rulesForKind(kind)` returns the `[name, def]` pairs that fit a kind:
 
 ```ts
 const { rulesForKind } = createSchemaBuilder()

@@ -66,6 +66,18 @@ describe('rule registry', () => {
     ])
   })
 
+  it('keeps a category of your own in meta', () => {
+    const iban = defineRule({
+      kinds: ['string'],
+      meta: { label: 'IBAN', category: 'banking' },
+      create: (_, message) => v.check((value: string) => /^[A-Z]{2}\d{2}/.test(value), message),
+    })
+    const { rulesForKind } = createSchemaBuilder({ rules: { iban } })
+
+    const listed = rulesForKind('string').find(([name]) => name === 'iban')
+    expect(listed?.[1].meta).toEqual({ label: 'IBAN', category: 'banking' })
+  })
+
   it('registers only the given rules without the defaults', () => {
     const { validate, rules } = createSchemaBuilder({
       includeDefaultRules: false,
