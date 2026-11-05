@@ -32,6 +32,10 @@ export interface JsonFormRule {
   rule: string
   /** Where the error shows, as a dot path: `'password2'`, `'address.zip'` or `'lines.*.qty'`. */
   field: string
+  /**
+   * Required, unlike a field rule's. Without it, the error would be Valibot's generic "Invalid
+   * input", which says nothing about the other field and repeats what was typed.
+   */
   message: string
   [param: string]: unknown
 }

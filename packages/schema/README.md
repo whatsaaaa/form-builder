@@ -176,7 +176,7 @@ A form rule checks a field against other fields, such as a repeated password or 
 
 - **Paths** name fields by their value: `'password2'`, `'address.zip'` for a field in a group, and `'lines.*.qty'` for a field in the items of an array. A rule on a path with `*` runs once per item, and its error shows on that item's field. A path it reads with `*` means the same item, so `{ "field": "lines.*.qty", "op": "lte", "other": "lines.*.stock" }` compares each line with itself.
 - **A form rule runs last**, after every field's own rules, and only when the fields it reads have no issues. So a password that is too short never also shows "Passwords differ". It never runs on an empty value either: make the fields required when they must be filled.
-- **`message` is required.** It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
+- **`message` is required**, unlike on a field's rules. Without it, the error would be Valibot's generic "Invalid input", which says nothing about the other field. It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
 - The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` is compared by its time, so compare it with another date that has `output: 'date'`.
 
 ## Checking definitions
