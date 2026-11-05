@@ -22,7 +22,6 @@ export type {
   FieldTypeDef,
   FieldTypeMeta,
   FieldWithProps,
-  KindOf,
 } from './field-types/field-type-def'
 export { defaultKinds } from './kinds/default-kinds'
 export type { KindDef } from './kinds/kind-def'

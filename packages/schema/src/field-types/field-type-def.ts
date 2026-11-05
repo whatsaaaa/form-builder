@@ -49,6 +49,7 @@ export interface FieldTypeMeta {
 
 /**
  * Picks the kind from the field. Declared as a method so it stays bivariant, like `schema()`.
+ * Internal: it isn't exported from the package, so it can change without a major release.
  */
 export type KindOf<TProps extends AnyObjectSchema = AnyObjectSchema> = {
   bivariant(field: FieldWithProps<TProps>): ValueKind
