@@ -13,6 +13,7 @@ import type { TypedForm } from './typed-form'
 import { checkRegistry } from './validate-definition'
 import { DefinitionError, type ValidateResult } from '../errors/definition-error'
 import type { JsonForm } from '../definition/json-form-schema'
+import type { WalkedField } from '../definition/walk-fields'
 import type { ValueKind } from '../shared/value-kind'
 
 export interface SchemaBuilderOptions {
@@ -49,6 +50,18 @@ export interface SchemaBuilder<
   defineForm(
     definition: TypedForm<TFieldTypes, TRules, TFormRules>,
   ): TypedForm<TFieldTypes, TRules, TFormRules>
+  /**
+   * Every field of the definition, at every depth, like the `walkFields` function, but it reads
+   * this builder's container types too. It never throws. A container with issues isn't built, so
+   * the fields inside it are left out: run `validate()` first when that matters.
+   */
+  walkFields(json: JsonForm): Generator<WalkedField, void, undefined>
+  /**
+   * Formisch's `initialInput`, like the `getInitialInput` function, but it reads this builder's
+   * container types too. A container of kind `object` gives an object, and one of kind `array`
+   * without a default gives `[]`. It never throws, and leaves out a field with issues.
+   */
+  getInitialInput(json: JsonForm): Record<string, unknown>
   /** The registered rules that can be used on a field of `kind`, e.g. for a rule picker. */
   rulesForKind(kind: ValueKind): [name: string, def: RuleDef][]
   readonly kinds: Readonly<Record<string, KindDef>>
@@ -111,6 +124,14 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     return schema
   }
 
+  function* walkFields(json: JsonForm): Generator<WalkedField, void, undefined> {
+    yield* compileDefinition(json, registry, messages).walked
+  }
+
+  function getInitialInput(json: JsonForm): Record<string, unknown> {
+    return compileDefinition(json, registry, messages).initialInput
+  }
+
   function rulesForKind(kind: ValueKind): [name: string, def: RuleDef][] {
     return Object.entries(registry.rules).filter(([, def]) => def.kinds.includes(kind))
   }
@@ -119,6 +140,8 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     build,
     validate,
     defineForm: (definition) => definition,
+    walkFields,
+    getInitialInput,
     rulesForKind,
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,

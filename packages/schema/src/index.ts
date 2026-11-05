@@ -22,7 +22,6 @@ export type {
   FieldTypeDef,
   FieldTypeMeta,
   FieldWithProps,
-  KindOf,
 } from './field-types/field-type-def'
 export { defaultKinds } from './kinds/default-kinds'
 export type { KindDef } from './kinds/kind-def'
@@ -40,7 +39,7 @@ export { lengthRules } from './rules/length-rules'
 export { normalizeRules } from './rules/normalize-rules'
 export { numberRules } from './rules/number-rules'
 export type { RuleCategory, RuleDef, RuleMeta, RuleStage } from './rules/rule-def'
-export { textUnitRules } from './rules/text-unit-rules'
+export { textRules } from './rules/text-rules'
 export {
   RESERVED_FIELD_KEYS,
   RESERVED_FORM_RULE_KEYS,

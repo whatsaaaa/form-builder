@@ -6,12 +6,12 @@ import { formatRules } from './format-rules'
 import { lengthRules } from './length-rules'
 import { normalizeRules } from './normalize-rules'
 import { numberRules } from './number-rules'
-import { textUnitRules } from './text-unit-rules'
+import { textRules } from './text-rules'
 
 /** Every built-in rule. Register single families with `includeDefaultRules: false`. */
 export const defaultRules = {
   ...lengthRules,
-  ...textUnitRules,
+  ...textRules,
   ...contentRules,
   ...formatRules,
   ...dateRules,

@@ -105,7 +105,7 @@ Every Valibot action whose arguments fit in JSON is a rule with the same name. P
 | Family            | Rules                                                                                                                                                                                                                                | Kinds                                                        | Params                                 |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------------------- |
 | `lengthRules`     | `length` `minLength` `maxLength` `notLength`                                                                                                                                                                                         | string, array                                                | `value`                                |
-| `textUnitRules`   | `graphemes` `minGraphemes` `maxGraphemes` `notGraphemes`, `words` `minWords` `maxWords` `notWords`, `bytes` `minBytes` `maxBytes` `notBytes`                                                                                         | string                                                       | `value`; words also `locale`           |
+| `textRules`       | `graphemes` `minGraphemes` `maxGraphemes` `notGraphemes`, `words` `minWords` `maxWords` `notWords`, `bytes` `minBytes` `maxBytes` `notBytes`                                                                                         | string                                                       | `value`; words also `locale`           |
 | `contentRules`    | `regex` `startsWith` `endsWith` `includes` `excludes`                                                                                                                                                                                | string; `includes` and `excludes` also array                 | `pattern` and `flags`, or `value`      |
 | `formatRules`     | `email` `rfcEmail` `url` `domain` `slug` `uuid` `ulid` `cuid2` `nanoid` `ip` `ipv4` `ipv6` `mac` `mac48` `mac64` `hexColor` `hexadecimal` `octal` `decimal` `digits` `base64` `bic` `creditCard` `imei` `isbn` `isrc` `emoji` `hash` | string                                                       | none; `hash` takes `types`             |
 | `dateRules`       | `isoDate` `isoDateTime` `isoTime` `isoTimeSecond` `isoTimestamp` `isoWeek`                                                                                                                                                           | string, date                                                 | none                                   |
@@ -135,7 +135,7 @@ The built-in `email` and `url` types use the `email` and `url` rules, so keep `f
 
 ### Listing rules
 
-Every built-in rule has `meta` with a `label`, a `category` and sometimes a `description`, for a rule picker. `rulesForKind(kind)` returns the `[name, def]` pairs that fit a kind:
+Every built-in rule has `meta` with a `label`, a `category` and sometimes a `description`, for a rule picker. Your own rules can use a built-in category or a new one, so a picker should group unknown categories too. `rulesForKind(kind)` returns the `[name, def]` pairs that fit a kind:
 
 ```ts
 const { rulesForKind } = createSchemaBuilder()
@@ -176,7 +176,7 @@ A form rule checks a field against other fields, such as a repeated password or 
 
 - **Paths** name fields by their value: `'password2'`, `'address.zip'` for a field in a group, and `'lines.*.qty'` for a field in the items of an array. A rule on a path with `*` runs once per item, and its error shows on that item's field. A path it reads with `*` means the same item, so `{ "field": "lines.*.qty", "op": "lte", "other": "lines.*.stock" }` compares each line with itself.
 - **A form rule runs last**, after every field's own rules, and only when the fields it reads have no issues. So a password that is too short never also shows "Passwords differ". It never runs on an empty value either: make the fields required when they must be filled.
-- **`message` is required.** It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
+- **`message` is required**, unlike on a field's rules. Without it, the error would be Valibot's generic "Invalid input", which says nothing about the other field. It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
 - The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` is compared by its time, so compare it with another date that has `output: 'date'`.
 
 ## Checking definitions
@@ -277,7 +277,7 @@ const { build } = createSchemaBuilder({ fieldTypes: { tags }, rules: { even } })
 ```
 
 - A **kind** says what "empty" means for a value (`isEmpty`) and adds an optional extra `required` check. Built-in kinds are `string`, `number`, `boolean`, `date`, `array`, `file`, `object` and `none`. A type with kind `none` has no value, like a heading.
-- A **field type** names the kind of its value. `kind` can also be a function of the field with its props parsed (`KindOf`), for a kind that depends on them, like a select's options. `itemKind` names the kind of each item of an array value: a rule for that kind but not for `array` then runs on each item, and reports its issues on the field. Two optional hooks fine-tune the pipeline: `required(message)` replaces the kind's required check (return `null` for none), and `finalize(field)` returns an action that runs after every rule, like `v.toDate()`.
+- A **field type** names the kind of its value. `kind` can also be a function of the field with its props parsed, for a kind that depends on them, like a select's options. `itemKind` names the kind of each item of an array value: a rule for that kind but not for `array` then runs on each item, and reports its issues on the field. Two optional hooks fine-tune the pipeline: `required(message)` replaces the kind's required check (return `null` for none), and `finalize(field)` returns an action that runs after every rule, like `v.toDate()`.
 - A **rule** with `stage: 'normalize'` runs before the required check. Its `params` schema lists the only keys the rule accepts. `params` can also be a function of the field's kind, for params whose type depends on it:
 
   ```ts
@@ -332,6 +332,17 @@ for (const { field, dataPath, definitionPath, depth } of walkFields(json)) {
 - `getInitialInput` gives each field's `default`, nested the way the value is. A group gives an object, and an array without a default gives `[]`. Other fields without a default are left out.
 - `walkFields` yields every field at every depth, in document order, with a group or array before its fields. The fields of an array's items come once, with `'*'` in place of the index. A field without a name, like a heading, has its parent's `dataPath`.
 - Both know the built-in `group` and `array` types only, and neither checks the definition, so run `validate()` first.
+
+With your own container types, use the builder's methods of the same name instead. They read every container the builder knows, and give the same results for the built-in ones:
+
+```ts
+const { build, getInitialInput, walkFields } = createSchemaBuilder({ fieldTypes: { section } })
+
+const form = useForm({ schema: build(json), initialInput: getInitialInput(json) })
+```
+
+- A container of kind `object` gives an object of its fields' input, and one of kind `array` without a default gives `[]`.
+- They never throw. A container with issues isn't built, so the fields inside it are left out of both, and a field with issues is left out of the initial input.
 
 ## Messages
 

@@ -8,7 +8,10 @@ import type { ValueKind } from '../shared/value-kind'
  */
 export type RuleStage = 'normalize' | 'validate'
 
-/** Groups rules in the builder app. One per rule family. */
+/**
+ * Groups rules in the builder app. The built-in ones are one per rule family, and your own rules
+ * can use them or any other name, so handle unknown categories when you list them.
+ */
 export type RuleCategory =
   | 'length'
   | 'text'
@@ -19,6 +22,7 @@ export type RuleCategory =
   | 'number'
   | 'file'
   | 'normalize'
+  | (string & {})
 
 /** Describes a rule to people, e.g. in the builder app's rule picker. */
 export interface RuleMeta {
