@@ -1,27 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Form, useForm } from '@formisch/vue'
-import { createSchemaBuilder, type JsonField, type JsonForm } from '@whatsaaaa/form-builder-schema'
-import FormField from './FormField.vue'
+import { Form } from '@formisch/vue'
+import type { JsonForm } from '@whatsaaaa/form-builder-schema'
+import { JsonFields, useJsonForm } from '@whatsaaaa/form-builder-vue'
+import { fieldComponents } from './fields/field-components'
 
 const { definition } = defineProps<{ definition: JsonForm }>()
 
-const { build, getInitialInput } = createSchemaBuilder()
-
-const hasName = (field: JsonField): field is JsonField & { name: string } =>
-  field.name !== undefined
-
-// v-model on a multi-select or a checkbox group needs an array to start from.
-const multiselects = Object.fromEntries(
-  definition.fields
-    .filter(hasName)
-    .filter((field) => field.type === 'multiselect')
-    .map((field) => [field.name, []]),
-)
-const form = useForm({
-  schema: build(definition),
-  initialInput: { ...multiselects, ...getInitialInput(definition) },
-})
+const jsonForm = useJsonForm(definition)
 const submitted = ref<unknown>()
 </script>
 
@@ -29,14 +15,8 @@ const submitted = ref<unknown>()
   <section class="example">
     <div class="panel">
       <h2>Form</h2>
-      <Form class="form" :of="form" @submit="(output) => (submitted = output)">
-        <FormField
-          v-for="(field, index) in definition.fields"
-          :key="field.name ?? index"
-          :form="form"
-          :field="field"
-          :path="hasName(field) ? [field.name] : []"
-        />
+      <Form class="form" :of="jsonForm.form" @submit="(output) => (submitted = output)">
+        <JsonFields :of="jsonForm" :components="fieldComponents" />
 
         <button type="submit">Submit</button>
       </Form>
