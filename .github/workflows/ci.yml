@@ -29,7 +29,7 @@ jobs:
       - name: Fail if the generated files are out of date
         run: git diff --exit-code
       - run: pnpm build
-      - run: pnpm -r --filter "./packages/*" lint:pkg
+      - run: pnpm -r --filter "./packages/*" --filter "./frameworks/*" lint:pkg
       - run: pnpm --filter @whatsaaaa/form-builder-schema size
 
   # The schema tests again, with the lowest Valibot and @valibot/to-json-schema the peer ranges

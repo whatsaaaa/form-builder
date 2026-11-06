@@ -1,5 +1,6 @@
 packages:
   - apps/*
+  - frameworks/*
   - packages/*
 
 # Install scripts that may run. The postinstalls of unrs-resolver and esbuild (used by
