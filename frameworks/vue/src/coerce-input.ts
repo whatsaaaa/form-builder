@@ -31,6 +31,7 @@ function toNumber(input: string): number | string | undefined {
  */
 function isFileList(value: unknown): value is ArrayLike<File> {
   if (typeof File === 'undefined' || typeof value !== 'object' || value === null) return false
-  if (value instanceof File || typeof (value as ArrayLike<unknown>).length !== 'number') return false
+  if (value instanceof File || typeof (value as ArrayLike<unknown>).length !== 'number')
+    return false
   return Array.from(value as ArrayLike<unknown>).every((item) => item instanceof File)
 }
