@@ -1,5 +1,13 @@
+import { Form } from '@formisch/vue'
 import type { JsonField, JsonForm } from '@whatsaaaa/form-builder-schema'
-import { createApp, defineComponent, type Component } from 'vue'
+import {
+  type FieldComponents,
+  JsonFields,
+  type JsonFormInstance,
+  useJsonForm,
+  type UseJsonFormOptions,
+} from '@whatsaaaa/form-builder-vue'
+import { type Component, createApp, defineComponent, h, nextTick } from 'vue'
 
 export const form = (...fields: JsonField[]): JsonForm => ({ version: '1', fields })
 
@@ -25,5 +33,52 @@ export function withSetup<T>(setup: () => T): T {
   return result as T
 }
 
+/**
+ * Mounts Formisch's `<Form>` with `<JsonFields>` in it, the way an app uses them. Gives the
+ * element, the form, and every output it submitted.
+ */
+export function mountForm(
+  json: JsonForm,
+  components: FieldComponents,
+  options?: UseJsonFormOptions,
+) {
+  const submitted: unknown[] = []
+  const jsonForm = withSetup(() => useJsonForm(json, options))
+  const root = mount(
+    defineComponent({
+      setup() {
+        return () =>
+          h(
+            Form as Component,
+            { of: jsonForm.form, onSubmit: (output: unknown) => submitted.push(output) },
+            { default: () => h(JsonFields, { of: jsonForm, components }) },
+          )
+      },
+    }),
+  )
+  return { root, jsonForm: jsonForm as JsonFormInstance, submitted }
+}
+
 /** Waits until Formisch has validated and Vue has rendered the result. */
-export const settle = () => new Promise((resolve) => setTimeout(resolve))
+export async function settle() {
+  await new Promise((resolve) => setTimeout(resolve))
+  await nextTick()
+}
+
+/** Types `value` into the input inside the element at `path`, like a person would. */
+export function type(root: HTMLElement, path: string, value: string) {
+  const input = root.querySelector<HTMLInputElement>(`[data-path="${path}"] input`)
+  if (!input) throw new Error(`No input at ${path}`)
+  input.value = value
+  input.dispatchEvent(new Event('input'))
+}
+
+/** Submits the form inside `root`, the way its submit button would. */
+export async function submit(root: HTMLElement) {
+  root.querySelector('form')?.dispatchEvent(new Event('submit', { cancelable: true }))
+  await settle()
+}
+
+/** The error shown in the element at `path`, if any. */
+export const errorAt = (root: HTMLElement, path: string) =>
+  root.querySelector(`[data-path="${path}"] > small`)?.textContent ?? null
