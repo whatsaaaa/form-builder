@@ -58,7 +58,7 @@ This repo is a **pnpm workspace**. Everything lives together so the packages can
 | 🧩  | [`@whatsaaaa/form-builder-schema`](./packages/schema)   | The heart of it all. Reads and validates JSON definitions and turns them into Valibot schemas Formisch understands.    |   🚧   |
 | 🔗  | [`@whatsaaaa/form-builder-affects`](./packages/affects) | Lets fields react to each other: show this when that's checked, make it required, change the options, compute a value. |   💭   |
 | ⚙️  | [`@whatsaaaa/form-builder-codegen`](./packages/codegen) | A CLI that turns your JSON into fully typed TypeScript, for when you know the form at build time.                      |   💭   |
-| 💚  | [`@whatsaaaa/form-builder-vue`](./frameworks/vue)       | Drop in `<JsonForm>`, pass it a definition, and you have a rendered form.                                              |   💭   |
+| 💚  | [`@whatsaaaa/form-builder-vue`](./frameworks/vue)       | Pass it a definition and a component per field type, and you have a working form. Headless, so any UI library fits.    |   🚧   |
 
 🚧 in progress · 💭 planned
 
