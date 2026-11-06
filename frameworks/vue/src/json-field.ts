@@ -7,7 +7,7 @@ import {
   renderField,
   resolveComponents,
 } from './render-fields'
-import type { JsonFormInstance } from './use-json-form'
+import type { AnyJsonFormInstance } from './use-json-form'
 
 /**
  * Renders one field of a `useJsonForm` form, wherever you put it inside Formisch's `<Form>`. A
@@ -17,7 +17,7 @@ export const JsonField = defineComponent({
   name: 'JsonField',
   props: {
     /** What `useJsonForm` returned. */
-    of: { type: Object as PropType<JsonFormInstance>, required: true },
+    of: { type: Object as PropType<AnyJsonFormInstance>, required: true },
     /** The field's path: `'email'`, or `'address.city'` for a field of a group. */
     path: { type: String, required: true },
     /** Defaults to the components `useJsonForm` got. */

@@ -8,7 +8,7 @@ import {
   renderFields,
   resolveComponents,
 } from './render-fields'
-import type { JsonFormInstance } from './use-json-form'
+import type { AnyJsonFormInstance } from './use-json-form'
 
 /**
  * Renders the fields of a `useJsonForm` form with your components, one per field type. It renders
@@ -19,7 +19,7 @@ export const JsonFields = defineComponent({
   name: 'JsonFields',
   props: {
     /** What `useJsonForm` returned. */
-    of: { type: Object as PropType<JsonFormInstance>, required: true },
+    of: { type: Object as PropType<AnyJsonFormInstance>, required: true },
     /** Defaults to the components `useJsonForm` got. */
     components: { type: Object as PropType<FieldComponents> },
     /** Renders only these fields, by path, in the order of the definition. */

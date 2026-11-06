@@ -2,12 +2,12 @@ import { type Component, h, type VNode } from 'vue'
 import { ArrayField } from './array-field'
 import type { FieldComponents, FieldPath } from './field-components'
 import type { FieldNode } from './field-tree'
-import type { JsonFormInstance } from './use-json-form'
+import type { AnyJsonFormInstance } from './use-json-form'
 import { ValueField } from './value-field'
 
 /** What `<JsonFields>` and `<JsonField>` render with. */
 export interface RenderContext {
-  of: JsonFormInstance
+  of: AnyJsonFormInstance
   components: FieldComponents
   /** True for a field that isn't rendered, and so neither are the fields inside it. */
   skip: (node: FieldNode) => boolean
@@ -16,7 +16,7 @@ export interface RenderContext {
 /** The components from the props, or else the ones `useJsonForm` got. */
 export function resolveComponents(
   components: FieldComponents | undefined,
-  of: JsonFormInstance,
+  of: AnyJsonFormInstance,
 ): FieldComponents {
   const resolved = components ?? of.components
   if (!resolved) {

@@ -3,13 +3,13 @@ import { type Component, defineComponent, h, type PropType, type VNode } from 'v
 import type { ArrayFieldProps, FieldPath } from './field-components'
 import type { FieldNode } from './field-tree'
 import { itemInput } from './item-input'
-import type { JsonFormInstance } from './use-json-form'
+import type { AnyJsonFormInstance } from './use-json-form'
 
 /** Connects a container of kind `array` to Formisch, and renders your component for it. */
 export const ArrayField = defineComponent({
   name: 'ArrayField',
   props: {
-    of: { type: Object as PropType<JsonFormInstance>, required: true },
+    of: { type: Object as PropType<AnyJsonFormInstance>, required: true },
     node: { type: Object as PropType<FieldNode>, required: true },
     path: { type: Array as PropType<FieldPath>, required: true },
     component: { type: [Object, Function] as PropType<Component>, required: true },
