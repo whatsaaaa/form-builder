@@ -4,11 +4,14 @@ import {
   type JsonForm,
   type SchemaBuilder,
 } from '@whatsaaaa/form-builder-schema'
+import type { FieldComponents } from './field-components'
 import { type FieldNode, fieldTree } from './field-tree'
 
 export interface UseJsonFormOptions {
   /** Builds the schema and knows your own types and rules. Defaults to `createSchemaBuilder()`. */
   builder?: SchemaBuilder
+  /** Your component for each field type, so `<JsonFields>` and `<JsonField>` don't need them. */
+  components?: FieldComponents
   /** When a field is validated the first time, as in Formisch. */
   validate?: ValidationMode
   /** When a field is validated again after that, as in Formisch. */
@@ -24,6 +27,8 @@ export interface JsonFormInstance {
   readonly form: FormStore<JsonFormSchema>
   readonly definition: JsonForm
   readonly builder: SchemaBuilder
+  /** The components from the options, if any. */
+  readonly components: FieldComponents | undefined
   /** The definition's fields as a tree, the way `<JsonFields>` renders them. */
   readonly fields: readonly FieldNode[]
 }
@@ -45,5 +50,6 @@ export function useJsonForm(
     validate: options.validate,
     revalidate: options.revalidate,
   })
-  return { form, definition, builder, fields: fieldTree(builder, definition) }
+  const { components } = options
+  return { form, definition, builder, components, fields: fieldTree(builder, definition) }
 }

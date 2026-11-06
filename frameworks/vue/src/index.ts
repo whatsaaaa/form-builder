@@ -10,6 +10,7 @@ export type {
   ValueFieldProps,
 } from './field-components'
 export type { FieldNode, FieldRole } from './field-tree'
+export { JsonField } from './json-field'
 export { JsonFields } from './json-fields'
 export { useJsonForm } from './use-json-form'
 export type { JsonFormInstance, JsonFormSchema, UseJsonFormOptions } from './use-json-form'
