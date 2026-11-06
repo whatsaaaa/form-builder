@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.1.1
+
+### Patch Changes
+
+- [#21](https://github.com/whatsaaaa/form-builder/pull/21) [`804c24f`](https://github.com/whatsaaaa/form-builder/commit/804c24f13bc7981941312017703f6df3653f6e27) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - Add an npm version badge to the README.
+
 ## 0.1.0
 
 ### Minor Changes
