@@ -244,6 +244,9 @@ importers:
       '@whatsaaaa/form-builder-schema':
         specifier: workspace:*
         version: link:../../packages/schema
+      '@whatsaaaa/form-builder-vue':
+        specifier: workspace:*
+        version: link:../../frameworks/vue
       valibot:
         specifier: 'catalog:'
         version: 1.5.0(typescript@6.0.3)
