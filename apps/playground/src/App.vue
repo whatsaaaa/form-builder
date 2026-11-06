@@ -10,6 +10,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/signup">Sign-up form</RouterLink>
       <RouterLink to="/order">Order form</RouterLink>
       <RouterLink to="/field-types">Field types</RouterLink>
+      <RouterLink to="/checkout">Placed fields</RouterLink>
     </nav>
   </header>
 

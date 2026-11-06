@@ -1,4 +1,5 @@
 import type { DefinitionPath } from '../errors/definition-error'
+import type { ValueKind } from '../shared/value-kind'
 import type { JsonField, JsonForm } from './json-form-schema'
 
 /** One field found by `walkFields`. */
@@ -16,6 +17,14 @@ export interface WalkedField {
   definitionPath: DefinitionPath
   /** 0 for the form's own fields, 1 for the fields inside them, and so on. */
   depth: number
+  /**
+   * The kind of the field's value, e.g. `'string'`, or `'none'` for a display element. Only the
+   * builder's `walkFields` knows it, so the `walkFields` function leaves it out, and so does the
+   * builder for a field with issues.
+   */
+  kind?: ValueKind
+  /** The kind of the items, for a field of kind `array` whose type has one, e.g. `'file'`. */
+  itemKind?: ValueKind
 }
 
 /**

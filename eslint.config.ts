@@ -146,7 +146,7 @@ export default defineConfigWithVueTs(
 
   {
     name: 'app/package-tests',
-    files: ['packages/*/tests/**'],
+    files: ['packages/*/tests/**', 'frameworks/*/tests/**'],
     rules: {
       'no-restricted-imports': [
         'error',

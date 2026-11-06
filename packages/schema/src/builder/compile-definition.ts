@@ -124,7 +124,7 @@ export function createCompiler(
       const name = checked ? checked.name : nameOf(raw)
       // A field without a name, like a heading, has its parent's path.
       const dataPath = name === undefined ? parentPath() : [...parentPath(), name]
-      walk(raw, [...path, i], dataPath)
+      walk(raw, [...path, i], dataPath, checked)
       if (name === undefined) return
       remember(raw, checked, dataPath)
       if (!checked) return
@@ -146,7 +146,7 @@ export function createCompiler(
     const checked = checkField(raw, path, registry, undefined, issues)
     // The field of a list's items has no name: its value is the item itself.
     const dataPath = parentPath()
-    walk(raw, path, dataPath)
+    walk(raw, path, dataPath, checked)
     remember(raw, checked, dataPath)
     // A field with issues gets no schema. build() throws before anything parses with it.
     return checked ? build(checked, dataPath).schema : v.never()
@@ -167,10 +167,22 @@ export function createCompiler(
   }
 
   /** Anything shaped like a field counts, so a field with issues is still walked. */
-  function walk(raw: unknown, definitionPath: DefinitionPath, dataPath: DataPath): void {
+  function walk(
+    raw: unknown,
+    definitionPath: DefinitionPath,
+    dataPath: DataPath,
+    checked: CheckedField | undefined,
+  ): void {
     if (!isRecord(raw) || typeof raw.type !== 'string') return
     const field = raw as JsonField
-    walked.push({ field, type: raw.type, dataPath, definitionPath, depth: parents.length })
+    walked.push({
+      field,
+      type: raw.type,
+      dataPath,
+      definitionPath,
+      depth: parents.length,
+      ...kindsOf(raw, checked, registry),
+    })
   }
 
   /** The first field at a path wins, as with duplicate names. Display elements are left out. */
@@ -196,6 +208,20 @@ const hasValue = (raw: unknown, registry: Registry) =>
   isRecord(raw) &&
   typeof raw.type === 'string' &&
   lookup(registry.fieldTypes, raw.type)?.kind !== 'none'
+
+/**
+ * A field's kinds, as `walkFields` gives them. A field with issues has none, but a display element
+ * has no value either way.
+ */
+function kindsOf(
+  raw: unknown,
+  checked: CheckedField | undefined,
+  registry: Registry,
+): Pick<WalkedField, 'kind' | 'itemKind'> {
+  if (!checked) return hasValue(raw, registry) ? {} : { kind: 'none' }
+  const { valueKind: kind, itemKind } = checked
+  return itemKind === undefined ? { kind } : { kind, itemKind }
+}
 
 /**
  * A field's value in `initialInput`. A container of kind `object` gets the input of its fields,

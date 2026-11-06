@@ -7,6 +7,7 @@ import {
   type JsonField,
   type JsonForm,
   walkFields,
+  type WalkedField,
 } from '@whatsaaaa/form-builder-schema'
 import { fixtures } from '../fixtures'
 import { form } from '../helpers'
@@ -39,11 +40,65 @@ const walk = (json: JsonForm) =>
     depth,
   }))
 
+// What the walkFields function yields too: everything but the kinds.
+const withoutKinds = (walked: WalkedField) =>
+  Object.fromEntries(Object.entries(walked).filter(([key]) => key !== 'kind' && key !== 'itemKind'))
+
+const kinds = (json: JsonForm) =>
+  [...builder.walkFields(json)].map(({ type, kind, itemKind }) => ({ type, kind, itemKind }))
+
 describe("the builder's walkFields", () => {
   it.each(Object.entries(fixtures))('yields what walkFields does for the %s fixture', (_, json) => {
     const definition = json as JsonForm
 
-    expect([...builder.walkFields(definition)]).toEqual([...walkFields(definition)])
+    expect([...builder.walkFields(definition)].map(withoutKinds)).toEqual([
+      ...walkFields(definition),
+    ])
+  })
+
+  it.each(Object.entries(fixtures))('gives every field of the %s fixture a kind', (_, json) => {
+    for (const { kind } of builder.walkFields(json as JsonForm)) expect(kind).toBeTypeOf('string')
+  })
+
+  it('gives each field its kind, and the kind of its items', () => {
+    const json = form(
+      { type: 'heading', text: 'Order' },
+      { name: 'qty', type: 'number' },
+      { name: 'size', type: 'select', options: [{ value: 1, label: 'S' }] },
+      { name: 'photos', type: 'file', multiple: true },
+      { name: 'colors', type: 'multiselect', options: [{ value: 'red', label: 'Red' }] },
+      { name: 'tags', type: 'list', of: { type: 'text' } },
+    )
+
+    expect(kinds(json)).toEqual([
+      { type: 'heading', kind: 'none' },
+      { type: 'number', kind: 'number' },
+      { type: 'select', kind: 'number' },
+      { type: 'file', kind: 'array', itemKind: 'file' },
+      { type: 'multiselect', kind: 'array', itemKind: 'string' },
+      { type: 'list', kind: 'array' },
+      { type: 'text', kind: 'string' },
+    ])
+  })
+
+  it('leaves out the kinds of a field with issues, but not of a display element', () => {
+    const json = form(
+      { name: 'a', type: 'number', rules: [{ rule: 'nope' }] },
+      { type: 'heading', text: 'Hi', rules: [] },
+    )
+
+    expect(builder.validate(json).success).toBe(false)
+    expect(kinds(json)).toEqual([
+      { type: 'number', kind: undefined },
+      { type: 'heading', kind: 'none' },
+    ])
+  })
+
+  it('has no kinds from the walkFields function', () => {
+    const [field] = walkFields(form({ name: 'a', type: 'number' }))
+
+    expect(field).not.toHaveProperty('kind')
+    expect(field).not.toHaveProperty('itemKind')
   })
 
   it('walks into your own container types', () => {

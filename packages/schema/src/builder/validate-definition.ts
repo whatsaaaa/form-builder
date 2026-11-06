@@ -28,6 +28,8 @@ export interface CheckedField {
   kind: KindDef
   /** The name of the kind, e.g. `'array'`. */
   valueKind: ValueKind
+  /** The kind of the items, for a field of kind `array` whose type has one. */
+  itemKind: ValueKind | undefined
   rules: CheckedRule[]
 }
 
@@ -163,6 +165,7 @@ export function checkField(
     type,
     kind: kindDef(field.type, kind, registry),
     valueKind: kind,
+    itemKind: kinds.itemKind,
     rules: [...defaultRules, ...fieldRules],
   }
 }
