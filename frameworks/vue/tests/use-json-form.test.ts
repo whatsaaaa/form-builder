@@ -10,7 +10,7 @@ import { type FieldNode, useJsonForm } from '@whatsaaaa/form-builder-vue'
 import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import { fixtures } from './fixtures'
-import { form, settle, withSetup } from './helpers'
+import { form, settle, silenceVueWarnings, withSetup } from './helpers'
 
 /** The tree without the field objects, to compare in one go. */
 const shape = (nodes: readonly FieldNode[]): unknown[] =>
@@ -31,6 +31,7 @@ describe('useJsonForm', () => {
   })
 
   it('throws a DefinitionError for a definition with issues', () => {
+    silenceVueWarnings()
     expect(() => withSetup(() => useJsonForm(form({ name: 'a', type: 'nope' })))).toThrow(
       DefinitionError,
     )

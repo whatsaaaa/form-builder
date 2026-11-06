@@ -7,7 +7,7 @@ import type { ValueKind } from '@whatsaaaa/form-builder-schema'
  */
 export function coerceInput(input: unknown, kind: ValueKind, itemKind?: ValueKind): unknown {
   if (kind === 'array') {
-    const items = isFileList(input) ? [...input] : input
+    const items = isFileList(input) ? Array.from(input) : input
     if (!Array.isArray(items) || itemKind === undefined) return items
     return items.map((item: unknown) => coerceInput(item, itemKind))
   }
@@ -23,6 +23,14 @@ function toNumber(input: string): number | string | undefined {
   return Number.isNaN(number) ? input : number
 }
 
-// FileList only exists in a browser, so check for it before using it, e.g. during SSR.
-const isFileList = (value: unknown): value is FileList =>
-  typeof FileList !== 'undefined' && value instanceof FileList
+/**
+ * A `FileList`, or anything shaped like one: an array-like whose items are all files. Checked by
+ * shape rather than with `instanceof FileList`, because a `File[]` from a component that spread the
+ * list, or from a DOM shim like happy-dom whose `DataTransfer.files` is an array, should count too.
+ * `File` only exists in a browser, so check for it before using it, e.g. during SSR.
+ */
+function isFileList(value: unknown): value is ArrayLike<File> {
+  if (typeof File === 'undefined' || typeof value !== 'object' || value === null) return false
+  if (value instanceof File || typeof (value as ArrayLike<unknown>).length !== 'number') return false
+  return Array.from(value as ArrayLike<unknown>).every((item) => item instanceof File)
+}

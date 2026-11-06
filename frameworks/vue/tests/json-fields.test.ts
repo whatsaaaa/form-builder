@@ -9,7 +9,16 @@ import * as v from 'valibot'
 import { defineComponent, h } from 'vue'
 import { describe, expect, it } from 'vitest'
 import { builtInComponents, TestArray, TestGroup, TestInput, TestText, values } from './components'
-import { errorAt, form, mount, mountForm, settle, submit, type } from './helpers'
+import {
+  errorAt,
+  form,
+  mount,
+  mountForm,
+  settle,
+  silenceVueWarnings,
+  submit,
+  type,
+} from './helpers'
 
 /** The roles and paths the tests' components rendered, in document order. */
 const rendered = (root: HTMLElement) =>
@@ -113,6 +122,7 @@ describe('<JsonFields>', () => {
   })
 
   it('throws a TypeError that names every type without a component', () => {
+    silenceVueWarnings()
     const json = form(
       { name: 'a', type: 'text' },
       { name: 'b', type: 'number' },

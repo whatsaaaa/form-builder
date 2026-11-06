@@ -8,6 +8,7 @@ import {
   type UseJsonFormOptions,
 } from '@whatsaaaa/form-builder-vue'
 import { type Component, createApp, defineComponent, h, nextTick } from 'vue'
+import { onTestFinished, vi } from 'vitest'
 
 export const form = (...fields: JsonField[]): JsonForm => ({ version: '1', fields })
 
@@ -82,3 +83,12 @@ export async function submit(root: HTMLElement) {
 /** The error shown in the element at `path`, if any. */
 export const errorAt = (root: HTMLElement, path: string) =>
   root.querySelector(`[data-path="${path}"] > small`)?.textContent ?? null
+
+/**
+ * Hides Vue's warnings for the rest of the test, for a test that expects a setup function to throw:
+ * Vue logs the error with every prop of the component, which buries the test output.
+ */
+export function silenceVueWarnings() {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  onTestFinished(() => warn.mockRestore())
+}
