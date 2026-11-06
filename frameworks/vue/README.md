@@ -1,5 +1,7 @@
 # @whatsaaaa/form-builder-vue
 
+[![npm](https://img.shields.io/npm/v/@whatsaaaa/form-builder-vue)](https://www.npmjs.com/package/@whatsaaaa/form-builder-vue)
+
 Render JSON form definitions with [Formisch](https://formisch.dev) and your own Vue components.
 
 It's headless: it reads the definition, connects every field to Formisch and turns input into the values the schema expects, but it renders nothing of its own. You give it a component per field type, so it works with plain HTML, Nuxt UI or any other UI library.
