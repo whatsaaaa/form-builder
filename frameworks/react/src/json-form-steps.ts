@@ -79,6 +79,8 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     failed: new Set<number>(),
     // The field to focus once the step it is on has rendered.
     focus: undefined as FieldPath | undefined,
+    // Whether a submit on the last step is on its way through Formisch.
+    submitting: false,
     modes,
   })
 
@@ -181,7 +183,11 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     // Before the last step, a submit, like Enter in a step with a single text input, is a Next.
     // It is caught on its way down to the form, before Formisch's own handler sees it.
     const onSubmit = (event: Event) => {
-      if (event.target !== formElementOf(form) || state.current.index === list.length - 1) return
+      if (event.target !== formElementOf(form)) return
+      if (state.current.index === list.length - 1) {
+        state.current.submitting = true
+        return
+      }
       event.preventDefault()
       event.stopImmediatePropagation()
       void methods.next()
@@ -194,13 +200,14 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
   }, [form, list, methods, stepped])
 
   // A submit that fails because of a step before the last, e.g. on a form rule, goes back to it.
+  // React can batch the start and the end of a submit into one render, so the submit is marked
+  // as it starts, and each render checks whether Formisch has finished it.
   const submitting = form.isSubmitting
-  const wasSubmitting = useRef(false)
   useEffect(() => {
-    const was = wasSubmitting.current
-    wasSubmitting.current = submitting
-    if (stepped && was && !submitting && !form.isValid) void methods.afterSubmit()
-  }, [form, methods, stepped, submitting])
+    if (!state.current.submitting || submitting) return
+    state.current.submitting = false
+    if (!form.isValid) void methods.afterSubmit()
+  })
 
   return useMemo(
     () => ({
