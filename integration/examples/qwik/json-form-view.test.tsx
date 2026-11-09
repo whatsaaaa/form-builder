@@ -3,7 +3,11 @@
 // no server rendering. The real qwikloader runs the handlers, so the elements get real events.
 import '@qwik.dev/core/qwikloader.js'
 import { render as renderQwik } from '@qwik.dev/core'
-import { _waitUntilRendered, getDomContainer } from '@qwik.dev/core/internal'
+import {
+  _waitUntilRendered,
+  _whenContainerDataReady,
+  getDomContainer,
+} from '@qwik.dev/core/internal'
 import type { JsonForm } from '@whatsaaaa/form-builder-schema'
 import { describe, onTestFinished } from 'vitest'
 import { type RenderedForm, runScenarios } from '../../tests/run-scenarios'
@@ -22,9 +26,13 @@ async function render(json: JsonForm): Promise<RenderedForm> {
     root.remove()
   })
 
+  // Qwik holds back every event until the container has processed its data, which it does in
+  // later turns of the event loop. Waits for that, so settle() sees the first event's handler run.
+  const container = getDomContainer(root)
+  await _whenContainerDataReady(container, () => {})
+
   // Handlers, Formisch's validation and a component waiting for its form all run asynchronously,
   // and each can make Qwik render again. Waits until a turn of the event loop changes nothing.
-  const container = getDomContainer(root)
   const settle = async () => {
     for (let html = ''; html !== root.innerHTML;) {
       html = root.innerHTML
