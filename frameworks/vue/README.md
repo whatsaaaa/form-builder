@@ -51,6 +51,7 @@ function save(output: unknown) {
 useJsonForm(definition, {
   builder: createSchemaBuilder({ fieldTypes: { money } }), // your own types, rules and messages
   components, // your component per field type, see below
+  layoutComponents, // your component per layout type, see Layout
   validate: 'blur', // when a field is validated the first time, as in Formisch
   revalidate: 'input', // when it is validated again
 })
@@ -194,9 +195,130 @@ defineProps<DisplayFieldProps>()
 
 Declare the props even when a component doesn't use them, like a divider, or Vue adds `field` to its element as an attribute.
 
+## Layout
+
+A definition's [`layout`](https://github.com/whatsaaaa/form-builder/tree/main/packages/schema#layout) puts its fields in sections, rows of a 12-column grid and steps, and leaves slots for content of yours. `<JsonFields>` renders the current step of it. Give `useJsonForm` a component for each layout type the definition uses, and `<JsonFields>` a named slot for each of its slots:
+
+```vue
+<!-- Row.vue: one line of a 12-column grid. On a narrow screen, give each cell the whole row. -->
+<script setup lang="ts">
+import type { RowProps, RowSlots } from '@whatsaaaa/form-builder-vue'
+
+defineProps<RowProps>()
+defineSlots<RowSlots>()
+</script>
+
+<template>
+  <div class="row">
+    <div v-for="(span, index) in spans" :key="index" :style="{ gridColumn: `span ${span}` }">
+      <slot :index="index" />
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.row {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+</style>
+```
+
+```vue
+<!-- Section.vue -->
+<script setup lang="ts">
+import type { SectionProps, SectionSlots } from '@whatsaaaa/form-builder-vue'
+
+defineProps<SectionProps>()
+defineSlots<SectionSlots>()
+</script>
+
+<template>
+  <fieldset>
+    <legend>{{ section.label }}</legend>
+    <slot />
+  </fieldset>
+</template>
+```
+
+```vue
+<script setup lang="ts">
+const jsonForm = useJsonForm(definition, {
+  components,
+  layoutComponents: { section: Section, row: Row },
+})
+</script>
+
+<template>
+  <Form :of="jsonForm.form" @submit="save">
+    <JsonFields :of="jsonForm">
+      <template #submit><button type="submit">Place order</button></template>
+    </JsonFields>
+  </Form>
+</template>
+```
+
+| Layout type | Props                                                                     | Slot                                           |
+| ----------- | ------------------------------------------------------------------------- | ---------------------------------------------- |
+| `section`   | `section`, as written, with its `id`, `label`, `description` and `ui`     | default: the section's items                   |
+| `row`       | `row`, as written, with its `id` and `ui`; `spans`, the span of each cell | default, with `{ index }`: the cell at `index` |
+
+The props are typed as `SectionProps` and `RowProps`, and the slots as `SectionSlots` and `RowSlots`.
+
+- `layoutComponents` goes to `useJsonForm`, or to `<JsonFields>` as a prop, which wins. A definition without sections or rows needs none, and one without a `layout` renders as it always did.
+- A layout type the layout uses without a component, or a slot without content, throws a `TypeError` naming each one when `<JsonFields>` sets up, on every step.
+- Display elements written in the layout render with your field components, like the ones in `fields`.
+- `except` leaves fields out of the layout too, and a section or a row left without fields drops out. The other cells of a row keep their spans. `only` renders the fields it names without the layout.
+- The spans are for a wide screen: the layout says nothing about narrow ones, so your row component decides, e.g. with a media query.
+
+### Steps
+
+`jsonForm.steps` is where the form is, and how to move. It is reactive, so templates follow it:
+
+```vue
+<template>
+  <Form :of="jsonForm.form" @submit="save">
+    <ol>
+      <li
+        v-for="(step, i) in jsonForm.steps.list"
+        :key="step.step.id ?? i"
+        :aria-current="i === jsonForm.steps.index ? 'step' : undefined"
+      >
+        {{ step.step.label }}
+      </li>
+    </ol>
+    <JsonFields :of="jsonForm" />
+    <button v-if="!jsonForm.steps.isFirst" type="button" @click="jsonForm.steps.back()">
+      Back
+    </button>
+    <button v-if="!jsonForm.steps.isLast" type="button" @click="jsonForm.steps.next()">Next</button>
+    <button v-else type="submit">Sign up</button>
+  </Form>
+</template>
+```
+
+| Member              |                                                                                                      |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| `list`              | every step, with its `step` as written (`id`, `label`, `description`, `ui`), `children` and `fields` |
+| `index`, `current`  | the step `<JsonFields>` renders                                                                      |
+| `isFirst`, `isLast` |                                                                                                      |
+| `next()`            | validates, and moves on when the step's fields have no issues. Resolves to whether it moved          |
+| `back()`            | moves back, without validating                                                                       |
+| `goTo(index)`       | back freely; forward through each step on the way, stopping at the first with issues                 |
+
+The form is one Formisch form, so Formisch validates all of it at once. The steps make that work:
+
+- **Next** validates the whole form, and only the issues on the current step's fields keep the user there. It focuses the first one, in layout order.
+- **A step shows what the user left**: the errors it had when they left it, and none the first time they get to it, so the issues of steps nobody saw yet stay out of sight.
+- **A step that failed Next revalidates** as the user fixes it, on the `revalidate` event, like a form after a failed submit.
+- **A submit before the last step is a Next**, so Enter in a step with a single text input doesn't submit the form early. On the last step, Formisch submits as usual.
+- **A submit that fails because of an earlier step**, like a form rule that reads fields of two steps, goes back to that step.
+- `<JsonFields :step="2" />` renders a given step instead of the current one, e.g. on a review page. A form without steps has one, and nothing changes for it.
+
 ## Placing fields yourself
 
-`<JsonFields>` renders every field in the order of the definition. To put some of them somewhere else, place them with `<JsonField>` and leave them out of `<JsonFields>` with `except`:
+Without a `layout`, `<JsonFields>` renders every field in the order of the definition. To put some of them somewhere else, in code rather than in the definition, place them with `<JsonField>` and leave them out of `<JsonFields>` with `except`:
 
 ```vue
 <template>
@@ -245,4 +367,4 @@ useFieldArray(jsonForm.form, { path: ['lines'] })
 
 - Labels and display text reach your components as written in the definition. The builder's `resolveMessage` only changes what goes into the schema, so translate `field.label` in your components.
 - `ui.widget` doesn't pick a component. A component can read `field.ui` itself, e.g. to show a multiselect as checkboxes.
-- Showing and hiding fields, or making one required because of another, belongs to a future affects package.
+- Showing and hiding fields, or making one required because of another, belongs to a future affects package. The layout already hides a section, a row or a step whose fields are all hidden, through `shownNodes` in the schema package.

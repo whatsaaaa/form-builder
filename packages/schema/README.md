@@ -180,6 +180,77 @@ A form rule checks a field against other fields, such as a repeated password or 
 - The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` holds a `Date`, which is compared by its time, also with a date that holds the ISO string.
 - **Form rules live in the schema's pipe.** With form rules, `build()` gives the object schema of the fields in a `v.pipe()` with one check per rule, and its type, `JsonFormSchema`, says so. A new object made from `schema.entries`, as with `v.pick()`, `v.omit()` or `v.object({ ...schema.entries })`, leaves the form rules out: pipe it with the checks from `schema.pipe` too.
 
+## Layout
+
+`layout`, next to `fields`, says where the fields go: on one page with `items`, or over several with `steps`. It never changes the value: `fields` alone decides its shape, its validation and the output, so a definition submits the same with any layout.
+
+```json
+{
+  "version": "1",
+  "fields": [
+    { "name": "name", "type": "text", "required": true },
+    { "name": "email", "type": "email", "required": true },
+    {
+      "name": "address",
+      "type": "group",
+      "fields": [
+        { "name": "city", "type": "text" },
+        { "name": "zip", "type": "text" }
+      ]
+    },
+    { "name": "coupon", "type": "text" },
+    { "name": "acceptTerms", "type": "checkbox", "required": true }
+  ],
+  "layout": {
+    "items": [
+      {
+        "type": "row",
+        "items": [
+          {
+            "type": "section",
+            "id": "delivery",
+            "label": "Delivery",
+            "span": 8,
+            "items": [
+              { "type": "row", "items": ["name", "email"] },
+              { "type": "row", "items": [{ "field": "address.city", "span": 8 }, "address.zip"] }
+            ]
+          },
+          {
+            "type": "section",
+            "id": "summary",
+            "label": "Summary",
+            "items": ["*", { "type": "slot", "name": "submit" }]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+| Item         | Written as                             | Keys                                                                                       |
+| ------------ | -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| A field      | `"email"`, `"address.city"`            | its dot path, from the fields around it                                                    |
+| A field, too | `{ "field": "lines", ... }`            | `field`, and `items` to lay out the fields of a group, or of each item of an array; `span` |
+| The rest     | `"*"`                                  | every field placed nowhere else, in the order of `fields`                                  |
+| A section    | `{ "type": "section", ... }`           | `items`, and `id`, `label`, `description`, `ui`, `span`: a block with a title              |
+| A row        | `{ "type": "row", ... }`               | `items`, and `id`, `ui`, `span`: one line of a 12-column grid                              |
+| A slot       | `{ "type": "slot", "name": "submit" }` | `name`, `span`: where the app puts its own content, like a submit button or a summary      |
+| Display      | `{ "type": "heading", "text": "..." }` | as in `fields`, with `id` instead of `name`, and `span`                                    |
+
+The layout takes `items` or `steps`, and `ui`. A step takes `items`, and `id`, `label`, `description` and `ui`. Lists of items are never empty.
+
+- **Every field is placed once.** Placing a group or an array places every field inside it. `"*"` places the rest, once per list of fields: the form's, across all steps, and each container's `items`. A field placed nowhere is `unplaced_field`, so a required field can't vanish and leave a form nobody can submit. So is a display element of `fields`, which `"*"` places too.
+- **Paths go through groups, not into array items.** `"address.city"` places the city on its own, even in another step than the rest of its group, and the value still nests it. A field of an array's items has no index outside its item: place the array, and lay out each item with its `items`, whose paths start inside the array.
+- **Rows are a 12-column grid.** Each item of a row takes `span` columns, from 1 to 12. Items without a `span` share the columns the others leave equally: `["name", "email"]` is 6 and 6. The spans add up to 12 at most, and the shares must come out whole. A second line is a second row, so a row never wraps, and an item never moves to another line. `"*"` can't be a cell, as a row's cells are fixed, but a section in a row can hold it. `span` is for the items of a row only.
+- **Screen sizes are up to the renderer.** The spans are for a wide screen. The layout says nothing about narrow ones: a renderer gives each cell the whole row below a width of its choice, and `ui` holds any hints of yours.
+- **Display elements go in the layout.** Write them where they go, with an `id` if you need one. A `label` and a `description` on a section or a step title it.
+- **`id`s** are optional, and unique across the layout. Renderers can key by them, and an app can go to a step by its `id`.
+- **`ui`** on the layout, a step, a section or a row is for renderers, like a field's, and never checked: `{ "variant": "card" }`, or `{ "steps": "tabs" }` on the layout.
+- `section`, `row` and `slot` are the layout's own types. A field type of yours with one of those names can't be placed as a display element.
+- **Steps** split the form into pages. The form is still one Formisch form with one schema: see [Steps](#steps) for how Next validates.
+
 ## Checking definitions
 
 `validate(json)` never throws. It returns every problem in the definition, in document order:
@@ -191,13 +262,14 @@ if (!result.success) {
 }
 ```
 
-`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params`, `kind_mismatch` and `unknown_field`. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
+`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params`, `kind_mismatch`, `unknown_field`, `duplicate_placement`, `unplaced_field` and `duplicate_id`. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
 
 - **Names** are one key of the value, so a name with `.`, `[` or `]` is `invalid_name`, and so are `*`, which paths use for the items of a list, and `__proto__`, which no object can hold as a key.
 - **Defaults** must pass the field's own schema, rules included, or they are `invalid_default`. An empty default, like `''`, counts as none.
 - **Form rules** report on `['formRules', 0]` and below. A `field` path that names no field with a value is `unknown_field` on `['formRules', 0, 'field']`, and a path the rule reads gets it on `['formRules', 0]`. When a field the rule reads has issues of its own, the rule adds none.
+- **The layout** reports on `['layout']` and below, after the fields and form rules, such as `['layout', 'steps', 1, 'items', 0]`. A path that names no field with a value, or reaches into an array's items, is `unknown_field`, a field placed twice is `duplicate_placement` on the second place, a field placed nowhere is `unplaced_field` on the list that misses it, and a second node with an `id` is `duplicate_id`. A span that is no whole number from 1 to 12, `span` outside a row, the spans of a row over 12 columns or that can't be shared evenly, and a type with a value in the layout are `invalid_shape`. The layout's paths are checked once the fields have no issues of their own.
 
-Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, an object that is never checked. A definition itself takes `version`, `fields`, `formRules` and `$schema`, which is allowed and never read. Any other key, on a field or on the definition, is `unknown_key`.
+Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, an object that is never checked. A definition itself takes `version`, `fields`, `formRules`, `layout` and `$schema`, which is allowed and never read. Any other key, on a field, a layout node or the definition, is `unknown_key`.
 
 ## Using with Formisch
 
@@ -209,20 +281,20 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/react valibot
 
 Every Formisch package needs Valibot 1.4.1 or later, newer than the 1.3 this package needs on its own.
 
-One builder gives Formisch the schema and the initial input, and you the fields to render:
+One builder gives Formisch the schema and the initial input, and you the layout to render:
 
 ```ts
 const builder = createSchemaBuilder()
 
 const form = useForm({ schema: builder.build(json), initialInput: builder.getInitialInput(json) })
-const fields = builder.getFieldTree(json)
+const { steps } = builder.getLayout(json)
 ```
 
-Use the same builder for all of it, so your own types and rules count everywhere. `getFieldTree` throws a `DefinitionError` like `build`, so run `validate()` first when the definition comes from outside your code.
+Use the same builder for all of it, so your own types and rules count everywhere. `getLayout` throws a `DefinitionError` like `build`, so run `validate()` first when the definition comes from outside your code. A definition without a `layout` has one step with every field, in the order of the definition, so one renderer renders every definition. `getFieldTree` gives the fields alone, without the layout.
 
 ### Rendering by role
 
-`getFieldTree` gives the definition's fields as a tree of `FieldNode`s, in the order of the definition. Render each one by its `role`, so your own types render too:
+A layout's fields are `FieldNode`s, as `getFieldTree` gives them. Render each one by its `role`, so your own types render too:
 
 | Role      | Which fields                   | Render                                                                      |
 | --------- | ------------------------------ | --------------------------------------------------------------------------- |
@@ -239,70 +311,146 @@ A whole renderer for React looks like this. Other frameworks have the same shape
 
 ```tsx
 import {
+  focus,
   Form,
   type FormStore,
+  getInput,
   insert,
   remove,
+  setErrors,
   type SubmitHandler,
   useField,
   useFieldArray,
   useForm,
+  validate,
 } from '@formisch/react'
 import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
+  fieldPathsOf,
   isRequired,
+  issuesOfStep,
   type JsonForm,
   type JsonFormSchema,
+  type LayoutField,
+  type LayoutNode,
+  type LayoutStep,
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
-import { useState } from 'react'
+import { Fragment, type ReactNode, useState } from 'react'
 
 const builder = createSchemaBuilder()
 
-export function JsonFormView(props: { json: JsonForm; onSubmit: SubmitHandler<JsonFormSchema> }) {
+/** The content of the layout's slots, by name. */
+type Slots = Record<string, ReactNode>
+
+interface JsonFormViewProps {
+  json: JsonForm
+  onSubmit: SubmitHandler<JsonFormSchema>
+  slots?: Slots
+}
+
+export function JsonFormView({ json, onSubmit, slots = {} }: JsonFormViewProps) {
   // Formisch reads its config once, so read the definition once too.
-  const [{ fields, ...config }] = useState(() => ({
-    schema: builder.build(props.json),
-    initialInput: builder.getInitialInput(props.json),
-    fields: builder.getFieldTree(props.json),
+  const [{ steps, ...config }] = useState(() => ({
+    schema: builder.build(json),
+    initialInput: builder.getInitialInput(json),
+    steps: builder.getLayout(json).steps,
   }))
   const form = useForm(config)
+  const [index, setIndex] = useState(0)
+  const step = steps[index] as LayoutStep
+
+  // Next validates the whole form, and only the issues on this step's fields keep the user here.
+  const next = async () => {
+    const found = issuesOfStep(step, (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    setIndex(index + 1)
+  }
+
   return (
-    <Form of={form} onSubmit={props.onSubmit}>
-      <Fields form={form} nodes={fields} indexes={[]} />
-      <button type="submit">Save</button>
+    <Form of={form} onSubmit={onSubmit}>
+      {/* Keyed by the step, so another step's fields don't take over this one's components. */}
+      <Layout key={index} form={form} nodes={step.children} indexes={[]} slots={slots} />
+      {index > 0 && (
+        <button type="button" onClick={() => setIndex(index - 1)}>
+          Back
+        </button>
+      )}
+      {index < steps.length - 1 ? (
+        <button type="button" onClick={next}>
+          Next
+        </button>
+      ) : (
+        <button type="submit">Save</button>
+      )}
     </Form>
   )
 }
 
-interface FieldsProps {
+interface LayoutProps {
   form: FormStore
-  nodes: readonly FieldNode[]
-  /** The index of each array item the fields are in, outermost first. */
+  nodes: readonly LayoutNode[]
+  /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
+  slots: Slots
 }
 
-function Fields({ form, nodes, indexes }: FieldsProps) {
-  return nodes.map((node, position) => {
-    const key = node.field.name ?? `#${position}`
-    switch (node.role) {
-      case 'display':
-        return <Display key={key} node={node} />
-      case 'group':
+function Layout({ form, nodes, indexes, slots }: LayoutProps) {
+  return nodes.map((node) => {
+    switch (node.type) {
+      case 'section':
         return (
-          <fieldset key={key}>
-            <legend>{node.field.label ?? node.field.name}</legend>
-            <Fields form={form} nodes={node.children} indexes={indexes} />
+          <fieldset key={node.key}>
+            <legend>{node.section.label}</legend>
+            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
           </fieldset>
         )
-      case 'array':
-        return <ArrayField key={key} form={form} node={node} indexes={indexes} />
-      case 'value':
-        return <ValueField key={key} form={form} node={node} indexes={indexes} />
+      case 'row':
+        // One line of a 12-column grid, where each cell takes its span.
+        return (
+          <div key={node.key} style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
+            {node.children.map((cell) => (
+              <div key={cell.key} style={{ gridColumn: `span ${cell.span}` }}>
+                <Layout form={form} nodes={[cell]} indexes={indexes} slots={slots} />
+              </div>
+            ))}
+          </div>
+        )
+      case 'slot':
+        return <Fragment key={node.key}>{slots[node.name]}</Fragment>
+      case 'field':
+        return <Field key={node.key} form={form} node={node} indexes={indexes} slots={slots} />
     }
   })
+}
+
+/** A field by its role. A group and an array render their fields from the layout. */
+function Field({ form, node, indexes, slots }: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
+  switch (node.node.role) {
+    case 'display':
+      return <Display node={node.node} />
+    case 'group':
+      return (
+        <fieldset>
+          <legend>{node.node.field.label ?? node.node.field.name}</legend>
+          <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+        </fieldset>
+      )
+    case 'array':
+      return <ArrayField form={form} node={node} indexes={indexes} />
+    case 'value':
+      return <ValueField form={form} node={node.node} indexes={indexes} />
+  }
 }
 
 function Display({ node }: { node: FieldNode }) {
@@ -314,23 +462,25 @@ function Display({ node }: { node: FieldNode }) {
   return node.type === 'paragraph' ? <p>{text}</p> : <hr />
 }
 
-interface FieldProps {
+interface FieldProps<TNode> {
   form: FormStore
-  node: FieldNode
+  node: TNode
   indexes: readonly number[]
 }
 
-function ArrayField({ form, node, indexes }: FieldProps) {
+/** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
+function ArrayField({ form, node, indexes }: FieldProps<LayoutField>) {
+  const { field, dataPath } = node.node
   // The path comes from the definition at runtime, so Formisch's types can't check it.
-  const path = toFieldPath(node.dataPath, indexes) as never
+  const path = toFieldPath(dataPath, indexes) as never
   const array = useFieldArray(form, { path })
-  const add = () => insert(form, { path, initialInput: builder.getItemInput(node.field) as never })
+  const add = () => insert(form, { path, initialInput: builder.getItemInput(field) as never })
   return (
     <fieldset>
-      <legend>{node.field.label ?? node.field.name}</legend>
+      <legend>{field.label ?? field.name}</legend>
       {array.items.map((item, index) => (
         <div key={item}>
-          <Fields form={form} nodes={node.children} indexes={[...indexes, index]} />
+          <Layout form={form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
           <button type="button" onClick={() => remove(form, { path, at: index })}>
             Remove
           </button>
@@ -344,7 +494,7 @@ function ArrayField({ form, node, indexes }: FieldProps) {
   )
 }
 
-function ValueField({ form, node, indexes }: FieldProps) {
+function ValueField({ form, node, indexes }: FieldProps<FieldNode>) {
   const store = useField(form, { path: toFieldPath(node.dataPath, indexes) as never })
   // Turns what the element gives into the field's value, e.g. '5' into 5 for a number.
   const set = (input: unknown) => store.onChange(coerceInput(input, node) as never)
@@ -372,6 +522,7 @@ function ValueField({ form, node, indexes }: FieldProps) {
 - **Errors.** Show each field's `errors`, and an array's own, like a required array's message, from its field array. Form rules need no wiring: their issues have the path of the field they name, so Formisch shows them on that field, and on that field of each array item.
 - **Required fields.** `isRequired(node.field)` is true when the definition makes a field required, with `required: true` or `{ message }`, e.g. to show an asterisk. The schema checks it: Formisch's `<Form>` turns the browser's own checks off.
 - **A component per type.** When your renderer looks up a component by `node.type`, `checkComponents(nodes, components)` throws a `TypeError` that names every type in the tree without one, so a missing component shows up before the first render rather than when its field first appears, like in a new array item.
+- **A component per layout type.** Likewise, `checkLayoutComponents(layout, components, slots)` throws a `TypeError` naming every layout type, like `section`, without a component, and every slot without content, on every step.
 
 Vue has the same shape, but its components set up once. Pass the path as a getter, so a field follows its item when one before it is removed, and the same for `useFieldArray`:
 
@@ -409,9 +560,39 @@ const set = (input: unknown) => {
 </template>
 ```
 
+### The layout tree
+
+`getLayout(json)` gives the layout with every path resolved and every `"*"` replaced by the fields it places: `{ steps, ui }`, with at least one step. Render it, never a field's own `children`: the layout can reorder a group's fields and put display elements among them.
+
+| Node      | What it has                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------- |
+| `field`   | `node`, the field's `FieldNode`, and `children`: the layout of a group's fields, or of one item of an array |
+| `section` | `section`, as written, with its `id`, `label`, `description` and `ui`, and `children`                       |
+| `row`     | `row`, as written, with its `id` and `ui`, and `children`, its cells                                        |
+| `slot`    | `name`                                                                                                      |
+
+- **Every node has a `span`**, the columns it takes in its row: 12 outside one. Render a row as a grid of 12 columns, `grid-template-columns: repeat(12, 1fr)`, and each cell with `grid-column: span N`. A display element written in the layout is a `field` node too, with the role `display`.
+- **Every node has a `key`**, unique among its siblings and the same for the life of the layout, for frameworks that key what they render.
+- **Each step** has `step`, the step as written (`{ items }` for a layout with `items`, `{ items: ['*'] }` without one), `children`, and `fields`: every field with a value placed in it, in layout order.
+- `allLayoutNodes(nodes)` gives every node of a tree, a container before its items.
+
+### Steps
+
+A form with steps is still one Formisch form with one schema. Formisch validates the whole form at once, so Next does too, and lets only the issues on the current step's fields keep the user there. The renderer above does this:
+
+1. **Next** runs `validate(form)`, and `issuesOfStep(step, result.issues)` gives the issues on the step's fields, in layout order, each with its `field` and Formisch `path`. With any, it stays, and `focus(form, { path })` goes to the first field that has an element: a group or an array has none.
+2. **A step starts clean.** That validation set errors on the next step's fields too, which nobody saw. `fieldPathsOf(step, getInput(form))` gives the Formisch path of each of the step's fields, with every array item there is, to clear them with `setErrors(form, { path, errors: null })`.
+3. **Back** never validates. **Submit** is the last step's: Formisch validates the whole form again, so a form rule that reads fields of two steps still works.
+
+The Vue and React adapters do more: a step shows the errors it had when the user left it, a step that failed Next revalidates as the user fixes it, a submit before the last step, like Enter in a step with one text input, moves on like Next, and a submit that fails because of an earlier step goes back to it.
+
+### Showing and hiding
+
+`shownNodes(nodes, indexes, isShown)` gives the nodes to render when some fields are hidden, by a function that says whether a field, in the array items at `indexes`, is shown. A hidden field drops out with the fields inside it. A group, a section or a row whose fields are all hidden drops out too, even with text in it, while one with no field with a value, only text, stays. A row's other cells keep their spans and line up from its first column: a row is one line, so no field moves to another. An array's items aren't looked into: call it for each item, with its indexes. `shownSteps(steps, isShown)` leaves out a step whose fields are all hidden, the same way. The adapters use them for `except`. They are where conditions on fields, like those of the planned affects package, plug in.
+
 ### Other frameworks
 
-Preact, Solid, Svelte, Qwik and Angular have the same shape too. [Formisch in each framework](docs/frameworks.md) has a whole renderer for each, with every control below, and the tests run every shared fixture through it. What changes:
+Preact, Solid, Svelte, Qwik and Angular have the same shape too. [Formisch in each framework](docs/frameworks.md) has a whole renderer for each, with layouts, steps and every control below, and the tests run every shared fixture through it. What changes:
 
 | Framework | Package             | What changes                                                                                  |
 | --------- | ------------------- | --------------------------------------------------------------------------------------------- |
@@ -486,7 +667,7 @@ const options = node.field.options as { value: string | number | boolean; label:
 
 ### Placing fields
 
-To render a field away from the others, say in a sidebar, find it by its dot path, and leave it out where you render the rest:
+A definition's `layout` places its fields. To place one in code instead, say in a sidebar, find it by its dot path in the field tree, and leave it out where you render the rest:
 
 ```ts
 const coupon = findField(fields, 'coupon', { placed: true })
@@ -544,8 +725,8 @@ const form = defineForm({
 const schema = build(form)
 ```
 
-- **Compile errors:** an unknown `type`, `rule` or form rule, a key that is neither reserved nor a prop, and a prop or param of the wrong type, such as `value: '120'`. Child fields of groups and arrays are checked the same way.
-- **Not checked:** whether a rule fits the field's kind, names, defaults and form rule paths. Run `validate()` for those.
+- **Compile errors:** an unknown `type`, `rule` or form rule, a key that is neither reserved nor a prop, and a prop or param of the wrong type, such as `value: '120'`. Child fields of groups and arrays are checked the same way, and so are the layout's nodes, with display elements typed by their props.
+- **Not checked:** whether a rule fits the field's kind, names, defaults, form rule paths and the layout's paths and spans. Run `validate()` for those.
 - The builder knows your entries by key when you pass them in the options. Options typed as `SchemaBuilderOptions` have no known keys, so `defineForm` then takes any name.
 - **The output type isn't inferred.** A field type's `schema()` returns any Valibot schema, so the definition doesn't say what type its value has. `v.InferOutput<typeof schema>` stays an object of `unknown` values. Inferring it would need every field type to declare its output type, so for now, give `build` your types: see [Typing the form](#typing-the-form).
 
@@ -570,8 +751,8 @@ const builder = createSchemaBuilder({ fieldTypes: { money } })
 writeFileSync('form.schema.json', JSON.stringify(toJsonSchema(builder), null, 2))
 ```
 
-- **It checks** type names, the keys and props of each type, the rules that fit a type's kind and their params, and form rule names and params. `meta.label` and `meta.description` become each type's and rule's `title` and `description`.
-- **It can't check** what only `validate()` does: duplicate names, defaults, form rule paths, and checks with no JSON Schema keyword, such as options having different values. Run `validate()` on definitions you store.
+- **It checks** type names, the keys and props of each type, the rules that fit a type's kind and their params, form rule names and params, and the layout's nodes and their keys, with `span` only in a row. `meta.label` and `meta.description` become each type's and rule's `title` and `description`.
+- **It can't check** what only `validate()` does: duplicate names, defaults, form rule paths, the layout's paths, placements and row totals, and checks with no JSON Schema keyword, such as options having different values. Run `validate()` on definitions you store.
 - A props or params schema that has no JSON Schema form, such as `v.custom()` or `v.instance()`, lets that type or rule take any keys, and `toJsonSchema` logs a warning.
 
 ## Reference

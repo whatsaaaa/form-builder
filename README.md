@@ -28,7 +28,7 @@ Forms are everywhere, and a lot of them don't really belong in your source code.
 edit them. Some come from an API. Some get dragged together in a visual editor.
 
 **form-builder** lets you write a form down as plain JSON and hands you back a working Formisch form, with fields and
-validation already wired up. The core doesn't care which framework you use: it works with Formisch's own package for
+validation already wired up. Where the fields go can be in the JSON too: sections, a 12-column grid and steps. The core doesn't care which framework you use: it works with Formisch's own package for
 Vue, React, Preact, Solid, Svelte, Qwik or Angular. Small adapters for Vue and React render the fields with your
 components, and the docs have a tested renderer for each of the others.
 
