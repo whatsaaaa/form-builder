@@ -1,5 +1,5 @@
 import type { FieldNode } from './field-tree'
-import type { LayoutNode } from './form-layout'
+import type { LayoutNode, LayoutSection } from './form-layout'
 
 /**
  * Whether a field is shown, e.g. by the conditions of the affects package. `indexes` are those of
@@ -20,14 +20,41 @@ export function shownNodes(
   indexes: readonly number[],
   isShown: IsFieldShown,
 ): LayoutNode[] {
+  return shownNodesWith(nodes, indexes, {
+    isShown,
+    isSectionHidden: () => false,
+    counts: () => false,
+  })
+}
+
+/** What `shownNodesWith` asks about the nodes. */
+export interface ShownRules {
+  /** False for a field, or a display element, that drops out. */
+  readonly isShown: IsFieldShown
+  /** True for a section that is hidden itself, with everything in it. */
+  isSectionHidden(section: LayoutSection, indexes: readonly number[]): boolean
+  /**
+   * True for a display element or a section that counts like a field with a value: a container
+   * of it stays while it is shown, and drops out when it and the fields are all hidden.
+   */
+  counts(node: FieldNode | LayoutSection): boolean
+}
+
+/** `shownNodes`, with sections that can hide, and display elements and sections that count. */
+export function shownNodesWith(
+  nodes: readonly LayoutNode[],
+  indexes: readonly number[],
+  rules: ShownRules,
+): LayoutNode[] {
   return nodes.flatMap((node): LayoutNode[] => {
     if (node.type === 'slot') return [node]
     if (node.type === 'field') {
-      if (!isShown(node.node, indexes)) return []
+      if (!rules.isShown(node.node, indexes)) return []
       if (node.node.role !== 'group') return [node]
     }
-    const children = shownNodes(node.children, indexes, isShown)
-    if (hasValues(node.children) && !hasValues(children)) return []
+    if (node.type === 'section' && rules.isSectionHidden(node, indexes)) return []
+    const children = shownNodesWith(node.children, indexes, rules)
+    if (hasCounting(node.children, rules) && !hasCounting(children, rules)) return []
     const same =
       children.length === node.children.length &&
       children.every((child, i) => child === node.children[i])
@@ -35,11 +62,14 @@ export function shownNodes(
   })
 }
 
-/** True when a field with a value is among the nodes, at any depth. */
-function hasValues(nodes: readonly LayoutNode[]): boolean {
+/** True when a field with a value, or a node that counts like one, is among the nodes. */
+export function hasCounting(nodes: readonly LayoutNode[], rules: ShownRules): boolean {
   return nodes.some((node) => {
     if (node.type === 'slot') return false
-    if (node.type === 'field' && node.node.role !== 'display') return true
-    return hasValues(node.children)
+    if (node.type === 'field' && (node.node.role !== 'display' || rules.counts(node.node))) {
+      return true
+    }
+    if (node.type === 'section' && rules.counts(node)) return true
+    return hasCounting(node.children, rules)
   })
 }

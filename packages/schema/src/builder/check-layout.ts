@@ -43,8 +43,8 @@ interface Scope {
 type Item =
   | { kind: 'field'; node: FieldNode; span: number; items?: { list: Item[]; scope: Scope } }
   | { kind: 'rest'; scope: Scope }
-  | { kind: 'section'; json: JsonLayoutSection; list: Item[]; span: number }
-  | { kind: 'row'; json: JsonLayoutRow; list: Item[]; span: number }
+  | { kind: 'section'; json: JsonLayoutSection; path: DefinitionPath; list: Item[]; span: number }
+  | { kind: 'row'; json: JsonLayoutRow; path: DefinitionPath; list: Item[]; span: number }
   | { kind: 'slot'; name: string; span: number }
   | { kind: 'display'; node: FieldNode; span: number }
 
@@ -52,6 +52,13 @@ type Item =
 type Unkeyed = LayoutNode extends infer T ? (T extends LayoutNode ? Omit<T, 'key'> : never) : never
 
 const ROOT: DefinitionPath = ['layout']
+
+/** A step, checked, with its items. */
+interface CheckedStep {
+  json: JsonLayoutStep
+  path: DefinitionPath
+  list: Item[]
+}
 
 /**
  * Checks the definition's layout and resolves it against the fields, and adds its issues to
@@ -67,22 +74,27 @@ export function checkLayout(
   const tree =
     walked && fieldTree(walked, (type) => lookup(registry.fieldTypes, type)?.container === true)
   if (raw === undefined) {
-    return tree && { steps: [stepOf({ items: ['*'] }, keyed(tree.map(fullLayout)))], ui: undefined }
+    const steps = tree && [stepOf({ items: ['*'] }, [], keyed(tree.map(fullLayout)))]
+    return steps && { steps, ui: undefined }
   }
 
   const issueCount = issues.length
   const ids = new Map<string, DefinitionPath>()
+  // The keys the extensions add to steps and sections, like `affects`.
+  const extensionKeys = registry.extensions.flatMap((extension) =>
+    Object.keys(extension.layoutProps?.entries ?? {}),
+  )
   const definitionPaths = new Map(walked?.map((field) => [field.field, field.definitionPath]))
 
   const steps = checkRoot(raw)
   if (!steps || !tree || issues.length > issueCount) return undefined
   return {
-    steps: steps.map(({ json, list }) => stepOf(json, build(list))),
+    steps: steps.map(({ json, path, list }) => stepOf(json, path, build(list))),
     ui: (raw as { ui?: Record<string, unknown> }).ui,
   }
 
   /** The layout's steps, checked, with the items of each. */
-  function checkRoot(layout: unknown): { json: JsonLayoutStep; list: Item[] }[] | undefined {
+  function checkRoot(layout: unknown): CheckedStep[] | undefined {
     if (!isObject(layout)) {
       report('invalid_shape', ROOT, 'The layout is an object with "items" or "steps"')
       return undefined
@@ -97,9 +109,10 @@ export function checkLayout(
     }
 
     const scope = createScope(tree, [], undefined, false)
-    let steps: { json: JsonLayoutStep; list: Item[] }[]
+    let steps: CheckedStep[]
     if (hasItems) {
-      steps = [{ json: { items: layout['items'] as never }, list: checkItems(layout, ROOT, scope) }]
+      const json = { items: layout['items'] as never }
+      steps = [{ json, path: ROOT, list: checkItems(layout, ROOT, scope) }]
     } else {
       const raws = layout['steps']
       const at = [...ROOT, 'steps']
@@ -113,21 +126,17 @@ export function checkLayout(
     return steps
   }
 
-  function checkStep(
-    raw: unknown,
-    path: DefinitionPath,
-    scope: Scope,
-  ): { json: JsonLayoutStep; list: Item[] } | undefined {
+  function checkStep(raw: unknown, path: DefinitionPath, scope: Scope): CheckedStep | undefined {
     if (!isObject(raw)) {
       report('invalid_shape', path, 'A step is an object with "items"')
       scope.broken = true
       return undefined
     }
-    checkKeys(raw, ['id', 'label', 'description', 'items', 'ui'], path, 'a step')
+    checkKeys(raw, ['id', 'label', 'description', 'items', 'ui', ...extensionKeys], path, 'a step')
     checkId(raw, path)
     checkText(raw, ['label', 'description'], path)
     checkUi(raw, path)
-    return { json: raw as unknown as JsonLayoutStep, list: checkItems(raw, path, scope) }
+    return { json: raw as unknown as JsonLayoutStep, path, list: checkItems(raw, path, scope) }
   }
 
   /**
@@ -293,11 +302,12 @@ export function checkLayout(
   ): Item {
     const section = kind === 'section'
     const keys = section ? ['label', 'description'] : []
-    checkKeys(raw, ['type', 'id', ...keys, 'items', 'ui', 'span'], path, `a ${kind}`)
+    const known = ['type', 'id', ...keys, 'items', 'ui', 'span', ...(section ? extensionKeys : [])]
+    checkKeys(raw, known, path, `a ${kind}`)
     checkId(raw, path)
     checkText(raw, keys, path)
     checkUi(raw, path)
-    return { kind, json: raw as never, list: checkItems(raw, path, scope, !section), span }
+    return { kind, json: raw as never, path, list: checkItems(raw, path, scope, !section), span }
   }
 
   function checkSlot(
@@ -358,6 +368,7 @@ export function checkLayout(
       kind: 'none',
       itemKind: undefined,
       dataPath: scope.dataPath,
+      definitionPath: path,
       children: [],
     }
     return { kind: 'display', node, span }
@@ -449,12 +460,14 @@ export function checkLayout(
             const children = items ? build(items.list) : keyed(node.children.map(fullLayout))
             return [{ type: 'field', node, span, children }]
           }
-          case 'section':
-            return [
-              { type: 'section', section: item.json, span: item.span, children: build(item.list) },
-            ]
-          case 'row':
-            return [{ type: 'row', row: item.json, span: item.span, children: build(item.list) }]
+          case 'section': {
+            const { json: section, path: definitionPath, span } = item
+            return [{ type: 'section', section, definitionPath, span, children: build(item.list) }]
+          }
+          case 'row': {
+            const { json: row, path: definitionPath, span } = item
+            return [{ type: 'row', row, definitionPath, span, children: build(item.list) }]
+          }
           case 'slot':
             return [{ type: 'slot', name: item.name, span: item.span }]
           case 'display':
@@ -562,8 +575,12 @@ function createScope(
   }
 }
 
-function stepOf(step: JsonLayoutStep, children: LayoutNode[]): LayoutStep {
-  return { step, children, fields: fieldsOf(children) }
+function stepOf(
+  step: JsonLayoutStep,
+  definitionPath: DefinitionPath,
+  children: LayoutNode[],
+): LayoutStep {
+  return { step, definitionPath, children, fields: fieldsOf(children) }
 }
 
 /** The fields with a value in `nodes`, in layout order, a container before its fields. */

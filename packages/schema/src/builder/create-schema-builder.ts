@@ -2,6 +2,7 @@ import type * as v from 'valibot'
 import type { JsonField, JsonForm } from '../definition/json-form-schema'
 import type { WalkedField } from '../definition/walk-fields'
 import { DefinitionError, type ValidateResult } from '../errors/definition-error'
+import type { SchemaExtension } from '../extensions/schema-extension'
 import type { defaultFieldTypes } from '../field-types/default-field-types'
 import type { FieldTypeDef } from '../field-types/field-type-def'
 import type { KindDef } from '../kinds/kind-def'
@@ -12,11 +13,12 @@ import type { FormRuleDef } from '../rules/form-rule-def'
 import type { defaultFormRules } from '../rules/form-rules'
 import type { RuleDef } from '../rules/rule-def'
 import type { ValueKind } from '../shared/value-kind'
+import { createVisibility, type Visibility } from '../visibility/visibility'
 import type { MessageContext, Messages } from './build-field-schema'
 import { checkRegistry } from './check-registry'
 import { compileDefinition, createCompiler, type JsonFormSchema } from './compile-definition'
 import { lookup, mergeRegistry } from './registry'
-import type { TypedForm } from './typed-form'
+import type { ExtensionProps, NoExtensionProps, TypedForm } from './typed-form'
 
 export interface SchemaBuilderOptions {
   kinds?: Record<string, KindDef>
@@ -32,6 +34,11 @@ export interface SchemaBuilderOptions {
    * as i18n keys. Return undefined to use the text as written.
    */
   resolveMessage?(key: string, ctx: MessageContext): string | undefined
+  /**
+   * Features from other packages that read keys of their own, like the `affects` of
+   * `@whatsaaaa/form-builder-affects`. Without one, its keys are unknown keys.
+   */
+  extensions?: readonly SchemaExtension[]
 }
 
 /**
@@ -60,11 +67,15 @@ export type TypedJsonFormSchema<
 /** The same type as an object literal type, which has the index signature Formisch requires. */
 type Plain<T> = { [K in keyof T]: T[K] }
 
-/** What `createSchemaBuilder` returns. Its type parameters are the registries, by key. */
+/**
+ * What `createSchemaBuilder` returns. Its type parameters are the registries, by key, and the keys
+ * its extensions add.
+ */
 export interface SchemaBuilder<
   TFieldTypes extends Record<string, FieldTypeDef> = Record<string, FieldTypeDef>,
   TRules extends Record<string, RuleDef> = Record<string, RuleDef>,
   TFormRules extends Record<string, FormRuleDef> = Record<string, FormRuleDef>,
+  TExtensionProps extends ExtensionProps = NoExtensionProps,
 > {
   /**
    * The definition's schema: an object schema, in a pipe with the form rules when it has any.
@@ -87,8 +98,8 @@ export interface SchemaBuilder<
    * `validate()`, which also checks names, defaults and form rule paths.
    */
   defineForm(
-    definition: TypedForm<TFieldTypes, TRules, TFormRules>,
-  ): TypedForm<TFieldTypes, TRules, TFormRules>
+    definition: TypedForm<TFieldTypes, TRules, TFormRules, TExtensionProps>,
+  ): TypedForm<TFieldTypes, TRules, TFormRules, TExtensionProps>
   /**
    * Every field of the definition, at every depth, like the `walkFields` function, but it reads
    * this builder's container types too. It never throws. A container with issues isn't built, so
@@ -121,12 +132,20 @@ export interface SchemaBuilder<
    * `build()`.
    */
   getLayout(json: JsonForm): FormLayout
+  /**
+   * What the conditions of this builder's extensions hide, for any input, for a renderer: the
+   * fields, sections and steps hidden, and the fields to clear. Without extensions, or conditions,
+   * nothing is hidden. The schema from `build()` reads the same conditions: a hidden field isn't
+   * validated. Throws one `DefinitionError` with every issue the definition has, like `build()`.
+   */
+  getVisibility(json: JsonForm): Visibility
   /** The registered rules that can be used on a field of `kind`, e.g. for a rule picker. */
   rulesForKind(kind: ValueKind): [name: string, def: RuleDef][]
   readonly kinds: Readonly<Record<string, KindDef>>
   readonly fieldTypes: Readonly<TFieldTypes>
   readonly rules: Readonly<TRules>
   readonly formRules: Readonly<TFormRules>
+  readonly extensions: readonly SchemaExtension[]
 }
 
 /** Your entries replace the defaults with the same key. */
@@ -139,27 +158,46 @@ type WithDefaults<
   TIncludeDefaultRules extends boolean,
 > = TIncludeDefaultRules extends false ? TOwn : Merge<TDefaults, TOwn>
 
+/** The keys a list of extensions adds, from the input types of their props schemas. */
+type PropsOfExtensions<TExtensions extends readonly SchemaExtension[]> = {
+  field: PropsOf<TExtensions, 'fieldProps'>
+  layout: PropsOf<TExtensions, 'layoutProps'>
+}
+
+type PropsOf<
+  TExtensions extends readonly SchemaExtension[],
+  TKey extends 'fieldProps' | 'layoutProps',
+> = TExtensions extends readonly [infer TFirst, ...infer TRest extends readonly SchemaExtension[]]
+  ? InputOf<TFirst extends { [K in TKey]?: infer P } ? P : undefined> & PropsOf<TRest, TKey>
+  : Record<never, never>
+
+type InputOf<T> = T extends v.GenericSchema ? v.InferInput<T> : Record<never, never>
+
 /**
  * The type parameters keep the keys of your registries, so `defineForm` knows every type, rule
- * and form rule by name. They come from the second half of the options type: the first half
- * still types the functions you write inline, like a field type's `schema()`.
+ * and form rule by name, and every key your extensions add. They come from the second half of the
+ * options type: the first half still types the functions you write inline, like a field type's
+ * `schema()`.
  */
 export function createSchemaBuilder<
   TFieldTypes extends Record<string, FieldTypeDef> = Record<never, never>,
   TRules extends Record<string, RuleDef> = Record<never, never>,
   TFormRules extends Record<string, FormRuleDef> = Record<never, never>,
   TIncludeDefaultRules extends boolean = true,
+  const TExtensions extends readonly SchemaExtension[] = [],
 >(
   options?: SchemaBuilderOptions & {
     fieldTypes?: TFieldTypes
     rules?: TRules
     formRules?: TFormRules
     includeDefaultRules?: TIncludeDefaultRules
+    extensions?: TExtensions
   },
 ): SchemaBuilder<
   Merge<typeof defaultFieldTypes, TFieldTypes>,
   WithDefaults<typeof defaultRules, TRules, TIncludeDefaultRules>,
-  WithDefaults<typeof defaultFormRules, TFormRules, TIncludeDefaultRules>
+  WithDefaults<typeof defaultFormRules, TFormRules, TIncludeDefaultRules>,
+  PropsOfExtensions<TExtensions>
 >
 /** For options whose registries have no known keys, e.g. a union of two option objects. */
 export function createSchemaBuilder(options?: SchemaBuilderOptions): SchemaBuilder
@@ -204,6 +242,12 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     return layout as FormLayout
   }
 
+  function getVisibility(json: JsonForm): Visibility {
+    const { issues, engine } = compileDefinition(json, registry, messages)
+    if (issues.length) throw new DefinitionError(issues)
+    return createVisibility(engine)
+  }
+
   function rulesForKind(kind: ValueKind): [name: string, def: RuleDef][] {
     return Object.entries(registry.rules).filter(([, def]) => def.kinds.includes(kind))
   }
@@ -218,10 +262,12 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     getItemInput,
     getFieldTree,
     getLayout,
+    getVisibility,
     rulesForKind,
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,
     rules: registry.rules,
     formRules: registry.formRules,
+    extensions: registry.extensions,
   }
 }

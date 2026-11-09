@@ -29,6 +29,54 @@ export function checkRegistry(registry: Registry): void {
   for (const [name, type] of Object.entries(registry.fieldTypes)) {
     checkFieldType(name, type, registry)
   }
+
+  checkExtensions(registry)
+}
+
+/** The keys of a layout's steps and sections, which an extension's layout props can't use. */
+const LAYOUT_KEYS = ['type', 'id', 'label', 'description', 'items', 'ui', 'span', 'field', 'name']
+
+/**
+ * An extension's keys can't be reserved, a field type's props, or another extension's, so every
+ * key of a field has one owner.
+ */
+function checkExtensions(registry: Registry): void {
+  const owners = new Map<string, string>()
+  for (const extension of registry.extensions) {
+    const at = `Extension "${extension.name}"`
+    for (const key of Object.keys(extension.fieldProps?.entries ?? {})) {
+      if (isReservedFieldKey(key)) {
+        throw new TypeError(`${at}: fieldProps can't use the reserved key "${key}"`)
+      }
+      for (const [name, type] of Object.entries(registry.fieldTypes)) {
+        if (Object.hasOwn(type.props?.entries ?? {}, key)) {
+          throw new TypeError(
+            `${at}: fieldProps can't use "${key}", a prop of field type "${name}"`,
+          )
+        }
+      }
+      claim(owners, `fields:${key}`, extension.name, `${at}: fieldProps`, key)
+    }
+    for (const key of Object.keys(extension.layoutProps?.entries ?? {})) {
+      if (LAYOUT_KEYS.includes(key)) {
+        throw new TypeError(`${at}: layoutProps can't use the layout's key "${key}"`)
+      }
+      claim(owners, `layout:${key}`, extension.name, `${at}: layoutProps`, key)
+    }
+  }
+}
+
+/** Gives `slot` to the extension `name`, unless another one has it. */
+function claim(
+  owners: Map<string, string>,
+  slot: string,
+  name: string,
+  at: string,
+  key: string,
+): void {
+  const owner = owners.get(slot)
+  if (owner) throw new TypeError(`${at} can't use "${key}", which extension "${owner}" uses`)
+  owners.set(slot, name)
 }
 
 function checkFieldType(name: string, type: FieldTypeDef, registry: Registry): void {

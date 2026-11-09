@@ -22,6 +22,8 @@ export type DefinitionIssueCode =
   | 'duplicate_placement'
   | 'unplaced_field'
   | 'duplicate_id'
+  | 'invalid_value'
+  | 'cycle'
 
 export interface DefinitionIssue {
   code: DefinitionIssueCode

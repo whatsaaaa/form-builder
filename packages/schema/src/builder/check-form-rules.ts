@@ -26,7 +26,7 @@ export interface CheckedFormRule {
 }
 
 /** Every field with a value, by the dot path of its value. A field with issues is null. */
-type FieldsByPath = ReadonlyMap<string, CheckedField | null>
+export type FieldsByPath = ReadonlyMap<string, CheckedField | null>
 
 // A form rule needs its own message: Valibot's would only say the value is invalid.
 const ruleShape = v.looseObject({ rule: v.string(), field: v.string(), message: v.string() })
@@ -124,7 +124,7 @@ function findReadFields(
  * The field with a value at `keys`. Null when a field on the way has issues of its own, and
  * the issue's message when there is no such field.
  */
-function findField(
+export function findField(
   keys: readonly string[],
   fieldsByPath: FieldsByPath,
 ): CheckedField | null | string {
@@ -151,15 +151,19 @@ function unknownField(keys: readonly string[], at: number, fieldsByPath: FieldsB
 
 /**
  * A path into the items of a list is read once per item, so `field` must be in the same items.
- * Returns the issue's message when it isn't.
+ * Returns the issue's message when it isn't. `what` names the reader in it, `field` by default.
  */
-function outsideItem(keys: readonly string[], fieldKeys: readonly string[]): string | undefined {
+export function outsideItem(
+  keys: readonly string[],
+  fieldKeys: readonly string[],
+  what = `"${fieldKeys.join('.')}"`,
+): string | undefined {
   const star = keys.lastIndexOf('*')
   const item = (path: readonly string[]) => path.slice(0, star + 1).join('.')
   if (star === -1 || item(keys) === item(fieldKeys)) return undefined
   const list = keys.slice(0, star).join('.')
   const read = keys.join('.')
-  return `"${read}" is read from each item of "${list}", so "${fieldKeys.join('.')}" must be too`
+  return `"${read}" is read from each item of "${list}", so ${what} must be too`
 }
 
 /** The issue's message when the kinds of the fields a rule reads don't fit it. */
