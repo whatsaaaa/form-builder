@@ -6,13 +6,23 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   type SubmitHandler,
   useField,
   useFieldArray,
   useForm$,
   validate,
 } from '@formisch/qwik'
-import { $, component$, Fragment, type JSXOutput, type QRL, useSignal } from '@qwik.dev/core'
+import {
+  $,
+  component$,
+  Fragment,
+  type JSXOutput,
+  type QRL,
+  useSignal,
+  useTask$,
+} from '@qwik.dev/core'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   coerceInput,
   createSchemaBuilder,
@@ -28,7 +38,9 @@ import {
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
 
-const builder = createSchemaBuilder()
+// With affects, the fields' conditions hide them: the schema doesn't validate them, and the view
+// leaves them out.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 /** The content of the layout's slots, by name. */
 type Slots = Record<string, JSXOutput>
@@ -46,8 +58,17 @@ export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$, sl
     initialInput: builder.getInitialInput(json),
   }))
   const { steps } = builder.getLayout(json)
+  // What the conditions hide for the input now. Reading the input renders the form again when it
+  // changes. The state has functions, which Qwik can't pass to a component: the nodes it shows can.
+  const visibility = builder.getVisibility(json).of(getInput(form))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  useTask$(({ track }) => {
+    const { toClear } = track(() => builder.getVisibility(json).of(getInput(form)))
+    for (const { path, input } of toClear) setInput(form, { path, input } as never)
+  })
   const index = useSignal(0)
   const step = steps[index.value] as LayoutStep
+  const { before, after } = around(json, form, index.value)
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   const next = $(async () => {
@@ -57,23 +78,37 @@ export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$, sl
       if (first) focus(form, { path: first.path as never })
       return
     }
+    // A handler works it out from the form, not from what it was when the view rendered.
+    const { after } = around(json, form, index.value)
+    if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index.value + 1] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    index.value += 1
+    index.value = after
   })
 
   return (
     <Form of={form} onSubmit$={onSubmit$}>
       {/* Keyed by the step, so another step's fields don't take over this one's components. */}
-      <Layout key={index.value} form={form} nodes={step.children} indexes={[]} slots={slots} />
-      {index.value > 0 && (
-        <button type="button" data-back="" onClick$={() => (index.value -= 1)}>
+      <Layout
+        key={index.value}
+        form={form}
+        json={json}
+        nodes={visibility.shownNodes(step.children, [])}
+        indexes={[]}
+        slots={slots}
+      />
+      {before !== undefined && (
+        <button
+          type="button"
+          data-back=""
+          onClick$={() => (index.value = around(json, form, index.value).before ?? index.value)}
+        >
           Back
         </button>
       )}
-      {index.value < steps.length - 1 ? (
+      {after !== undefined ? (
         <button type="button" data-next="" onClick$={next}>
           Next
         </button>
@@ -84,22 +119,38 @@ export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$, sl
   )
 })
 
+/**
+ * The steps before and after the one at `index` that the user goes to: a step whose fields are
+ * all hidden is skipped.
+ */
+function around(json: JsonForm, form: FormStore, index: number) {
+  const { steps } = builder.getLayout(json)
+  const visibility = builder.getVisibility(json).of(getInput(form))
+  const shown = steps.flatMap((each, i) =>
+    i === index || !visibility.isStepHidden(each) ? [i] : [],
+  )
+  return { before: shown[shown.indexOf(index) - 1], after: shown[shown.indexOf(index) + 1] }
+}
+
 interface LayoutProps {
   form: FormStore
+  /** The definition, for the conditions of each item of an array. */
+  json: JsonForm
+  /** The nodes the conditions show. */
   nodes: readonly LayoutNode[]
   /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
   slots: Slots
 }
 
-const Layout = component$<LayoutProps>(({ form, nodes, indexes, slots }) => {
+const Layout = component$<LayoutProps>(({ nodes, ...props }) => {
   return nodes.map((node) => {
     switch (node.type) {
       case 'section':
         return (
           <fieldset key={node.key}>
             <legend>{node.section.label}</legend>
-            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+            <Layout {...props} nodes={node.children} />
           </fieldset>
         )
       case 'row':
@@ -108,22 +159,22 @@ const Layout = component$<LayoutProps>(({ form, nodes, indexes, slots }) => {
           <div key={node.key} style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
             {node.children.map((cell) => (
               <div key={cell.key} data-span={cell.span} style={{ gridColumn: `span ${cell.span}` }}>
-                <Layout form={form} nodes={[cell]} indexes={indexes} slots={slots} />
+                <Layout {...props} nodes={[cell]} />
               </div>
             ))}
           </div>
         )
       case 'slot':
-        return <Fragment key={node.key}>{slots[node.name]}</Fragment>
+        return <Fragment key={node.key}>{props.slots[node.name]}</Fragment>
       case 'field':
-        return <Field key={node.key} form={form} node={node} indexes={indexes} slots={slots} />
+        return <Field key={node.key} {...props} node={node} />
     }
   })
 })
 
 /** A field by its role. A group and an array render their fields from the layout. */
 const Field = component$<Omit<LayoutProps, 'nodes'> & { node: LayoutField }>(
-  ({ form, node, indexes, slots }) => {
+  ({ node, ...props }) => {
     switch (node.node.role) {
       case 'display':
         return <Display node={node.node} />
@@ -131,13 +182,15 @@ const Field = component$<Omit<LayoutProps, 'nodes'> & { node: LayoutField }>(
         return (
           <fieldset>
             <legend>{node.node.field.label ?? node.node.field.name}</legend>
-            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+            <Layout {...props} nodes={node.children} />
           </fieldset>
         )
       case 'array':
-        return <ArrayField form={form} node={node} indexes={indexes} />
+        return (
+          <ArrayField form={props.form} json={props.json} node={node} indexes={props.indexes} />
+        )
       case 'value':
-        return <ValueField form={form} node={node.node} indexes={indexes} />
+        return <ValueField form={props.form} node={node.node} indexes={props.indexes} />
     }
   },
 )
@@ -152,18 +205,26 @@ const Display = component$<{ node: FieldNode }>(({ node }) => {
 })
 
 /** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
-const ArrayField = component$<{ form: FormStore; node: LayoutField; indexes: readonly number[] }>(
-  ({ form, node, indexes }) => {
+const ArrayField = component$<Omit<LayoutProps, 'nodes' | 'slots'> & { node: LayoutField }>(
+  ({ form, json, node, indexes }) => {
     const { field, dataPath } = node.node
     const path = toFieldPath(dataPath, indexes)
     // The path comes from the definition at runtime, so Formisch's types can't check it.
     const array = useFieldArray(form, { path: path as never })
+    // Each item hides its own fields, by the fields of the item.
+    const visibility = builder.getVisibility(json).of(getInput(form))
     return (
       <fieldset>
         <legend>{field.label ?? field.name}</legend>
         {array.items.value.map((item, index) => (
           <div key={item}>
-            <Layout form={form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
+            <Layout
+              form={form}
+              json={json}
+              nodes={visibility.shownNodes(node.children, [...indexes, index])}
+              indexes={[...indexes, index]}
+              slots={{}}
+            />
             <button
               type="button"
               data-remove={`${path.join('.')}.${index}`}

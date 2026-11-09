@@ -1,12 +1,15 @@
 // The form store Formisch for Qwik makes from a built schema, field by field. Every binding makes
 // its store this way, but only Qwik's rejects `v.lazy`. examples/qwik renders the forms.
 import { createFormStore, getFieldInput, getFieldStore } from '@formisch/qwik/internals'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
 import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import { type FixtureName, fixtures } from './fixtures'
 
-const builder = createSchemaBuilder()
+// With affects, the fields conditions can hide have a gate around their schema, which must not
+// change the store Formisch makes.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 function createStore(name: FixtureName) {
   const json = fixtures[name]

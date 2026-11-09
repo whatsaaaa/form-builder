@@ -10,11 +10,13 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   useField,
   useFieldArray,
   useForm,
   validate,
 } from '@formisch/react'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   createSchemaBuilder,
   type FieldNode,
@@ -27,8 +29,9 @@ import {
   type LayoutStep,
   type SchemaBuilder,
   toFieldPath,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
-import { act, type ChangeEvent, Fragment, type ReactNode, useState } from 'react'
+import { act, type ChangeEvent, Fragment, type ReactNode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { describe, onTestFinished } from 'vitest'
 import { type RenderedForm, runScenarios } from './run-scenarios'
@@ -39,7 +42,8 @@ import { type RenderedForm, runScenarios } from './run-scenarios'
 type Path = readonly (string | number)[]
 type Option = { value: string | number | boolean; label: string }
 
-const builder: SchemaBuilder = createSchemaBuilder()
+// The affects extension: the schema skips hidden fields, and the view hides and clears them.
+const builder: SchemaBuilder = createSchemaBuilder({ extensions: [affects()] })
 
 /** The content of the layout's slots, by name. */
 const slots: Record<string, ReactNode> = {
@@ -63,19 +67,21 @@ const inputTypes: Record<string, string> = {
 
 interface LayoutProps {
   form: FormStore
+  /** What the conditions hide now. The nodes are the ones it shows. */
+  visibility: VisibilityState
   nodes: readonly LayoutNode[]
   /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
 }
 
 function Layout(props: LayoutProps) {
-  const { form, indexes } = props
+  const { form, visibility, indexes } = props
   return props.nodes.map((node) => {
     switch (node.type) {
       case 'section':
         return (
           <fieldset key={node.key}>
-            <Layout form={form} nodes={node.children} indexes={indexes} />
+            <Layout form={form} visibility={visibility} nodes={node.children} indexes={indexes} />
           </fieldset>
         )
       case 'row':
@@ -83,7 +89,7 @@ function Layout(props: LayoutProps) {
           <div key={node.key}>
             {node.children.map((cell) => (
               <div key={cell.key} data-span={cell.span}>
-                <Layout form={form} nodes={[cell]} indexes={indexes} />
+                <Layout form={form} visibility={visibility} nodes={[cell]} indexes={indexes} />
               </div>
             ))}
           </div>
@@ -91,13 +97,15 @@ function Layout(props: LayoutProps) {
       case 'slot':
         return <Fragment key={node.key}>{slots[node.name]}</Fragment>
       case 'field':
-        return <Field key={node.key} form={form} node={node} indexes={indexes} />
+        return (
+          <Field key={node.key} form={form} visibility={visibility} node={node} indexes={indexes} />
+        )
     }
   })
 }
 
-function Field(props: { form: FormStore; node: LayoutField; indexes: readonly number[] }) {
-  const { form, node, indexes } = props
+function Field(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
+  const { form, visibility, node, indexes } = props
   const path = toFieldPath(node.node.dataPath, indexes)
   switch (node.node.role) {
     case 'display':
@@ -105,23 +113,18 @@ function Field(props: { form: FormStore; node: LayoutField; indexes: readonly nu
     case 'group':
       return (
         <fieldset>
-          <Layout form={form} nodes={node.children} indexes={indexes} />
+          <Layout form={form} visibility={visibility} nodes={node.children} indexes={indexes} />
         </fieldset>
       )
     case 'array':
-      return <List form={form} node={node} path={path} indexes={indexes} />
+      return <List form={form} visibility={visibility} node={node} path={path} indexes={indexes} />
     case 'value':
       return <Value form={form} node={node.node} path={path} />
   }
 }
 
-function List(props: {
-  form: FormStore
-  node: LayoutField
-  path: Path
-  indexes: readonly number[]
-}) {
-  const { form, node, path, indexes } = props
+function List(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField; path: Path }) {
+  const { form, visibility, node, path, indexes } = props
   // The path comes from the definition at runtime, so the schema's types can't check it.
   const list = useFieldArray(form, { path: path as never })
   const initialInput = () => builder.getItemInput(node.node.field) as never
@@ -129,7 +132,13 @@ function List(props: {
     <fieldset>
       {list.items.map((item, index) => (
         <div key={item}>
-          <Layout form={form} nodes={node.children} indexes={[...indexes, index]} />
+          {/* Each item hides its own fields, by the fields of the item. */}
+          <Layout
+            form={form}
+            visibility={visibility}
+            nodes={visibility.shownNodes(node.children, [...indexes, index])}
+            indexes={[...indexes, index]}
+          />
           <button
             type="button"
             data-remove={`${dotPath(path)}.${index}`}
@@ -250,14 +259,30 @@ function Value(props: { form: FormStore; node: FieldNode; path: Path }) {
 }
 
 function JsonFormView(props: { json: JsonForm; onSubmit: (output: unknown) => void }) {
-  const [{ steps, ...config }] = useState(() => ({
+  const [{ steps, visibility: conditions, ...config }] = useState(() => ({
     schema: builder.build(props.json),
     initialInput: builder.getInitialInput(props.json),
     steps: builder.getLayout(props.json).steps,
+    visibility: builder.getVisibility(props.json),
   }))
   const form = useForm(config)
+  // Reading the input here renders the form again on each change. It is the same object until
+  // what the conditions hide changes.
+  const visibility = conditions.of(getInput(form))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  const { toClear } = visibility
+  useEffect(() => {
+    for (const { path, input } of toClear) setInput(form, { path, input } as never)
+  }, [form, toClear])
+
   const [index, setIndex] = useState(0)
   const step = steps[index] as LayoutStep
+  // A step whose fields are all hidden is skipped. The current one stays, while the user is on it.
+  const shown = steps.flatMap((each, i) =>
+    i === index || !visibility.isStepHidden(each) ? [i] : [],
+  )
+  const before = shown[shown.indexOf(index) - 1]
+  const after = shown[shown.indexOf(index) + 1]
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   const next = async () => {
@@ -268,21 +293,28 @@ function JsonFormView(props: { json: JsonForm; onSubmit: (output: unknown) => vo
       return
     }
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+    if (after === undefined) return
+    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    setIndex(index + 1)
+    setIndex(after)
   }
 
   return (
     <Form of={form} onSubmit={props.onSubmit}>
-      <Layout key={index} form={form as FormStore} nodes={step.children} indexes={[]} />
-      {index > 0 && (
-        <button type="button" data-back="" onClick={() => setIndex(index - 1)}>
+      <Layout
+        key={index}
+        form={form as FormStore}
+        visibility={visibility}
+        nodes={visibility.shownNodes(step.children, [])}
+        indexes={[]}
+      />
+      {before !== undefined && (
+        <button type="button" data-back="" onClick={() => setIndex(before)}>
           Back
         </button>
       )}
-      {index < steps.length - 1 && (
+      {after !== undefined && (
         <button type="button" data-next="" onClick={() => void next()}>
           Next
         </button>

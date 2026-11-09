@@ -7,11 +7,13 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   type SubmitHandler,
   useField,
   useFieldArray,
   validate,
 } from '@formisch/solid'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   coerceInput,
   createSchemaBuilder,
@@ -25,11 +27,24 @@ import {
   type LayoutNode,
   type LayoutStep,
   toFieldPath,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
-import { createSignal, For, type JSX, Match, Show, Switch } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  type JSX,
+  Match,
+  on,
+  Show,
+  Switch,
+} from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
-const builder = createSchemaBuilder()
+// With affects, the fields' conditions hide them: the schema doesn't validate them, and the view
+// leaves them out.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 /** The content of the layout's slots, by name. */
 type Slots = Record<string, JSX.Element>
@@ -47,9 +62,23 @@ export function JsonFormView(props: JsonFormViewProps) {
     initialInput: builder.getInitialInput(props.json),
   })
   const { steps } = builder.getLayout(props.json)
+  const conditions = builder.getVisibility(props.json)
+  // What the conditions hide for the input now: the same object until that changes.
+  const visibility = createMemo(() => conditions.of(getInput(form)))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  createEffect(
+    on(visibility, (state) => {
+      for (const { path, input } of state.toClear) setInput(form, { path, input } as never)
+    }),
+  )
   const [index, setIndex] = createSignal(0)
   const step = () => steps[index()] as LayoutStep
-  const isLast = () => index() === steps.length - 1
+  // A step whose fields are all hidden is skipped. The current one stays, while the user is on it.
+  const shown = createMemo(() =>
+    steps.flatMap((each, i) => (i === index() || !visibility().isStepHidden(each) ? [i] : [])),
+  )
+  const before = () => shown()[shown().indexOf(index()) - 1]
+  const after = () => shown()[shown().indexOf(index()) + 1]
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   const next = async () => {
@@ -59,11 +88,13 @@ export function JsonFormView(props: JsonFormViewProps) {
       if (first) focus(form, { path: first.path as never })
       return
     }
+    const to = after()
+    if (to === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index() + 1] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(steps[to] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    setIndex(index() + 1)
+    setIndex(to)
   }
 
   return (
@@ -71,15 +102,21 @@ export function JsonFormView(props: JsonFormViewProps) {
       {/* Keyed by the step, so its fields render anew when it changes. */}
       <Show when={step()} keyed>
         {(current) => (
-          <Layout form={form} nodes={current.children} indexes={[]} slots={props.slots ?? {}} />
+          <Layout
+            form={form}
+            visibility={visibility}
+            nodes={current.children}
+            indexes={[]}
+            slots={props.slots ?? {}}
+          />
         )}
       </Show>
-      <Show when={index() > 0}>
-        <button type="button" data-back="" onClick={() => setIndex(index() - 1)}>
+      <Show when={before() !== undefined}>
+        <button type="button" data-back="" onClick={() => setIndex(before() as number)}>
           Back
         </button>
       </Show>
-      <Show when={!isLast()} fallback={<button type="submit">Save</button>}>
+      <Show when={after() !== undefined} fallback={<button type="submit">Save</button>}>
         <button type="button" data-next="" onClick={next}>
           Next
         </button>
@@ -90,46 +127,76 @@ export function JsonFormView(props: JsonFormViewProps) {
 
 interface LayoutProps {
   form: FormStore
+  /** What the conditions hide now. */
+  visibility: () => VisibilityState
   nodes: readonly LayoutNode[]
   /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
   slots: Slots
 }
 
+/**
+ * The keys of the nodes the conditions show. The nodes stay the ones written, so `<For>` keeps the
+ * element of each as others show and hide.
+ */
+const shownKeys = (props: Pick<LayoutProps, 'visibility' | 'nodes' | 'indexes'>) =>
+  new Set(
+    props
+      .visibility()
+      .shownNodes(props.nodes, props.indexes)
+      .map((node) => node.key),
+  )
+
 function Layout(props: LayoutProps) {
+  const shown = createMemo(() => shownKeys(props))
   return (
     <For each={props.nodes}>
       {(node) => (
-        <Switch>
-          <Match when={node.type === 'section' && node}>
-            {(section) => (
-              <fieldset>
-                <legend>{section().section.label}</legend>
-                <Layout {...props} nodes={section().children} />
-              </fieldset>
-            )}
-          </Match>
-          <Match when={node.type === 'row' && node}>
-            {(row) => (
-              // One line of a 12-column grid, where each cell takes its span.
-              <div style={{ display: 'grid', 'grid-template-columns': 'repeat(12, 1fr)' }}>
-                <For each={row().children}>
-                  {(cell) => (
-                    <div data-span={cell.span} style={{ 'grid-column': `span ${cell.span}` }}>
-                      <Layout {...props} nodes={[cell]} />
-                    </div>
-                  )}
-                </For>
-              </div>
-            )}
-          </Match>
-          <Match when={node.type === 'slot' && node}>{(slot) => props.slots[slot().name]}</Match>
-          <Match when={node.type === 'field' && node}>
-            {(field) => <Field {...props} node={field()} />}
-          </Match>
-        </Switch>
+        <Show when={shown().has(node.key)}>
+          <Node {...props} node={node} />
+        </Show>
       )}
     </For>
+  )
+}
+
+function Node(props: Omit<LayoutProps, 'nodes'> & { node: LayoutNode }) {
+  const node = props.node
+  return (
+    <Switch>
+      <Match when={node.type === 'section' && node}>
+        {(section) => (
+          <fieldset>
+            <legend>{section().section.label}</legend>
+            <Layout {...props} nodes={section().children} />
+          </fieldset>
+        )}
+      </Match>
+      <Match when={node.type === 'row' && node}>
+        {(row) => {
+          const cells = createMemo(() => shownKeys({ ...props, nodes: row().children }))
+          return (
+            // One line of a 12-column grid, where each cell takes its span. A hidden cell drops
+            // out, and the others line up from the first column.
+            <div style={{ display: 'grid', 'grid-template-columns': 'repeat(12, 1fr)' }}>
+              <For each={row().children}>
+                {(cell) => (
+                  <Show when={cells().has(cell.key)}>
+                    <div data-span={cell.span} style={{ 'grid-column': `span ${cell.span}` }}>
+                      <Node {...props} node={cell} />
+                    </div>
+                  </Show>
+                )}
+              </For>
+            </div>
+          )
+        }}
+      </Match>
+      <Match when={node.type === 'slot' && node}>{(slot) => props.slots[slot().name]}</Match>
+      <Match when={node.type === 'field' && node}>
+        {(field) => <Field {...props} node={field()} />}
+      </Match>
+    </Switch>
   )
 }
 
@@ -146,6 +213,7 @@ function Field(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
           <legend>{node().field.label ?? node().field.name}</legend>
           <Layout
             form={props.form}
+            visibility={props.visibility}
             nodes={props.node.children}
             indexes={props.indexes}
             slots={props.slots}
@@ -153,7 +221,12 @@ function Field(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
         </fieldset>
       </Match>
       <Match when={node().role === 'array'}>
-        <ArrayField form={props.form} node={props.node} indexes={props.indexes} />
+        <ArrayField
+          form={props.form}
+          visibility={props.visibility}
+          node={props.node}
+          indexes={props.indexes}
+        />
       </Match>
       <Match when={node().role === 'value'}>
         <ValueField form={props.form} node={node()} indexes={props.indexes} />
@@ -177,7 +250,7 @@ function Display(props: { node: FieldNode }) {
 }
 
 /** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
-function ArrayField(props: { form: FormStore; node: LayoutField; indexes: readonly number[] }) {
+function ArrayField(props: Omit<LayoutProps, 'nodes' | 'slots'> & { node: LayoutField }) {
   // A getter, so the path follows the item when one before it is removed. It comes from the
   // definition at runtime, so Formisch's types can't check it.
   const path = () => toFieldPath(props.node.node.dataPath, props.indexes)
@@ -193,8 +266,10 @@ function ArrayField(props: { form: FormStore; node: LayoutField; indexes: readon
       <For each={array.items}>
         {(_, index) => (
           <div>
+            {/* Each item hides its own fields, by the fields of the item. */}
             <Layout
               form={props.form}
+              visibility={props.visibility}
               nodes={props.node.children}
               indexes={[...props.indexes, index()]}
               slots={{}}

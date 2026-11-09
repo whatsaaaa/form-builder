@@ -4,7 +4,7 @@
 
 The schema package works with Formisch's own package for every framework, with no adapter from this repo. Here is a whole renderer for each of Preact, Solid, Svelte, Qwik and Angular. Each has the shape of the React one in [Using with Formisch](../README.md#using-with-formisch), with the native control of every built-in type from [Controls](../README.md#controls). For Vue and React, use [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue) and [`@whatsaaaa/form-builder-react`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/react).
 
-Every renderer is tested. The [integration tests](https://github.com/whatsaaaa/form-builder/tree/main/integration/examples) run every shared fixture through it, from a text field to arrays, form rules and layouts with steps: they type, tick, pick, step and submit like a person, and check the fields on show, the errors the form shows and what it submits.
+Every renderer is tested. The [integration tests](https://github.com/whatsaaaa/form-builder/tree/main/integration/examples) run every shared fixture through it, from a text field to arrays, form rules, layouts with steps and conditions: they type, tick, pick, step and submit like a person, and check the fields on show, the errors the form shows and what it submits.
 
 Each one renders the definition's [layout](../README.md#layout), so it renders a definition without one too, as one step with every field. Each one has the same parts:
 
@@ -13,6 +13,13 @@ Each one renders the definition's [layout](../README.md#layout), so it renders a
 - **`ArrayField`** renders Formisch's field array, the layout of each item, and buttons to add and remove items. A new item's input is `builder.getItemInput(node.field)`.
 - **`ValueField`** connects a field to Formisch at its path, from `toFieldPath(node.dataPath, indexes)`, picks the control by the field's type, and sets what the element gives through `coerceInput`.
 
+Each one renders the conditions of [`@whatsaaaa/form-builder-affects`](https://github.com/whatsaaaa/form-builder/tree/main/packages/affects) too, from a builder made with `createSchemaBuilder({ extensions: [affects()] })`:
+
+- **`JsonFormView`** reads `builder.getVisibility(json)` once, and keeps its state for the form's input: `visibility.of(getInput(form))`, which stays the same object until what is hidden changes. In an effect, it sets each field of `state.toClear` blank with Formisch's `setInput`, as soon as its conditions clear it. Back and Next skip a step that `state.isStepHidden(step)` hides, except the one on show.
+- **`Layout`** renders the nodes `state.shownNodes(nodes, indexes)` gives: without the hidden fields and sections, and without the groups, sections and rows whose fields are all hidden. **`ArrayField`** gives it each item's indexes, so each item hides its own fields.
+
+Validation needs nothing more: the schema skips a hidden field, and submits what it should. Without the clearing effect, the output is still right, but a field shows its old value when it comes back. A builder without the extension, or a definition without conditions, hides nothing, so the same renderer renders every definition.
+
 The `data-error`, `data-add`, `data-remove`, `data-next`, `data-back` and `data-span` attributes only mark elements for the tests. Leave them out.
 
 A row's CSS grid has 12 columns at every width here. On a narrow screen, give the cells the whole row with a media query, as the layout says nothing about screen sizes. The Vue and React adapters also restore a step's errors when the user comes back to it, revalidate a step that failed Next as the user fixes it, and treat a submit before the last step as Next: see their READMEs.
@@ -20,7 +27,7 @@ A row's CSS grid has 12 columns at every width here. On a narrow screen, give th
 ## Preact
 
 ```sh
-pnpm add @whatsaaaa/form-builder-schema @formisch/preact @preact/signals preact valibot
+pnpm add @whatsaaaa/form-builder-schema @whatsaaaa/form-builder-affects @formisch/preact @preact/signals preact valibot
 ```
 
 - It is the React renderer with Preact's imports. A field's state is a signal: read `field.input.value` and `field.errors.value`.
@@ -38,12 +45,15 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   type SubmitHandler,
   useField,
   useFieldArray,
   useForm,
   validate,
 } from '@formisch/preact'
+import { useComputed, useSignalEffect } from '@preact/signals'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   coerceInput,
   createSchemaBuilder,
@@ -57,11 +67,14 @@ import {
   type LayoutNode,
   type LayoutStep,
   toFieldPath,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 import { type ComponentChildren, Fragment } from 'preact'
 import { useState } from 'preact/hooks'
 
-const builder = createSchemaBuilder()
+// With affects, the fields' conditions hide them: the schema doesn't validate them, and the view
+// leaves them out.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 /** The content of the layout's slots, by name. */
 type Slots = Record<string, ComponentChildren>
@@ -74,15 +87,27 @@ interface JsonFormViewProps {
 
 export function JsonFormView({ json, onSubmit, slots = {} }: JsonFormViewProps) {
   // Formisch reads its config once, so read the definition once too.
-  const [{ steps, ...config }] = useState(() => ({
+  const [{ steps, conditions, ...config }] = useState(() => ({
     schema: builder.build(json),
     initialInput: builder.getInitialInput(json),
     steps: builder.getLayout(json).steps,
+    conditions: builder.getVisibility(json),
   }))
   const form = useForm(config)
+  // What the conditions hide for the input now: the same object until that changes.
+  const visibility = useComputed(() => conditions.of(getInput(form)))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  useSignalEffect(() => {
+    for (const { path, input } of visibility.value.toClear) setInput(form, { path, input } as never)
+  })
   const [index, setIndex] = useState(0)
   const step = steps[index] as LayoutStep
-  const isLast = index === steps.length - 1
+  // A step whose fields are all hidden is skipped. The current one stays, while the user is on it.
+  const shown = steps.flatMap((each, i) =>
+    i === index || !visibility.value.isStepHidden(each) ? [i] : [],
+  )
+  const before = shown[shown.indexOf(index) - 1]
+  const after = shown[shown.indexOf(index) + 1]
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   const next = async () => {
@@ -92,23 +117,31 @@ export function JsonFormView({ json, onSubmit, slots = {} }: JsonFormViewProps) 
       if (first) focus(form, { path: first.path as never })
       return
     }
+    if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    setIndex(index + 1)
+    setIndex(after)
   }
 
   return (
     <Form of={form} onSubmit={onSubmit}>
       {/* Keyed by the step, so another step's fields don't take over this one's components. */}
-      <Layout key={index} form={form} nodes={step.children} indexes={[]} slots={slots} />
-      {index > 0 && (
-        <button type="button" data-back="" onClick={() => setIndex(index - 1)}>
+      <Layout
+        key={index}
+        form={form}
+        visibility={visibility.value}
+        nodes={visibility.value.shownNodes(step.children, [])}
+        indexes={[]}
+        slots={slots}
+      />
+      {before !== undefined && (
+        <button type="button" data-back="" onClick={() => setIndex(before)}>
           Back
         </button>
       )}
-      {isLast ? (
+      {after === undefined ? (
         <button type="submit">Save</button>
       ) : (
         <button type="button" data-next="" onClick={next}>
@@ -121,20 +154,22 @@ export function JsonFormView({ json, onSubmit, slots = {} }: JsonFormViewProps) 
 
 interface LayoutProps {
   form: FormStore
+  /** What the conditions hide now. The nodes are the ones it shows. */
+  visibility: VisibilityState
   nodes: readonly LayoutNode[]
   /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
   slots: Slots
 }
 
-function Layout({ form, nodes, indexes, slots }: LayoutProps) {
+function Layout({ nodes, ...props }: LayoutProps) {
   return nodes.map((node) => {
     switch (node.type) {
       case 'section':
         return (
           <fieldset key={node.key}>
             <legend>{node.section.label}</legend>
-            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+            <Layout {...props} nodes={node.children} />
           </fieldset>
         )
       case 'row':
@@ -143,21 +178,21 @@ function Layout({ form, nodes, indexes, slots }: LayoutProps) {
           <div key={node.key} style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
             {node.children.map((cell) => (
               <div key={cell.key} data-span={cell.span} style={{ gridColumn: `span ${cell.span}` }}>
-                <Layout form={form} nodes={[cell]} indexes={indexes} slots={slots} />
+                <Layout {...props} nodes={[cell]} />
               </div>
             ))}
           </div>
         )
       case 'slot':
-        return <Fragment key={node.key}>{slots[node.name]}</Fragment>
+        return <Fragment key={node.key}>{props.slots[node.name]}</Fragment>
       case 'field':
-        return <Field key={node.key} form={form} node={node} indexes={indexes} slots={slots} />
+        return <Field key={node.key} {...props} node={node} />
     }
   })
 }
 
 /** A field by its role. A group and an array render their fields from the layout. */
-function Field({ form, node, indexes, slots }: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
+function Field({ node, ...props }: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
   switch (node.node.role) {
     case 'display':
       return <Display node={node.node} />
@@ -165,13 +200,13 @@ function Field({ form, node, indexes, slots }: Omit<LayoutProps, 'nodes'> & { no
       return (
         <fieldset>
           <legend>{node.node.field.label ?? node.node.field.name}</legend>
-          <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+          <Layout {...props} nodes={node.children} />
         </fieldset>
       )
     case 'array':
-      return <ArrayField form={form} node={node} indexes={indexes} />
+      return <ArrayField {...props} node={node} />
     case 'value':
-      return <ValueField form={form} node={node.node} indexes={indexes} />
+      return <ValueField form={props.form} node={node.node} indexes={props.indexes} />
   }
 }
 
@@ -187,13 +222,10 @@ function Display({ node }: { node: FieldNode }) {
 /** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
 function ArrayField({
   form,
+  visibility,
   node,
   indexes,
-}: {
-  form: FormStore
-  node: LayoutField
-  indexes: readonly number[]
-}) {
+}: Omit<LayoutProps, 'nodes' | 'slots'> & { node: LayoutField }) {
   const { field, dataPath } = node.node
   const path = toFieldPath(dataPath, indexes)
   // The path comes from the definition at runtime, so Formisch's types can't check it.
@@ -205,7 +237,14 @@ function ArrayField({
       <legend>{field.label ?? field.name}</legend>
       {array.items.value.map((item, index) => (
         <div key={item}>
-          <Layout form={form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
+          {/* Each item hides its own fields, by the fields of the item. */}
+          <Layout
+            form={form}
+            visibility={visibility}
+            nodes={visibility.shownNodes(node.children, [...indexes, index])}
+            indexes={[...indexes, index]}
+            slots={{}}
+          />
           <button
             type="button"
             data-remove={`${path.join('.')}.${index}`}
@@ -377,12 +416,13 @@ function ValueField({
 ## Solid
 
 ```sh
-pnpm add @whatsaaaa/form-builder-schema @formisch/solid solid-js valibot
+pnpm add @whatsaaaa/form-builder-schema @whatsaaaa/form-builder-affects @formisch/solid solid-js valibot
 ```
 
 - `createForm` makes the form. A component runs once, so it reads the definition once.
 - Pass the path to `useField` and `useFieldArray` as a getter, so a field follows its item when one before it is removed.
 - A field keeps its type, so the control is picked once, when the field renders. Its state is read in JSX, where Solid tracks it.
+- `<For>` keeps an element for each object of its list, and `shownNodes` gives new objects for the sections and rows whose fields show or hide. So `Layout` renders the nodes as written, each in a `<Show>` while `shownNodes` has its key, and a field keeps its element, and its focus, as the fields around it show and hide.
 
 <!-- example: solid/json-form-view.tsx -->
 
@@ -396,11 +436,13 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   type SubmitHandler,
   useField,
   useFieldArray,
   validate,
 } from '@formisch/solid'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   coerceInput,
   createSchemaBuilder,
@@ -414,11 +456,24 @@ import {
   type LayoutNode,
   type LayoutStep,
   toFieldPath,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
-import { createSignal, For, type JSX, Match, Show, Switch } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  type JSX,
+  Match,
+  on,
+  Show,
+  Switch,
+} from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
-const builder = createSchemaBuilder()
+// With affects, the fields' conditions hide them: the schema doesn't validate them, and the view
+// leaves them out.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 /** The content of the layout's slots, by name. */
 type Slots = Record<string, JSX.Element>
@@ -436,9 +491,23 @@ export function JsonFormView(props: JsonFormViewProps) {
     initialInput: builder.getInitialInput(props.json),
   })
   const { steps } = builder.getLayout(props.json)
+  const conditions = builder.getVisibility(props.json)
+  // What the conditions hide for the input now: the same object until that changes.
+  const visibility = createMemo(() => conditions.of(getInput(form)))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  createEffect(
+    on(visibility, (state) => {
+      for (const { path, input } of state.toClear) setInput(form, { path, input } as never)
+    }),
+  )
   const [index, setIndex] = createSignal(0)
   const step = () => steps[index()] as LayoutStep
-  const isLast = () => index() === steps.length - 1
+  // A step whose fields are all hidden is skipped. The current one stays, while the user is on it.
+  const shown = createMemo(() =>
+    steps.flatMap((each, i) => (i === index() || !visibility().isStepHidden(each) ? [i] : [])),
+  )
+  const before = () => shown()[shown().indexOf(index()) - 1]
+  const after = () => shown()[shown().indexOf(index()) + 1]
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   const next = async () => {
@@ -448,11 +517,13 @@ export function JsonFormView(props: JsonFormViewProps) {
       if (first) focus(form, { path: first.path as never })
       return
     }
+    const to = after()
+    if (to === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index() + 1] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(steps[to] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    setIndex(index() + 1)
+    setIndex(to)
   }
 
   return (
@@ -460,15 +531,21 @@ export function JsonFormView(props: JsonFormViewProps) {
       {/* Keyed by the step, so its fields render anew when it changes. */}
       <Show when={step()} keyed>
         {(current) => (
-          <Layout form={form} nodes={current.children} indexes={[]} slots={props.slots ?? {}} />
+          <Layout
+            form={form}
+            visibility={visibility}
+            nodes={current.children}
+            indexes={[]}
+            slots={props.slots ?? {}}
+          />
         )}
       </Show>
-      <Show when={index() > 0}>
-        <button type="button" data-back="" onClick={() => setIndex(index() - 1)}>
+      <Show when={before() !== undefined}>
+        <button type="button" data-back="" onClick={() => setIndex(before() as number)}>
           Back
         </button>
       </Show>
-      <Show when={!isLast()} fallback={<button type="submit">Save</button>}>
+      <Show when={after() !== undefined} fallback={<button type="submit">Save</button>}>
         <button type="button" data-next="" onClick={next}>
           Next
         </button>
@@ -479,46 +556,76 @@ export function JsonFormView(props: JsonFormViewProps) {
 
 interface LayoutProps {
   form: FormStore
+  /** What the conditions hide now. */
+  visibility: () => VisibilityState
   nodes: readonly LayoutNode[]
   /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
   slots: Slots
 }
 
+/**
+ * The keys of the nodes the conditions show. The nodes stay the ones written, so `<For>` keeps the
+ * element of each as others show and hide.
+ */
+const shownKeys = (props: Pick<LayoutProps, 'visibility' | 'nodes' | 'indexes'>) =>
+  new Set(
+    props
+      .visibility()
+      .shownNodes(props.nodes, props.indexes)
+      .map((node) => node.key),
+  )
+
 function Layout(props: LayoutProps) {
+  const shown = createMemo(() => shownKeys(props))
   return (
     <For each={props.nodes}>
       {(node) => (
-        <Switch>
-          <Match when={node.type === 'section' && node}>
-            {(section) => (
-              <fieldset>
-                <legend>{section().section.label}</legend>
-                <Layout {...props} nodes={section().children} />
-              </fieldset>
-            )}
-          </Match>
-          <Match when={node.type === 'row' && node}>
-            {(row) => (
-              // One line of a 12-column grid, where each cell takes its span.
-              <div style={{ display: 'grid', 'grid-template-columns': 'repeat(12, 1fr)' }}>
-                <For each={row().children}>
-                  {(cell) => (
-                    <div data-span={cell.span} style={{ 'grid-column': `span ${cell.span}` }}>
-                      <Layout {...props} nodes={[cell]} />
-                    </div>
-                  )}
-                </For>
-              </div>
-            )}
-          </Match>
-          <Match when={node.type === 'slot' && node}>{(slot) => props.slots[slot().name]}</Match>
-          <Match when={node.type === 'field' && node}>
-            {(field) => <Field {...props} node={field()} />}
-          </Match>
-        </Switch>
+        <Show when={shown().has(node.key)}>
+          <Node {...props} node={node} />
+        </Show>
       )}
     </For>
+  )
+}
+
+function Node(props: Omit<LayoutProps, 'nodes'> & { node: LayoutNode }) {
+  const node = props.node
+  return (
+    <Switch>
+      <Match when={node.type === 'section' && node}>
+        {(section) => (
+          <fieldset>
+            <legend>{section().section.label}</legend>
+            <Layout {...props} nodes={section().children} />
+          </fieldset>
+        )}
+      </Match>
+      <Match when={node.type === 'row' && node}>
+        {(row) => {
+          const cells = createMemo(() => shownKeys({ ...props, nodes: row().children }))
+          return (
+            // One line of a 12-column grid, where each cell takes its span. A hidden cell drops
+            // out, and the others line up from the first column.
+            <div style={{ display: 'grid', 'grid-template-columns': 'repeat(12, 1fr)' }}>
+              <For each={row().children}>
+                {(cell) => (
+                  <Show when={cells().has(cell.key)}>
+                    <div data-span={cell.span} style={{ 'grid-column': `span ${cell.span}` }}>
+                      <Node {...props} node={cell} />
+                    </div>
+                  </Show>
+                )}
+              </For>
+            </div>
+          )
+        }}
+      </Match>
+      <Match when={node.type === 'slot' && node}>{(slot) => props.slots[slot().name]}</Match>
+      <Match when={node.type === 'field' && node}>
+        {(field) => <Field {...props} node={field()} />}
+      </Match>
+    </Switch>
   )
 }
 
@@ -535,6 +642,7 @@ function Field(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
           <legend>{node().field.label ?? node().field.name}</legend>
           <Layout
             form={props.form}
+            visibility={props.visibility}
             nodes={props.node.children}
             indexes={props.indexes}
             slots={props.slots}
@@ -542,7 +650,12 @@ function Field(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
         </fieldset>
       </Match>
       <Match when={node().role === 'array'}>
-        <ArrayField form={props.form} node={props.node} indexes={props.indexes} />
+        <ArrayField
+          form={props.form}
+          visibility={props.visibility}
+          node={props.node}
+          indexes={props.indexes}
+        />
       </Match>
       <Match when={node().role === 'value'}>
         <ValueField form={props.form} node={node()} indexes={props.indexes} />
@@ -566,7 +679,7 @@ function Display(props: { node: FieldNode }) {
 }
 
 /** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
-function ArrayField(props: { form: FormStore; node: LayoutField; indexes: readonly number[] }) {
+function ArrayField(props: Omit<LayoutProps, 'nodes' | 'slots'> & { node: LayoutField }) {
   // A getter, so the path follows the item when one before it is removed. It comes from the
   // definition at runtime, so Formisch's types can't check it.
   const path = () => toFieldPath(props.node.node.dataPath, props.indexes)
@@ -582,8 +695,10 @@ function ArrayField(props: { form: FormStore; node: LayoutField; indexes: readon
       <For each={array.items}>
         {(_, index) => (
           <div>
+            {/* Each item hides its own fields, by the fields of the item. */}
             <Layout
               form={props.form}
+              visibility={props.visibility}
               nodes={props.node.children}
               indexes={[...props.indexes, index()]}
               slots={{}}
@@ -759,7 +874,7 @@ function ValueField(props: { form: FormStore; node: FieldNode; indexes: readonly
 ## Svelte
 
 ```sh
-pnpm add @whatsaaaa/form-builder-schema @formisch/svelte svelte valibot
+pnpm add @whatsaaaa/form-builder-schema @whatsaaaa/form-builder-affects @formisch/svelte svelte valibot
 ```
 
 - `createForm` makes the form. `untrack` reads the definition once, as Formisch reads its config once.
@@ -770,10 +885,15 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/svelte svelte valibot
 <!-- example: svelte/builder.ts -->
 
 ```ts
+import { affects } from '@whatsaaaa/form-builder-affects'
 import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
 
-/** One builder for the schema, the initial input, the layout and new array items. */
-export const builder = createSchemaBuilder()
+/**
+ * One builder for the schema, the initial input, the layout, what the conditions hide, and new
+ * array items. With affects, the fields' conditions hide them: the schema doesn't validate them,
+ * and the view leaves them out.
+ */
+export const builder = createSchemaBuilder({ extensions: [affects()] })
 ```
 
 <!-- example: svelte/JsonFormView.svelte -->
@@ -786,6 +906,7 @@ export const builder = createSchemaBuilder()
     Form,
     getInput,
     setErrors,
+    setInput,
     type SubmitHandler,
     validate,
   } from '@formisch/svelte'
@@ -812,14 +933,30 @@ export const builder = createSchemaBuilder()
   } = $props()
 
   // Formisch reads its config once, so read the definition once too.
-  const { steps, ...config } = untrack(() => ({
+  const { steps, conditions, ...config } = untrack(() => ({
     schema: builder.build(json),
     initialInput: builder.getInitialInput(json),
     steps: builder.getLayout(json).steps,
+    conditions: builder.getVisibility(json),
   }))
   const form = createForm(config)
+  // What the conditions hide for the input now: the same object until that changes.
+  const visibility = $derived(conditions.of(getInput(form)))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  $effect(() => {
+    const { toClear } = visibility
+    untrack(() => {
+      for (const { path, input } of toClear) setInput(form, { path, input } as never)
+    })
+  })
   let index = $state(0)
   const step = $derived(steps[index] as LayoutStep)
+  // A step whose fields are all hidden is skipped. The current one stays, while the user is on it.
+  const shown = $derived(
+    steps.flatMap((each, i) => (i === index || !visibility.isStepHidden(each) ? [i] : [])),
+  )
+  const before = $derived(shown[shown.indexOf(index) - 1])
+  const after = $derived(shown[shown.indexOf(index) + 1])
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   async function next() {
@@ -829,23 +966,24 @@ export const builder = createSchemaBuilder()
       if (first) focus(form, { path: first.path as never })
       return
     }
+    if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    index += 1
+    index = after
   }
 </script>
 
 <Form of={form} onsubmit={(output) => onsubmit(output)}>
   <!-- Keyed by the step, so its fields render anew when it changes. -->
   {#key index}
-    <Layout {form} nodes={step.children} indexes={[]} {slots} />
+    <Layout {form} {visibility} nodes={step.children} indexes={[]} {slots} />
   {/key}
-  {#if index > 0}
-    <button type="button" data-back="" onclick={() => (index -= 1)}>Back</button>
+  {#if before !== undefined}
+    <button type="button" data-back="" onclick={() => (index = before as number)}>Back</button>
   {/if}
-  {#if index < steps.length - 1}
+  {#if after !== undefined}
     <button type="button" data-next="" onclick={next}>Next</button>
   {:else}
     <button type="submit">Save</button>
@@ -858,7 +996,7 @@ export const builder = createSchemaBuilder()
 ```svelte
 <script lang="ts">
   import type { FormStore } from '@formisch/svelte'
-  import type { LayoutNode } from '@whatsaaaa/form-builder-schema'
+  import type { LayoutNode, VisibilityState } from '@whatsaaaa/form-builder-schema'
   import type { Snippet } from 'svelte'
   import ArrayField from './ArrayField.svelte'
   import Layout from './Layout.svelte'
@@ -866,31 +1004,36 @@ export const builder = createSchemaBuilder()
 
   let {
     form,
+    visibility,
     nodes,
     indexes,
     slots,
   }: {
     form: FormStore
+    /** What the conditions hide now: the nodes it hides are left out. */
+    visibility: VisibilityState
     nodes: readonly LayoutNode[]
     /** The index of each array item the nodes are in, outermost first. */
     indexes: readonly number[]
     /** The content of the layout's slots, by name. */
     slots: Record<string, Snippet>
   } = $props()
+
+  const shown = $derived(visibility.shownNodes(nodes, indexes))
 </script>
 
-{#each nodes as node (node.key)}
+{#each shown as node (node.key)}
   {#if node.type === 'section'}
     <fieldset>
       <legend>{node.section.label}</legend>
-      <Layout {form} nodes={node.children} {indexes} {slots} />
+      <Layout {form} {visibility} nodes={node.children} {indexes} {slots} />
     </fieldset>
   {:else if node.type === 'row'}
     <!-- One line of a 12-column grid, where each cell takes its span. -->
     <div style="display: grid; grid-template-columns: repeat(12, 1fr)">
       {#each node.children as cell (cell.key)}
         <div data-span={cell.span} style:grid-column="span {cell.span}">
-          <Layout {form} nodes={[cell]} {indexes} {slots} />
+          <Layout {form} {visibility} nodes={[cell]} {indexes} {slots} />
         </div>
       {/each}
     </div>
@@ -909,10 +1052,10 @@ export const builder = createSchemaBuilder()
   {:else if node.node.role === 'group'}
     <fieldset>
       <legend>{node.node.field.label ?? node.node.field.name}</legend>
-      <Layout {form} nodes={node.children} {indexes} {slots} />
+      <Layout {form} {visibility} nodes={node.children} {indexes} {slots} />
     </fieldset>
   {:else if node.node.role === 'array'}
-    <ArrayField {form} {node} {indexes} />
+    <ArrayField {form} {visibility} {node} {indexes} />
   {:else}
     <ValueField {form} node={node.node} {indexes} />
   {/if}
@@ -924,13 +1067,26 @@ export const builder = createSchemaBuilder()
 ```svelte
 <script lang="ts">
   import { type FormStore, insert, remove, useFieldArray } from '@formisch/svelte'
-  import { type LayoutField, toFieldPath } from '@whatsaaaa/form-builder-schema'
+  import {
+    type LayoutField,
+    toFieldPath,
+    type VisibilityState,
+  } from '@whatsaaaa/form-builder-schema'
   import { builder } from './builder'
   import Layout from './Layout.svelte'
 
   // A list: Formisch's field array, and the layout of each item. A slot never is in one.
-  let { form, node, indexes }: { form: FormStore; node: LayoutField; indexes: readonly number[] } =
-    $props()
+  let {
+    form,
+    visibility,
+    node,
+    indexes,
+  }: {
+    form: FormStore
+    visibility: VisibilityState
+    node: LayoutField
+    indexes: readonly number[]
+  } = $props()
 
   // Derived, so the path follows the item when one before it is removed. It comes from the
   // definition at runtime, so Formisch's types can't check it.
@@ -950,7 +1106,8 @@ export const builder = createSchemaBuilder()
   <legend>{node.node.field.label ?? node.node.field.name}</legend>
   {#each array.items as item, index (item)}
     <div>
-      <Layout {form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
+      <!-- Each item hides its own fields, by the fields of the item. -->
+      <Layout {form} {visibility} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
       <button
         type="button"
         data-remove={`${path.join('.')}.${index}`}
@@ -1110,12 +1267,13 @@ export const builder = createSchemaBuilder()
 ## Qwik
 
 ```sh
-pnpm add @whatsaaaa/form-builder-schema @formisch/qwik @qwik.dev/core valibot
+pnpm add @whatsaaaa/form-builder-schema @whatsaaaa/form-builder-affects @formisch/qwik @qwik.dev/core valibot
 ```
 
 - `useForm$` takes a function that returns the config. Formisch calls it again wherever the form resumes, so the schema is built there from the definition, which is JSON.
 - Field state is a signal: read `field.input.value` and `field.errors.value`. `field.onInput` is a QRL, and so is `set`, so the handlers can call it.
 - Formisch for Qwik keeps a JSON copy of the schema, so it can't hold `v.lazy`. The built schema never uses it.
+- A component's props must be data Qwik can serialize, and the visibility state has functions. So `JsonFormView` passes `Layout` the nodes the state shows, and `ArrayField` gets the state for each item from the definition. A handler works out the step to go to from the form when it runs, not from what the view had when it rendered.
 
 <!-- example: qwik/json-form-view.tsx -->
 
@@ -1128,13 +1286,23 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   type SubmitHandler,
   useField,
   useFieldArray,
   useForm$,
   validate,
 } from '@formisch/qwik'
-import { $, component$, Fragment, type JSXOutput, type QRL, useSignal } from '@qwik.dev/core'
+import {
+  $,
+  component$,
+  Fragment,
+  type JSXOutput,
+  type QRL,
+  useSignal,
+  useTask$,
+} from '@qwik.dev/core'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   coerceInput,
   createSchemaBuilder,
@@ -1150,7 +1318,9 @@ import {
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
 
-const builder = createSchemaBuilder()
+// With affects, the fields' conditions hide them: the schema doesn't validate them, and the view
+// leaves them out.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 /** The content of the layout's slots, by name. */
 type Slots = Record<string, JSXOutput>
@@ -1168,8 +1338,17 @@ export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$, sl
     initialInput: builder.getInitialInput(json),
   }))
   const { steps } = builder.getLayout(json)
+  // What the conditions hide for the input now. Reading the input renders the form again when it
+  // changes. The state has functions, which Qwik can't pass to a component: the nodes it shows can.
+  const visibility = builder.getVisibility(json).of(getInput(form))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  useTask$(({ track }) => {
+    const { toClear } = track(() => builder.getVisibility(json).of(getInput(form)))
+    for (const { path, input } of toClear) setInput(form, { path, input } as never)
+  })
   const index = useSignal(0)
   const step = steps[index.value] as LayoutStep
+  const { before, after } = around(json, form, index.value)
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   const next = $(async () => {
@@ -1179,23 +1358,37 @@ export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$, sl
       if (first) focus(form, { path: first.path as never })
       return
     }
+    // A handler works it out from the form, not from what it was when the view rendered.
+    const { after } = around(json, form, index.value)
+    if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index.value + 1] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    index.value += 1
+    index.value = after
   })
 
   return (
     <Form of={form} onSubmit$={onSubmit$}>
       {/* Keyed by the step, so another step's fields don't take over this one's components. */}
-      <Layout key={index.value} form={form} nodes={step.children} indexes={[]} slots={slots} />
-      {index.value > 0 && (
-        <button type="button" data-back="" onClick$={() => (index.value -= 1)}>
+      <Layout
+        key={index.value}
+        form={form}
+        json={json}
+        nodes={visibility.shownNodes(step.children, [])}
+        indexes={[]}
+        slots={slots}
+      />
+      {before !== undefined && (
+        <button
+          type="button"
+          data-back=""
+          onClick$={() => (index.value = around(json, form, index.value).before ?? index.value)}
+        >
           Back
         </button>
       )}
-      {index.value < steps.length - 1 ? (
+      {after !== undefined ? (
         <button type="button" data-next="" onClick$={next}>
           Next
         </button>
@@ -1206,22 +1399,38 @@ export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$, sl
   )
 })
 
+/**
+ * The steps before and after the one at `index` that the user goes to: a step whose fields are
+ * all hidden is skipped.
+ */
+function around(json: JsonForm, form: FormStore, index: number) {
+  const { steps } = builder.getLayout(json)
+  const visibility = builder.getVisibility(json).of(getInput(form))
+  const shown = steps.flatMap((each, i) =>
+    i === index || !visibility.isStepHidden(each) ? [i] : [],
+  )
+  return { before: shown[shown.indexOf(index) - 1], after: shown[shown.indexOf(index) + 1] }
+}
+
 interface LayoutProps {
   form: FormStore
+  /** The definition, for the conditions of each item of an array. */
+  json: JsonForm
+  /** The nodes the conditions show. */
   nodes: readonly LayoutNode[]
   /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
   slots: Slots
 }
 
-const Layout = component$<LayoutProps>(({ form, nodes, indexes, slots }) => {
+const Layout = component$<LayoutProps>(({ nodes, ...props }) => {
   return nodes.map((node) => {
     switch (node.type) {
       case 'section':
         return (
           <fieldset key={node.key}>
             <legend>{node.section.label}</legend>
-            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+            <Layout {...props} nodes={node.children} />
           </fieldset>
         )
       case 'row':
@@ -1230,22 +1439,22 @@ const Layout = component$<LayoutProps>(({ form, nodes, indexes, slots }) => {
           <div key={node.key} style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
             {node.children.map((cell) => (
               <div key={cell.key} data-span={cell.span} style={{ gridColumn: `span ${cell.span}` }}>
-                <Layout form={form} nodes={[cell]} indexes={indexes} slots={slots} />
+                <Layout {...props} nodes={[cell]} />
               </div>
             ))}
           </div>
         )
       case 'slot':
-        return <Fragment key={node.key}>{slots[node.name]}</Fragment>
+        return <Fragment key={node.key}>{props.slots[node.name]}</Fragment>
       case 'field':
-        return <Field key={node.key} form={form} node={node} indexes={indexes} slots={slots} />
+        return <Field key={node.key} {...props} node={node} />
     }
   })
 })
 
 /** A field by its role. A group and an array render their fields from the layout. */
 const Field = component$<Omit<LayoutProps, 'nodes'> & { node: LayoutField }>(
-  ({ form, node, indexes, slots }) => {
+  ({ node, ...props }) => {
     switch (node.node.role) {
       case 'display':
         return <Display node={node.node} />
@@ -1253,13 +1462,15 @@ const Field = component$<Omit<LayoutProps, 'nodes'> & { node: LayoutField }>(
         return (
           <fieldset>
             <legend>{node.node.field.label ?? node.node.field.name}</legend>
-            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+            <Layout {...props} nodes={node.children} />
           </fieldset>
         )
       case 'array':
-        return <ArrayField form={form} node={node} indexes={indexes} />
+        return (
+          <ArrayField form={props.form} json={props.json} node={node} indexes={props.indexes} />
+        )
       case 'value':
-        return <ValueField form={form} node={node.node} indexes={indexes} />
+        return <ValueField form={props.form} node={node.node} indexes={props.indexes} />
     }
   },
 )
@@ -1274,18 +1485,26 @@ const Display = component$<{ node: FieldNode }>(({ node }) => {
 })
 
 /** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
-const ArrayField = component$<{ form: FormStore; node: LayoutField; indexes: readonly number[] }>(
-  ({ form, node, indexes }) => {
+const ArrayField = component$<Omit<LayoutProps, 'nodes' | 'slots'> & { node: LayoutField }>(
+  ({ form, json, node, indexes }) => {
     const { field, dataPath } = node.node
     const path = toFieldPath(dataPath, indexes)
     // The path comes from the definition at runtime, so Formisch's types can't check it.
     const array = useFieldArray(form, { path: path as never })
+    // Each item hides its own fields, by the fields of the item.
+    const visibility = builder.getVisibility(json).of(getInput(form))
     return (
       <fieldset>
         <legend>{field.label ?? field.name}</legend>
         {array.items.value.map((item, index) => (
           <div key={item}>
-            <Layout form={form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
+            <Layout
+              form={form}
+              json={json}
+              nodes={visibility.shownNodes(node.children, [...indexes, index])}
+              indexes={[...indexes, index]}
+              slots={{}}
+            />
             <button
               type="button"
               data-remove={`${path.join('.')}.${index}`}
@@ -1460,7 +1679,7 @@ const ValueField = component$<{ form: FormStore; node: FieldNode; indexes: reado
 ## Angular
 
 ```sh
-pnpm add @whatsaaaa/form-builder-schema @formisch/angular valibot
+pnpm add @whatsaaaa/form-builder-schema @whatsaaaa/form-builder-affects @formisch/angular valibot
 ```
 
 - `injectForm` needs an injection context, and the definition is an input, which is set from `ngOnInit`. So `ngOnInit` makes the form in the component's injector.
@@ -1476,6 +1695,7 @@ import { NgTemplateOutlet } from '@angular/common'
 import {
   Component,
   computed,
+  effect,
   forwardRef,
   inject,
   Injector,
@@ -1485,6 +1705,7 @@ import {
   runInInjectionContext,
   signal,
   type TemplateRef,
+  untracked,
 } from '@angular/core'
 import {
   focus,
@@ -1498,8 +1719,10 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   validate,
 } from '@formisch/angular'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   coerceInput,
   createSchemaBuilder,
@@ -1512,9 +1735,13 @@ import {
   type LayoutNode,
   type LayoutStep,
   toFieldPath,
+  type Visibility,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 
-const builder = createSchemaBuilder()
+// With affects, the fields' conditions hide them: the schema doesn't validate them, and the view
+// leaves them out.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 type Option = { value: string | number | boolean; label: string }
 
@@ -1701,8 +1928,10 @@ export class ValueField {
       <legend>{{ field().label ?? field().name }}</legend>
       @for (item of array.items(); track item; let index = $index) {
         <div>
+          <!-- Each item hides its own fields, by the fields of the item. -->
           <json-layout
             [form]="form()"
+            [visibility]="visibility()"
             [nodes]="node().children"
             [indexes]="[...indexes(), index]"
             [slots]="{}"
@@ -1725,6 +1954,7 @@ export class ValueField {
 })
 export class ArrayField {
   readonly form = input.required<FormStore>()
+  readonly visibility = input.required<VisibilityState>()
   readonly node = input.required<LayoutField>()
   readonly indexes = input.required<readonly number[]>()
 
@@ -1753,12 +1983,13 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
   selector: 'json-layout',
   imports: [ArrayField, NgTemplateOutlet, ValueField],
   template: `
-    @for (node of nodes(); track node.key) {
+    @for (node of shown(); track node.key) {
       @if (node.type === 'section') {
         <fieldset>
           <legend>{{ node.section.label }}</legend>
           <json-layout
             [form]="form()"
+            [visibility]="visibility()"
             [nodes]="node.children"
             [indexes]="indexes()"
             [slots]="slots()"
@@ -1771,6 +2002,7 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
             <div [attr.data-span]="cell.span" [style.grid-column]="'span ' + cell.span">
               <json-layout
                 [form]="form()"
+                [visibility]="visibility()"
                 [nodes]="[cell]"
                 [indexes]="indexes()"
                 [slots]="slots()"
@@ -1812,13 +2044,19 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
           <legend>{{ node.node.field.label ?? node.node.field.name }}</legend>
           <json-layout
             [form]="form()"
+            [visibility]="visibility()"
             [nodes]="node.children"
             [indexes]="indexes()"
             [slots]="slots()"
           />
         </fieldset>
       } @else if (node.node.role === 'array') {
-        <json-array-field [form]="form()" [node]="node" [indexes]="indexes()" />
+        <json-array-field
+          [form]="form()"
+          [visibility]="visibility()"
+          [node]="node"
+          [indexes]="indexes()"
+        />
       } @else {
         <json-value-field [form]="form()" [node]="node.node" [indexes]="indexes()" />
       }
@@ -1827,10 +2065,16 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
 })
 export class JsonLayout {
   readonly form = input.required<FormStore>()
+  /** What the conditions hide now: the nodes it hides are left out. */
+  readonly visibility = input.required<VisibilityState>()
   readonly nodes = input.required<readonly LayoutNode[]>()
   /** The index of each array item the nodes are in, outermost first. */
   readonly indexes = input.required<readonly number[]>()
   readonly slots = input.required<Slots>()
+
+  protected readonly shown = computed(() =>
+    this.visibility().shownNodes(this.nodes(), this.indexes()),
+  )
 }
 
 /** Renders a definition as a Formisch form, a step at a time, and emits the output on submit. */
@@ -1842,12 +2086,18 @@ export class JsonLayout {
       <form [formischForm]="form" [formischSubmit]="handleSubmit">
         <!-- Tracked by the step, so its fields render anew when it changes. -->
         @for (current of [step()]; track current) {
-          <json-layout [form]="form" [nodes]="current.children" [indexes]="[]" [slots]="slots()" />
+          <json-layout
+            [form]="form"
+            [visibility]="visibility()"
+            [nodes]="current.children"
+            [indexes]="[]"
+            [slots]="slots()"
+          />
         }
-        @if (index() > 0) {
-          <button type="button" data-back="" (click)="index.set(index() - 1)">Back</button>
+        @if (before() !== undefined) {
+          <button type="button" data-back="" (click)="index.set(before()!)">Back</button>
         }
-        @if (index() < steps.length - 1) {
+        @if (after() !== undefined) {
           <button type="button" data-next="" (click)="next()">Next</button>
         } @else {
           <button type="submit">Save</button>
@@ -1864,16 +2114,42 @@ export class JsonFormView implements OnInit {
   private readonly injector = inject(Injector)
   protected form: FormStore | undefined
   protected steps: readonly LayoutStep[] = []
+  private conditions: Visibility | undefined
   protected readonly index = signal(0)
   protected readonly step = computed(() => this.steps[this.index()] as LayoutStep)
+
+  /** What the conditions hide for the input now: the same object until that changes. */
+  protected readonly visibility = computed(() =>
+    (this.conditions as Visibility).of(getInput(this.form as FormStore)),
+  )
+  /** A step whose fields are all hidden is skipped. The current one stays, while the user is on it. */
+  private readonly shown = computed(() =>
+    this.steps.flatMap((each, i) =>
+      i === this.index() || !this.visibility().isStepHidden(each) ? [i] : [],
+    ),
+  )
+  protected readonly before = computed(() => this.shown()[this.shown().indexOf(this.index()) - 1])
+  protected readonly after = computed(() => this.shown()[this.shown().indexOf(this.index()) + 1])
 
   // Formisch reads its config once, in an injection context. Inputs are set from ngOnInit.
   ngOnInit(): void {
     const json = this.json()
     this.steps = builder.getLayout(json).steps
-    this.form = runInInjectionContext(this.injector, () =>
-      injectForm({ schema: builder.build(json), initialInput: builder.getInitialInput(json) }),
-    )
+    this.conditions = builder.getVisibility(json)
+    this.form = runInInjectionContext(this.injector, () => {
+      const form = injectForm({
+        schema: builder.build(json),
+        initialInput: builder.getInitialInput(json),
+      })
+      // The fields the conditions clear, set blank as soon as they are cleared.
+      effect(() => {
+        const { toClear } = this.visibility()
+        untracked(() => {
+          for (const { path, input } of toClear) setInput(form, { path, input } as never)
+        })
+      })
+      return form
+    })
   }
 
   /** Validates the whole form. Only the issues on this step's fields keep the user here. */
@@ -1885,12 +2161,13 @@ export class JsonFormView implements OnInit {
       if (first) focus(form, { path: first.path as never })
       return
     }
+    const after = this.after()
+    if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    const following = this.steps[this.index() + 1] as LayoutStep
-    for (const path of fieldPathsOf(following, getInput(form))) {
+    for (const path of fieldPathsOf(this.steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    this.index.set(this.index() + 1)
+    this.index.set(after)
   }
 
   protected readonly handleSubmit = (output: unknown) => this.submitted.emit(output)

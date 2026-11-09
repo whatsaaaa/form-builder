@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common'
 import {
   Component,
   computed,
+  effect,
   forwardRef,
   inject,
   Injector,
@@ -11,6 +12,7 @@ import {
   runInInjectionContext,
   signal,
   type TemplateRef,
+  untracked,
 } from '@angular/core'
 import {
   focus,
@@ -24,8 +26,10 @@ import {
   insert,
   remove,
   setErrors,
+  setInput,
   validate,
 } from '@formisch/angular'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   coerceInput,
   createSchemaBuilder,
@@ -38,9 +42,13 @@ import {
   type LayoutNode,
   type LayoutStep,
   toFieldPath,
+  type Visibility,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 
-const builder = createSchemaBuilder()
+// With affects, the fields' conditions hide them: the schema doesn't validate them, and the view
+// leaves them out.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 type Option = { value: string | number | boolean; label: string }
 
@@ -227,8 +235,10 @@ export class ValueField {
       <legend>{{ field().label ?? field().name }}</legend>
       @for (item of array.items(); track item; let index = $index) {
         <div>
+          <!-- Each item hides its own fields, by the fields of the item. -->
           <json-layout
             [form]="form()"
+            [visibility]="visibility()"
             [nodes]="node().children"
             [indexes]="[...indexes(), index]"
             [slots]="{}"
@@ -251,6 +261,7 @@ export class ValueField {
 })
 export class ArrayField {
   readonly form = input.required<FormStore>()
+  readonly visibility = input.required<VisibilityState>()
   readonly node = input.required<LayoutField>()
   readonly indexes = input.required<readonly number[]>()
 
@@ -279,12 +290,13 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
   selector: 'json-layout',
   imports: [ArrayField, NgTemplateOutlet, ValueField],
   template: `
-    @for (node of nodes(); track node.key) {
+    @for (node of shown(); track node.key) {
       @if (node.type === 'section') {
         <fieldset>
           <legend>{{ node.section.label }}</legend>
           <json-layout
             [form]="form()"
+            [visibility]="visibility()"
             [nodes]="node.children"
             [indexes]="indexes()"
             [slots]="slots()"
@@ -297,6 +309,7 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
             <div [attr.data-span]="cell.span" [style.grid-column]="'span ' + cell.span">
               <json-layout
                 [form]="form()"
+                [visibility]="visibility()"
                 [nodes]="[cell]"
                 [indexes]="indexes()"
                 [slots]="slots()"
@@ -338,13 +351,19 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
           <legend>{{ node.node.field.label ?? node.node.field.name }}</legend>
           <json-layout
             [form]="form()"
+            [visibility]="visibility()"
             [nodes]="node.children"
             [indexes]="indexes()"
             [slots]="slots()"
           />
         </fieldset>
       } @else if (node.node.role === 'array') {
-        <json-array-field [form]="form()" [node]="node" [indexes]="indexes()" />
+        <json-array-field
+          [form]="form()"
+          [visibility]="visibility()"
+          [node]="node"
+          [indexes]="indexes()"
+        />
       } @else {
         <json-value-field [form]="form()" [node]="node.node" [indexes]="indexes()" />
       }
@@ -353,10 +372,16 @@ type Slots = Readonly<Record<string, TemplateRef<unknown>>>
 })
 export class JsonLayout {
   readonly form = input.required<FormStore>()
+  /** What the conditions hide now: the nodes it hides are left out. */
+  readonly visibility = input.required<VisibilityState>()
   readonly nodes = input.required<readonly LayoutNode[]>()
   /** The index of each array item the nodes are in, outermost first. */
   readonly indexes = input.required<readonly number[]>()
   readonly slots = input.required<Slots>()
+
+  protected readonly shown = computed(() =>
+    this.visibility().shownNodes(this.nodes(), this.indexes()),
+  )
 }
 
 /** Renders a definition as a Formisch form, a step at a time, and emits the output on submit. */
@@ -368,12 +393,18 @@ export class JsonLayout {
       <form [formischForm]="form" [formischSubmit]="handleSubmit">
         <!-- Tracked by the step, so its fields render anew when it changes. -->
         @for (current of [step()]; track current) {
-          <json-layout [form]="form" [nodes]="current.children" [indexes]="[]" [slots]="slots()" />
+          <json-layout
+            [form]="form"
+            [visibility]="visibility()"
+            [nodes]="current.children"
+            [indexes]="[]"
+            [slots]="slots()"
+          />
         }
-        @if (index() > 0) {
-          <button type="button" data-back="" (click)="index.set(index() - 1)">Back</button>
+        @if (before() !== undefined) {
+          <button type="button" data-back="" (click)="index.set(before()!)">Back</button>
         }
-        @if (index() < steps.length - 1) {
+        @if (after() !== undefined) {
           <button type="button" data-next="" (click)="next()">Next</button>
         } @else {
           <button type="submit">Save</button>
@@ -390,16 +421,42 @@ export class JsonFormView implements OnInit {
   private readonly injector = inject(Injector)
   protected form: FormStore | undefined
   protected steps: readonly LayoutStep[] = []
+  private conditions: Visibility | undefined
   protected readonly index = signal(0)
   protected readonly step = computed(() => this.steps[this.index()] as LayoutStep)
+
+  /** What the conditions hide for the input now: the same object until that changes. */
+  protected readonly visibility = computed(() =>
+    (this.conditions as Visibility).of(getInput(this.form as FormStore)),
+  )
+  /** A step whose fields are all hidden is skipped. The current one stays, while the user is on it. */
+  private readonly shown = computed(() =>
+    this.steps.flatMap((each, i) =>
+      i === this.index() || !this.visibility().isStepHidden(each) ? [i] : [],
+    ),
+  )
+  protected readonly before = computed(() => this.shown()[this.shown().indexOf(this.index()) - 1])
+  protected readonly after = computed(() => this.shown()[this.shown().indexOf(this.index()) + 1])
 
   // Formisch reads its config once, in an injection context. Inputs are set from ngOnInit.
   ngOnInit(): void {
     const json = this.json()
     this.steps = builder.getLayout(json).steps
-    this.form = runInInjectionContext(this.injector, () =>
-      injectForm({ schema: builder.build(json), initialInput: builder.getInitialInput(json) }),
-    )
+    this.conditions = builder.getVisibility(json)
+    this.form = runInInjectionContext(this.injector, () => {
+      const form = injectForm({
+        schema: builder.build(json),
+        initialInput: builder.getInitialInput(json),
+      })
+      // The fields the conditions clear, set blank as soon as they are cleared.
+      effect(() => {
+        const { toClear } = this.visibility()
+        untracked(() => {
+          for (const { path, input } of toClear) setInput(form, { path, input } as never)
+        })
+      })
+      return form
+    })
   }
 
   /** Validates the whole form. Only the issues on this step's fields keep the user here. */
@@ -411,12 +468,13 @@ export class JsonFormView implements OnInit {
       if (first) focus(form, { path: first.path as never })
       return
     }
+    const after = this.after()
+    if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    const following = this.steps[this.index() + 1] as LayoutStep
-    for (const path of fieldPathsOf(following, getInput(form))) {
+    for (const path of fieldPathsOf(this.steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    this.index.set(this.index() + 1)
+    this.index.set(after)
   }
 
   protected readonly handleSubmit = (output: unknown) => this.submitted.emit(output)

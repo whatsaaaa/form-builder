@@ -1,7 +1,9 @@
 // The scenarios through @whatsaaaa/form-builder-vue, with components written the way its README
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
 import { Form } from '@formisch/vue'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import {
+  createSchemaBuilder,
   defaultFieldTypes,
   type FieldTypeDef,
   type JsonField,
@@ -31,6 +33,9 @@ import { describe, onTestFinished } from 'vitest'
 import { type RenderedForm, runScenarios } from './run-scenarios'
 
 type Option = { value: string | number | boolean; label: string }
+
+// The fixtures with conditions need the affects extension. The others render the same with it.
+const builder = createSchemaBuilder({ extensions: [affects()] })
 
 const optionsOf = (field: JsonField) => (field.options ?? []) as Option[]
 const dotPath = (path: FieldPath) => path.join('.')
@@ -242,7 +247,7 @@ function render(json: JsonForm): RenderedForm {
   const app = createApp(
     defineComponent({
       setup() {
-        const jsonForm = useJsonForm(json, { components, layoutComponents })
+        const jsonForm = useJsonForm(json, { builder, components, layoutComponents })
         const { steps } = jsonForm
         return () =>
           h(
