@@ -1,7 +1,7 @@
-import { checkComponents, findField } from '@whatsaaaa/form-builder-schema'
+import { checkComponents, dotPathOf, findField } from '@whatsaaaa/form-builder-schema'
 import type { ReactElement } from 'react'
 import type { FieldComponents } from './field-components'
-import { type RenderContext, renderField, resolveComponents } from './render-fields'
+import { type RenderContext, renderField, renderFields, resolveComponents } from './render-fields'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 export interface JsonFieldProps {
@@ -22,5 +22,7 @@ export function JsonField({ of, path, components }: JsonFieldProps): ReactElemen
   const ctx: RenderContext = { of, components: resolveComponents(components, of) }
   checkComponents([node], ctx.components)
 
-  return renderField(ctx, node, [], 0)
+  return renderField(ctx, node, [], dotPathOf(node) ?? '#0', (indexes) =>
+    renderFields(ctx, node.children, indexes),
+  )
 }

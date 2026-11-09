@@ -84,7 +84,7 @@ export function checkLayout(
   /** The layout's steps, checked, with the items of each. */
   function checkRoot(layout: unknown): { json: JsonLayoutStep; list: Item[] }[] | undefined {
     if (!isObject(layout)) {
-      issues.push(issue('invalid_shape', ROOT, 'The layout is an object with "items" or "steps"'))
+      report('invalid_shape', ROOT, 'The layout is an object with "items" or "steps"')
       return undefined
     }
     checkKeys(layout, ['items', 'steps', 'ui'], ROOT, 'the layout')
@@ -92,7 +92,7 @@ export function checkLayout(
     const hasItems = Object.hasOwn(layout, 'items')
     const hasSteps = Object.hasOwn(layout, 'steps')
     if (hasItems === hasSteps) {
-      issues.push(issue('invalid_shape', ROOT, 'Give exactly one of "items" and "steps"'))
+      report('invalid_shape', ROOT, 'Give exactly one of "items" and "steps"')
       if (!hasItems) return undefined
     }
 
@@ -104,7 +104,7 @@ export function checkLayout(
       const raws = layout['steps']
       const at = [...ROOT, 'steps']
       if (!Array.isArray(raws) || !raws.length) {
-        issues.push(issue('invalid_shape', at, 'Give a list of at least one step'))
+        report('invalid_shape', at, 'Give a list of at least one step')
         return undefined
       }
       steps = raws.flatMap((step, i) => checkStep(step, [...at, i], scope) ?? [])
@@ -119,7 +119,7 @@ export function checkLayout(
     scope: Scope,
   ): { json: JsonLayoutStep; list: Item[] } | undefined {
     if (!isObject(raw)) {
-      issues.push(issue('invalid_shape', path, 'A step is an object with "items"'))
+      report('invalid_shape', path, 'A step is an object with "items"')
       scope.broken = true
       return undefined
     }
@@ -143,7 +143,7 @@ export function checkLayout(
     const raws = owner['items']
     const at = [...path, 'items']
     if (!Array.isArray(raws) || !raws.length) {
-      issues.push(issue('invalid_shape', at, 'Give a list of at least one item'))
+      report('invalid_shape', at, 'Give a list of at least one item')
       scope.broken = true
       return []
     }
@@ -165,11 +165,11 @@ export function checkLayout(
     if (given.every((span) => span === undefined || isSpan(span))) {
       if (left < 0) {
         const message = `A row has ${ROW_COLUMNS} columns, and its spans add up to ${used}. Put the rest in another row`
-        issues.push(issue('invalid_shape', path, message))
+        report('invalid_shape', path, message)
       } else if (shared && (share === 0 || left % shared)) {
         const items = shared === 1 ? '1 item' : `${shared} items`
         const message = `The spans leave ${left} of ${ROW_COLUMNS} columns to share evenly between ${items} without a span. Give them a span`
-        issues.push(issue('invalid_shape', path, message))
+        report('invalid_shape', path, message)
       }
     }
     return given.map((span) => (isSpan(span) ? span : share))
@@ -187,16 +187,15 @@ export function checkLayout(
     if (typeof raw === 'string') return checkRef(raw, path, scope, span)
     if (!isObject(raw)) {
       const message = 'A layout item is a dot path, "*", or an object with "field" or "type"'
-      issues.push(issue('invalid_shape', path, message))
+      report('invalid_shape', path, message)
       return undefined
     }
     checkSpan(raw, path, cell)
     if (Object.hasOwn(raw, 'field')) return checkFieldItem(raw, path, scope, span)
     switch (raw['type']) {
       case 'section':
-        return checkSection(raw, path, scope, span)
       case 'row':
-        return checkRow(raw, path, scope, span)
+        return checkBlock(raw, path, scope, span, raw['type'])
       case 'slot':
         return checkSlot(raw, path, scope, span)
       default:
@@ -211,10 +210,10 @@ export function checkLayout(
   ): Item | undefined {
     if (cell !== undefined) {
       const message = `The cells of a row are fixed, so "*" can't be one. Put it in a section in the row`
-      issues.push(issue('invalid_shape', path, message))
+      report('invalid_shape', path, message)
     } else if (scope.rest) {
       const message = `"*" places every field not placed elsewhere, so it goes once. It is at ${formatPath(scope.rest)} already`
-      issues.push(issue('invalid_shape', path, message))
+      report('invalid_shape', path, message)
     } else {
       scope.rest = path
       return { kind: 'rest', scope }
@@ -226,10 +225,10 @@ export function checkLayout(
     if (!Object.hasOwn(raw, 'span')) return
     if (cell === undefined) {
       const message = '"span" is for an item of a row'
-      issues.push(issue('invalid_shape', [...path, 'span'], message))
+      report('invalid_shape', [...path, 'span'], message)
     } else if (!isSpan(raw['span'])) {
       const message = `"span" is a whole number from 1 to ${ROW_COLUMNS}`
-      issues.push(issue('invalid_shape', [...path, 'span'], message))
+      report('invalid_shape', [...path, 'span'], message)
     }
   }
 
@@ -249,7 +248,7 @@ export function checkLayout(
     const ref = raw['field']
     const at = [...path, 'field']
     if (typeof ref !== 'string') {
-      issues.push(issue('invalid_shape', at, '"field" is a dot path, like "address.city"'))
+      report('invalid_shape', at, '"field" is a dot path, like "address.city"')
       return undefined
     }
     const item = checkRef(ref, at, scope, span)
@@ -269,43 +268,33 @@ export function checkLayout(
     const dot = dotOf(node)
     if (node.role === 'group') return createScope(node.children, node.dataPath, node, false)
     if (node.role !== 'array') {
-      issues.push(issue('invalid_shape', at, `"${dot}" holds no fields, so it takes no "items"`))
+      report('invalid_shape', at, `"${dot}" holds no fields, so it takes no "items"`)
       return undefined
     }
     // The field of a list of single values has no name: its value is the item itself.
     if (node.children.some((child) => child.role !== 'display' && child.field.name === undefined)) {
       const message = `"${dot}" is a list of single values, so it takes no "items"`
-      issues.push(issue('invalid_shape', at, message))
+      report('invalid_shape', at, message)
       return undefined
     }
     return createScope(node.children, [...node.dataPath, '*'], node, true)
   }
 
-  function checkSection(
+  /** A section or a row, which hold items. The items of a row each get their span. */
+  function checkBlock(
     raw: Record<string, unknown>,
     path: DefinitionPath,
     scope: Scope,
     span: number,
+    kind: 'section' | 'row',
   ): Item {
-    checkKeys(raw, ['type', 'id', 'label', 'description', 'items', 'ui', 'span'], path, 'a section')
+    const section = kind === 'section'
+    const keys = section ? ['label', 'description'] : []
+    checkKeys(raw, ['type', 'id', ...keys, 'items', 'ui', 'span'], path, `a ${kind}`)
     checkId(raw, path)
-    checkText(raw, ['label', 'description'], path)
+    checkText(raw, keys, path)
     checkUi(raw, path)
-    const list = checkItems(raw, path, scope)
-    return { kind: 'section', json: raw as unknown as JsonLayoutSection, list, span }
-  }
-
-  function checkRow(
-    raw: Record<string, unknown>,
-    path: DefinitionPath,
-    scope: Scope,
-    span: number,
-  ): Item {
-    checkKeys(raw, ['type', 'id', 'items', 'ui', 'span'], path, 'a row')
-    checkId(raw, path)
-    checkUi(raw, path)
-    const list = checkItems(raw, path, scope, true)
-    return { kind: 'row', json: raw as unknown as JsonLayoutRow, list, span }
+    return { kind, json: raw as never, list: checkItems(raw, path, scope, !section), span }
   }
 
   function checkSlot(
@@ -317,12 +306,12 @@ export function checkLayout(
     checkKeys(raw, ['type', 'name', 'span'], path, 'a slot')
     const name = raw['name']
     if (typeof name !== 'string' || !name) {
-      issues.push(issue('invalid_shape', [...path, 'name'], 'A slot needs a "name"'))
+      report('invalid_shape', [...path, 'name'], 'A slot needs a "name"')
       return undefined
     }
     if (scope.inItems) {
       const message = 'A slot is filled once, so it goes outside the items of a list'
-      issues.push(issue('invalid_shape', path, message))
+      report('invalid_shape', path, message)
       return undefined
     }
     return { kind: 'slot', name, span }
@@ -338,23 +327,23 @@ export function checkLayout(
     const typeName = raw['type']
     if (typeof typeName !== 'string') {
       const message = 'A layout item object needs a "field", or a "type"'
-      issues.push(issue('invalid_shape', path, message))
+      report('invalid_shape', path, message)
       return undefined
     }
     const type = lookup(registry.fieldTypes, typeName)
     if (!type) {
       const message = `Unknown type "${typeName}". A layout item is a "section", a "row", a "slot" or a display element`
-      issues.push(issue('unknown_type', [...path, 'type'], message))
+      report('unknown_type', [...path, 'type'], message)
       return undefined
     }
     if (type.kind !== 'none') {
       const message = `Type "${typeName}" has a value: add the field to "fields", and place it here by its name`
-      issues.push(issue('invalid_shape', [...path, 'type'], message))
+      report('invalid_shape', [...path, 'type'], message)
       return undefined
     }
     if (Object.hasOwn(raw, 'name')) {
       const message = `A "${typeName}" in the layout has no "name". Give it an "id"`
-      issues.push(issue('unknown_key', [...path, 'name'], message))
+      report('unknown_key', [...path, 'name'], message)
     }
     checkId(raw, path)
     // Like a field in a list of fields, which doesn't need a name.
@@ -383,14 +372,14 @@ export function checkLayout(
       if (node?.role === 'array') {
         const dot = dotOf(node)
         const message = `"${ref}" is in the items of "${dot}", which have no index here. Place "${dot}", and lay out its items with "items"`
-        issues.push(issue('unknown_field', at, message))
+        report('unknown_field', at, message)
         return undefined
       }
       nodes = node ? node.children : nodes
       node = nodes.find((child) => child.role !== 'display' && child.field.name === key)
       if (!node) {
         const inside = scope.container ? ` in "${dotOf(scope.container)}"` : ''
-        issues.push(issue('unknown_field', at, `Unknown field "${ref}"${inside}`))
+        report('unknown_field', at, `Unknown field "${ref}"${inside}`)
         return undefined
       }
     }
@@ -414,7 +403,7 @@ export function checkLayout(
       message = `Field "${dot}" holds fields that are placed already`
     }
     if (message) {
-      issues.push(issue('duplicate_placement', at, message))
+      report('duplicate_placement', at, message)
       return false
     }
     scope.placed.add(node)
@@ -440,7 +429,7 @@ export function checkLayout(
         node.role === 'display'
           ? `The "${node.type}" at ${formatPath(where)} isn't placed. Add "*", or write it in the layout`
           : `Field "${dotOf(node)}" isn't placed. Place it, or add "*" for the fields you don't list`
-      issues.push(issue('unplaced_field', path, message))
+      report('unplaced_field', path, message)
     }
   }
 
@@ -487,6 +476,10 @@ export function checkLayout(
     })
   }
 
+  function report(code: DefinitionIssue['code'], path: DefinitionPath, message: string): void {
+    issues.push(issue(code, path, message))
+  }
+
   function checkKeys(
     raw: Record<string, unknown>,
     known: readonly string[],
@@ -495,7 +488,7 @@ export function checkLayout(
   ): void {
     for (const key of Object.keys(raw)) {
       if (!known.includes(key)) {
-        issues.push(issue('unknown_key', [...path, key], `Unknown key "${key}" on ${what}`))
+        report('unknown_key', [...path, key], `Unknown key "${key}" on ${what}`)
       }
     }
   }
@@ -505,13 +498,13 @@ export function checkLayout(
     const id = raw['id']
     const at = [...path, 'id']
     if (typeof id !== 'string' || !id) {
-      issues.push(issue('invalid_shape', at, '"id" is a string that is not empty'))
+      report('invalid_shape', at, '"id" is a string that is not empty')
       return
     }
     const first = ids.get(id)
     if (first) {
       const message = `Duplicate id "${id}". The first one is at ${formatPath(first)}`
-      issues.push(issue('duplicate_id', at, message))
+      report('duplicate_id', at, message)
       return
     }
     ids.set(id, path)
@@ -524,14 +517,14 @@ export function checkLayout(
   ): void {
     for (const key of keys) {
       if (Object.hasOwn(raw, key) && typeof raw[key] !== 'string') {
-        issues.push(issue('invalid_shape', [...path, key], `"${key}" is a string`))
+        report('invalid_shape', [...path, key], `"${key}" is a string`)
       }
     }
   }
 
   function checkUi(raw: Record<string, unknown>, path: DefinitionPath): void {
     if (Object.hasOwn(raw, 'ui') && !isObject(raw['ui'])) {
-      issues.push(issue('invalid_shape', [...path, 'ui'], '"ui" is an object'))
+      report('invalid_shape', [...path, 'ui'], '"ui" is an object')
     }
   }
 }

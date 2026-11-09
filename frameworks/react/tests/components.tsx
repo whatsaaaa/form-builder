@@ -4,6 +4,9 @@ import type {
   FieldComponents,
   FieldPath,
   GroupFieldProps,
+  LayoutComponents,
+  RowProps,
+  SectionProps,
   ValueFieldProps,
 } from '@whatsaaaa/form-builder-react'
 import { defaultFieldTypes, type FieldTypeDef } from '@whatsaaaa/form-builder-schema'
@@ -71,3 +74,27 @@ export const builtInComponents: FieldComponents = Object.fromEntries(
     return [type, TestInput]
   }),
 )
+
+export function TestSection({ section, children }: SectionProps) {
+  return (
+    <fieldset data-section={section.id ?? ''}>
+      <legend>{section.label}</legend>
+      {children}
+    </fieldset>
+  )
+}
+
+/** Each cell is a `<div>` with its span, like a CSS grid of 12 columns would take it. */
+export function TestRow({ row, spans, children }: RowProps) {
+  return (
+    <div data-row={row.id ?? ''}>
+      {spans.map((span, index) => (
+        <div key={index} data-span={span}>
+          {children(index)}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export const layoutComponents: LayoutComponents = { section: TestSection, row: TestRow }
