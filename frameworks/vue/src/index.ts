@@ -4,7 +4,10 @@ export type {
   FieldNode,
   FieldPath,
   FieldRole,
+  FormLayout,
   JsonFormSchema,
+  LayoutNode,
+  LayoutStep,
   TypedJsonFormSchema,
 } from '@whatsaaaa/form-builder-schema'
 export type {
@@ -14,9 +17,15 @@ export type {
   FieldComponents,
   GroupFieldProps,
   GroupFieldSlots,
+  LayoutComponents,
+  RowProps,
+  RowSlots,
+  SectionProps,
+  SectionSlots,
   ValueFieldProps,
 } from './field-components'
 export { JsonField } from './json-field'
 export { JsonFields } from './json-fields'
+export type { JsonFormSteps } from './json-form-steps'
 export { useJsonForm } from './use-json-form'
 export type { AnyJsonFormInstance, JsonFormInstance, UseJsonFormOptions } from './use-json-form'

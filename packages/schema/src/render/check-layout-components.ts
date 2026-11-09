@@ -8,11 +8,7 @@ import type { FormLayout } from './form-layout'
  * shows up at once rather than on the step that uses it. A layout without sections, rows and
  * slots, like the one of a definition without a `layout`, needs none.
  */
-export function checkLayoutComponents(
-  layout: FormLayout,
-  components: Readonly<Record<string, unknown>>,
-  slots: Readonly<Record<string, unknown>>,
-): void {
+export function checkLayoutComponents(layout: FormLayout, components: object, slots: object): void {
   const types = new Set<string>()
   const names = new Set<string>()
   for (const step of layout.steps) {

@@ -2,6 +2,7 @@ import { insert, move, remove, useFieldArray } from '@formisch/vue'
 import type { FieldNode, FieldPath } from '@whatsaaaa/form-builder-schema'
 import { type Component, defineComponent, h, type PropType, type VNode } from 'vue'
 import type { ArrayFieldProps } from './field-components'
+import { fieldEventsOf } from './json-form-steps'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 /** Connects a container of kind `array` to Formisch, and renders your component for it. */
@@ -23,15 +24,25 @@ export const ArrayField = defineComponent({
       () => ({ path: path() }),
     )
 
+    // In a form with steps, a step that failed Next revalidates on a change of its items too.
+    const events = fieldEventsOf(props.of.form)
     const methods = {
       // A new item starts with the defaults of its fields, like the items of a new form.
-      add: () =>
+      add: () => {
         insert(props.of.form, {
           path: path(),
           initialInput: props.of.builder.getItemInput(props.node.field) as never,
-        }),
-      remove: (index: number) => remove(props.of.form, { path: path(), at: index }),
-      move: (from: number, to: number) => move(props.of.form, { path: path(), from, to }),
+        })
+        events?.('input')
+      },
+      remove: (index: number) => {
+        remove(props.of.form, { path: path(), at: index })
+        events?.('input')
+      },
+      move: (from: number, to: number) => {
+        move(props.of.form, { path: path(), from, to })
+        events?.('input')
+      },
     }
 
     return () => {

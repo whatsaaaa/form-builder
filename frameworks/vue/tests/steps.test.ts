@@ -1,0 +1,342 @@
+import { Form, getErrors, submit as requestSubmit } from '@formisch/vue'
+import type { JsonForm, JsonLayout } from '@whatsaaaa/form-builder-schema'
+import {
+  JsonFields,
+  type JsonFormInstance,
+  useJsonForm,
+  type UseJsonFormOptions,
+} from '@whatsaaaa/form-builder-vue'
+import { type Component, defineComponent, h } from 'vue'
+import { describe, expect, it } from 'vitest'
+import { builtInComponents, layoutComponents } from './components'
+import { errorAt, mount, settle, type, withSetup } from './helpers'
+
+const fields: JsonForm['fields'] = [
+  { name: 'email', type: 'email', required: true },
+  { name: 'name', type: 'text', required: true },
+  { name: 'city', type: 'text', required: true },
+  { name: 'zip', type: 'text' },
+  {
+    name: 'lines',
+    type: 'array',
+    required: { message: 'Add a line' },
+    fields: [{ name: 'product', type: 'text', required: true }],
+  },
+  { name: 'code', type: 'text', required: true },
+]
+
+// The steps reorder the fields: name comes before email.
+const layout: JsonLayout = {
+  steps: [
+    { id: 'you', label: 'You', items: ['name', 'email'] },
+    { id: 'where', label: 'Where', items: [{ type: 'row', items: ['city', 'zip'] }, 'lines'] },
+    { id: 'code', label: 'Code', items: ['code'] },
+  ],
+}
+
+const json = (extra: Partial<JsonForm> = {}): JsonForm => ({
+  version: '1',
+  fields,
+  layout,
+  ...extra,
+})
+
+/** Mounts the form with `<JsonFields>` for the current step, the way an app uses steps. */
+function mountSteps(definition: JsonForm = json(), options: UseJsonFormOptions = {}) {
+  const submitted: unknown[] = []
+  const jsonForm = withSetup(() =>
+    useJsonForm(definition, { components: builtInComponents, layoutComponents, ...options }),
+  )
+  const root = mount(
+    defineComponent({
+      setup: () => () =>
+        h(
+          Form as Component,
+          { of: jsonForm.form, onSubmit: (output: unknown) => submitted.push(output) },
+          {
+            default: () => [
+              h('p', { 'data-step': '' }, jsonForm.steps.current.step.label),
+              h(JsonFields, { of: jsonForm }),
+            ],
+          },
+        ),
+    }),
+  )
+  return { root, jsonForm: jsonForm as JsonFormInstance, submitted }
+}
+
+/** The paths of the value fields on show, in order. */
+const shown = (root: HTMLElement) =>
+  [...root.querySelectorAll<HTMLElement>('[data-role="value"]')].map(
+    (element) => element.dataset['path'],
+  )
+
+const stepOf = (root: HTMLElement) => root.querySelector('[data-step]')?.textContent
+
+async function next(jsonForm: JsonFormInstance) {
+  const moved = await jsonForm.steps.next()
+  await settle()
+  return moved
+}
+
+async function fillFirstStep(root: HTMLElement, jsonForm: JsonFormInstance) {
+  type(root, 'email', 'ana@example.com')
+  type(root, 'name', 'Ana')
+  expect(await next(jsonForm)).toBe(true)
+}
+
+describe('steps', () => {
+  it('renders the first step, and knows where it is', () => {
+    const { root, jsonForm } = mountSteps()
+    const { steps } = jsonForm
+
+    expect(shown(root)).toEqual(['name', 'email'])
+    expect(steps.list.map((step) => step.step.id)).toEqual(['you', 'where', 'code'])
+    expect([steps.index, steps.isFirst, steps.isLast]).toEqual([0, true, false])
+    expect(steps.current).toBe(steps.list[0])
+  })
+
+  it('stays on a step with issues, shows them, and focuses the first in layout order', async () => {
+    const { root, jsonForm } = mountSteps()
+
+    expect(await next(jsonForm)).toBe(false)
+    expect(stepOf(root)).toBe('You')
+    expect([errorAt(root, 'name'), errorAt(root, 'email')]).toEqual(['Required', 'Required'])
+    expect(document.activeElement).toBe(root.querySelector('[data-path="name"] input'))
+  })
+
+  it('moves on when the step has no issues, and the next step starts clean', async () => {
+    const { root, jsonForm } = mountSteps()
+    await fillFirstStep(root, jsonForm)
+
+    expect(stepOf(root)).toBe('Where')
+    expect(shown(root)).toEqual(['city', 'zip'])
+    // Next validated the whole form, but this step's errors were cleared when it came up.
+    expect(errorAt(root, 'city')).toBeNull()
+    expect(getErrors(jsonForm.form, { path: ['lines'] } as never)).toBeNull()
+    expect(getErrors(jsonForm.form, { path: ['code'] } as never)).toEqual(['Required'])
+  })
+
+  it('goes back without validating, and keeps what each step holds', async () => {
+    const { root, jsonForm } = mountSteps()
+    await fillFirstStep(root, jsonForm)
+    expect(await next(jsonForm)).toBe(false)
+    expect(errorAt(root, 'city')).toBe('Required')
+
+    jsonForm.steps.back()
+    await settle()
+    expect(stepOf(root)).toBe('You')
+    expect((root.querySelector('[data-path="name"] input') as HTMLInputElement).value).toBe('Ana')
+
+    expect(await next(jsonForm)).toBe(true)
+    // It was seen, so it keeps its errors.
+    expect(errorAt(root, 'city')).toBe('Required')
+    jsonForm.steps.back()
+    jsonForm.steps.back()
+    await settle()
+    expect(jsonForm.steps.index).toBe(0)
+  })
+
+  it('blocks on the issues of an array and the fields of its items', async () => {
+    const { root, jsonForm } = mountSteps()
+    await fillFirstStep(root, jsonForm)
+    type(root, 'city', 'Graz')
+
+    expect(await next(jsonForm)).toBe(false)
+    expect(root.textContent).toContain('Add a line')
+  })
+
+  it('revalidates a step that failed Next as the user fixes it', async () => {
+    const { root, jsonForm } = mountSteps()
+    await next(jsonForm)
+
+    type(root, 'name', 'Ana')
+    await settle()
+    expect(errorAt(root, 'name')).toBeNull()
+    expect(errorAt(root, 'email')).toBe('Required')
+  })
+
+  it('revalidates on the event `revalidate` names', async () => {
+    const { root, jsonForm } = mountSteps(json(), { revalidate: 'blur' })
+    await next(jsonForm)
+    const input = root.querySelector('[data-path="name"] input') as HTMLInputElement
+
+    type(root, 'name', 'Ana')
+    input.dispatchEvent(new Event('change'))
+    input.dispatchEvent(new Event('focus'))
+    await settle()
+    expect(errorAt(root, 'name')).toBe('Required')
+
+    input.dispatchEvent(new Event('blur'))
+    await settle()
+    expect(errorAt(root, 'name')).toBeNull()
+  })
+
+  it("doesn't revalidate a step that hasn't failed Next", async () => {
+    const { root, jsonForm } = mountSteps()
+    await fillFirstStep(root, jsonForm)
+    type(root, 'city', 'x')
+    await settle()
+    expect(errorAt(root, 'zip')).toBeNull()
+    expect(getErrors(jsonForm.form, { path: ['lines'] } as never)).toBeNull()
+  })
+
+  it('revalidates when the items of an array change after a failed Next', async () => {
+    const { root, jsonForm } = mountSteps()
+    await fillFirstStep(root, jsonForm)
+    type(root, 'city', 'Graz')
+    await next(jsonForm)
+    expect(root.textContent).toContain('Add a line')
+
+    const { arrays } = await import('./components')
+    arrays.get('lines')?.add()
+    await settle()
+    expect(root.textContent).not.toContain('Add a line')
+    expect(errorAt(root, 'lines.0.product')).toBe('Required')
+    arrays.get('lines')?.move(0, 0)
+    arrays.get('lines')?.remove(0)
+    await settle()
+    expect(root.textContent).toContain('Add a line')
+  })
+
+  it('goes to a step: back freely, forward through each step on the way', async () => {
+    const { root, jsonForm } = mountSteps()
+
+    expect(await jsonForm.steps.goTo(2)).toBe(false)
+    await settle()
+    expect(stepOf(root)).toBe('You')
+
+    await fillFirstStep(root, jsonForm)
+    type(root, 'city', 'Graz')
+    jsonForm.steps.back()
+    await settle()
+    // The step after is in the way, with no line yet: it stops there, with its issues shown.
+    expect(await jsonForm.steps.goTo(2)).toBe(false)
+    await settle()
+    expect(stepOf(root)).toBe('Where')
+    expect(root.textContent).toContain('Add a line')
+
+    expect(await jsonForm.steps.goTo(0)).toBe(true)
+    await expect(jsonForm.steps.goTo(3)).rejects.toThrow(RangeError)
+    await expect(jsonForm.steps.goTo(-1)).rejects.toThrow('No step -1. The form has 3.')
+  })
+
+  it("doesn't go past the last step", async () => {
+    const definition = json({
+      fields: [{ name: 'a', type: 'text' }],
+      layout: { steps: [{ items: ['a'] }] },
+    })
+    const { jsonForm } = mountSteps(definition)
+
+    expect(jsonForm.steps.isLast).toBe(true)
+    expect(await next(jsonForm)).toBe(false)
+    jsonForm.steps.back()
+    expect(jsonForm.steps.index).toBe(0)
+  })
+
+  it('treats a submit before the last step as Next', async () => {
+    const { root, jsonForm, submitted } = mountSteps()
+
+    requestSubmit(jsonForm.form)
+    await settle()
+    expect(stepOf(root)).toBe('You')
+    expect(errorAt(root, 'name')).toBe('Required')
+    expect(jsonForm.form.isSubmitted).toBe(false)
+
+    type(root, 'email', 'ana@example.com')
+    type(root, 'name', 'Ana')
+    root
+      .querySelector('form')
+      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await settle()
+    expect(stepOf(root)).toBe('Where')
+    expect(submitted).toEqual([])
+  })
+
+  it('submits on the last step', async () => {
+    const definition = json({ fields: fields.filter((field) => field.name !== 'lines') })
+    const short = {
+      ...definition,
+      layout: { steps: [{ items: ['name', 'email'] }, { items: ['city', 'zip', 'code'] }] },
+    }
+    const { root, jsonForm, submitted } = mountSteps(short)
+    await fillFirstStep(root, jsonForm)
+    type(root, 'city', 'Graz')
+    type(root, 'code', 'X')
+
+    requestSubmit(jsonForm.form)
+    await settle()
+    expect(submitted).toEqual([{ email: 'ana@example.com', name: 'Ana', city: 'Graz', code: 'X' }])
+  })
+
+  it('goes back to a step before when the submit fails because of it', async () => {
+    const definition: JsonForm = {
+      version: '1',
+      fields: [
+        { name: 'password', type: 'password', required: true },
+        { name: 'repeat', type: 'password', required: true },
+      ],
+      formRules: [
+        { rule: 'sameAs', field: 'password', other: 'repeat', message: 'Passwords differ' },
+      ],
+      layout: {
+        steps: [
+          { label: 'One', items: ['password'] },
+          { label: 'Two', items: ['repeat'] },
+        ],
+      },
+    }
+    const { root, jsonForm, submitted } = mountSteps(definition)
+    type(root, 'password', 'longenough1')
+    expect(await next(jsonForm)).toBe(true)
+    type(root, 'repeat', 'longenough2')
+
+    requestSubmit(jsonForm.form)
+    await settle()
+    await settle()
+    expect(submitted).toEqual([])
+    expect(stepOf(root)).toBe('One')
+    expect(errorAt(root, 'password')).toBe('Passwords differ')
+    expect(document.activeElement).toBe(root.querySelector('[data-path="password"] input'))
+  })
+
+  it('stays on the last step when its own fields fail the submit', async () => {
+    const short = {
+      ...json({ fields: fields.filter((field) => field.name !== 'lines') }),
+      layout: {
+        steps: [
+          { label: 'One', items: ['name', 'email'] },
+          { label: 'Two', items: ['*'] },
+        ],
+      },
+    }
+    const { root, jsonForm, submitted } = mountSteps(short)
+    await fillFirstStep(root, jsonForm)
+
+    requestSubmit(jsonForm.form)
+    await settle()
+    await settle()
+    expect(submitted).toEqual([])
+    expect(stepOf(root)).toBe('Two')
+    expect(errorAt(root, 'city')).toBe('Required')
+  })
+
+  it('renders the step `step` names', () => {
+    const jsonForm = withSetup(() =>
+      useJsonForm(json(), { components: builtInComponents, layoutComponents }),
+    )
+    const root = mount(
+      defineComponent({
+        setup: () => () =>
+          h(
+            Form as Component,
+            { of: jsonForm.form, onSubmit: () => {} },
+            {
+              default: () => h(JsonFields, { of: jsonForm, step: 2 }),
+            },
+          ),
+      }),
+    )
+    expect(shown(root)).toEqual(['code'])
+  })
+})
