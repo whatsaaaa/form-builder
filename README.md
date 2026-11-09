@@ -7,6 +7,7 @@
     <img src="https://img.shields.io/badge/pnpm-workspace-F69220?logo=pnpm&amp;logoColor=white" alt="pnpm workspace">
     <img src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript">
     <img src="https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&amp;logoColor=white" alt="Vue">
+    <img src="https://img.shields.io/badge/React-18%20%7C%2019-61DAFB?logo=react&amp;logoColor=white" alt="React">
     <img src="https://img.shields.io/badge/validation-Valibot-0F172A" alt="Valibot">
     <img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT">
     <img src="https://img.shields.io/badge/status-early%20days-orange" alt="Status: early days">
@@ -28,8 +29,8 @@ edit them. Some come from an API. Some get dragged together in a visual editor.
 
 **form-builder** lets you write a form down as plain JSON and hands you back a working Formisch form, with fields and
 validation already wired up. The core doesn't care which framework you use: it works with Formisch's own package for
-Vue, React, Preact, Solid, Svelte, Qwik or Angular. A small Vue adapter renders the fields with your components, and
-adapters for the other frameworks are planned.
+Vue, React, Preact, Solid, Svelte, Qwik or Angular. Small adapters for Vue and React render the fields with your
+components.
 
 ```json
 {
@@ -58,13 +59,13 @@ This repo is a **pnpm workspace**. Everything lives together so the packages can
 | :-: | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | :----: |
 | 🧩  | [`@whatsaaaa/form-builder-schema`](./packages/schema) | The heart of it all. Turns JSON definitions into Valibot schemas Formisch understands, with helpers to render them anywhere. |   🚧   |
 | 💚  | [`@whatsaaaa/form-builder-vue`](./frameworks/vue)     | Pass it a definition and a component per field type, and you have a working form. Headless, so any UI library fits.          |   🚧   |
+| ⚛️  | [`@whatsaaaa/form-builder-react`](./frameworks/react) | The same for React: a definition and a component per field type give you a working form, with any UI library.                |   🚧   |
 | 🔗  | `@whatsaaaa/form-builder-affects`                     | Lets fields react to each other: show this when that's checked, make it required, change the options, compute a value.       |   💭   |
 | ⚙️  | `@whatsaaaa/form-builder-codegen`                     | A CLI that turns your JSON into fully typed TypeScript, for when you know the form at build time.                            |   💭   |
 
 🚧 in progress · 💭 planned
 
-Adapters for React, Preact, Solid, Svelte, Qwik and Angular are planned. They'll sit next to the Vue adapter in
-`frameworks/`. Until then, the schema package works with Formisch's own package for any of them: see
+For Preact, Solid, Svelte, Qwik and Angular, the schema package works with Formisch's own package: see
 [Using with Formisch](./packages/schema/README.md#using-with-formisch).
 
 ### Apps (private, never published)
@@ -109,7 +110,7 @@ pnpm --filter @whatsaaaa/form-builder-schema test
 
 ```
 📁 packages/     the framework-agnostic core
-📁 frameworks/   thin adapters: Vue today, the other Formisch frameworks later
+📁 frameworks/   thin adapters for Vue and React
 📁 apps/         the playground (a builder and docs are planned)
 📁 fixtures/     sample JSON forms every test suite shares
 📁 integration/  tests that run the fixtures through Formisch's own bindings
@@ -124,7 +125,7 @@ There's one rule to keep things tidy. **Dependencies only flow downhill:**
 apps  →  frameworks  →  packages
 ```
 
-The core never imports Vue or Node built-ins, so it runs anywhere. ESLint will gently remind you if you forget.
+The core never imports a UI framework or Node built-ins, so it runs anywhere. ESLint will gently remind you if you forget.
 
 ### Inside a package
 

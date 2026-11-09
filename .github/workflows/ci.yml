@@ -24,14 +24,14 @@ jobs:
       - name: Fail if lint auto-fixed anything
         run: git diff --exit-code
       - run: pnpm type-check
-      - run: pnpm -r --filter '!@whatsaaaa/form-builder-schema' test
-      - run: pnpm --filter @whatsaaaa/form-builder-schema test:coverage
+      - run: pnpm -r --filter '!@whatsaaaa/form-builder-schema' --filter '!@whatsaaaa/form-builder-react' test
+      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-react test:coverage
       - run: pnpm --filter @whatsaaaa/form-builder-schema docs:gen
       - name: Fail if the generated files are out of date
         run: git diff --exit-code
       - run: pnpm build
       - run: pnpm -r --filter "./packages/*" --filter "./frameworks/*" lint:pkg
-      - run: pnpm --filter @whatsaaaa/form-builder-schema size
+      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-react size
 
   # The schema tests again, with the lowest Valibot and @valibot/to-json-schema the peer ranges
   # allow.
@@ -51,3 +51,22 @@ jobs:
           npm pkg set devDependencies.@valibot/to-json-schema=1.6.0
           pnpm install --no-frozen-lockfile
       - run: pnpm --filter @whatsaaaa/form-builder-schema test:coverage
+
+  # The React adapter's tests and types again, with React 18, the lowest major its peer range allows.
+  react-18:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4 # use the latest major
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install with React 18
+        working-directory: frameworks/react
+        run: |
+          npm pkg set devDependencies.react=18.3.1 devDependencies.react-dom=18.3.1
+          npm pkg set devDependencies.@types/react=^18.3.0 devDependencies.@types/react-dom=^18.3.0
+          pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-react test:coverage
+      - run: pnpm --filter @whatsaaaa/form-builder-react type-check

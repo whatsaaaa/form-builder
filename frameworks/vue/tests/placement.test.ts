@@ -158,6 +158,25 @@ describe('placing fields', () => {
     expect(root.querySelector('[data-role="display"]')).toBe(null)
   })
 
+  it('keeps two fields of the same name at different depths apart in `only`', async () => {
+    const billing = form(
+      { name: 'email', type: 'email' },
+      { name: 'billing', type: 'group', fields: [{ name: 'email', type: 'email' }] },
+    )
+    const { root, jsonForm } = mountLayout(billing, (instance) => [
+      h(JsonFields, { of: instance, only: ['email', 'billing.email'] }),
+    ])
+    type(root, 'email', 'ana@example.com')
+    type(root, 'billing.email', 'bo@example.com')
+    await settle()
+
+    expect(pathsIn(root, 'form')).toEqual(['email', 'billing.email'])
+    expect(getInput(jsonForm.form)).toEqual({
+      email: 'ana@example.com',
+      billing: { email: 'bo@example.com' },
+    })
+  })
+
   it('throws a TypeError for a path that names no field', () => {
     const placed = thrownBy((jsonForm) => h(JsonField, { of: jsonForm, path: 'emial' }))
     const excepted = thrownBy((jsonForm) => h(JsonFields, { of: jsonForm, except: ['emial'] }))
