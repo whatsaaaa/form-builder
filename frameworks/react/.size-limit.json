@@ -1,0 +1,15 @@
+[
+  {
+    "name": "useJsonForm and JsonFields, with the schema package",
+    "path": "dist/index.js",
+    "import": "{ JsonFields, useJsonForm }",
+    "limit": "13 kB"
+  },
+  {
+    "name": "the whole adapter, without the schema package",
+    "path": "dist/index.js",
+    "import": "*",
+    "ignore": ["@whatsaaaa/form-builder-schema"],
+    "limit": "1.5 kB"
+  }
+]
