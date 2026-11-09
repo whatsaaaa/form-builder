@@ -18,6 +18,9 @@ export type Step =
   | { do: 'add'; path: DotPath }
   /** Removes the item at `index` from the list. */
   | { do: 'remove'; path: DotPath; index: number }
+  /** Goes to the next step of the layout, or the one before. */
+  | { do: 'next' }
+  | { do: 'back' }
   | { do: 'submit' }
 
 export interface FileSpec {
@@ -36,6 +39,12 @@ export interface Scenario {
   output?: Record<string, unknown>
   /** The text some fields hold at the end, by path, e.g. an item's default. */
   values?: Record<DotPath, string>
+  /** Every field on show at the end, in order: those of the current step. */
+  shown?: DotPath[]
+  /** The span of the row cell some fields are in, by path. */
+  spans?: Record<DotPath, number>
+  /** The slots on show at the end, in order. */
+  slots?: string[]
 }
 
 const fill = (path: DotPath, text: string): Step => ({ do: 'fill', path, text })
@@ -49,6 +58,8 @@ const upload = (path: DotPath, ...files: [name: string, type: string, size: numb
 const add = (path: DotPath): Step => ({ do: 'add', path })
 const remove = (path: DotPath, index: number): Step => ({ do: 'remove', path, index })
 const submit: Step = { do: 'submit' }
+const next: Step = { do: 'next' }
+const back: Step = { do: 'back' }
 
 /** A file the form submitted, picked with `upload`. */
 const uploaded = (name: string) => expect.objectContaining({ name })
@@ -552,5 +563,228 @@ export const scenarios: Scenario[] = [
     name: 'valid',
     steps: [fill('billing.zip', '21000'), fill('shipping.zip', '21000'), submit],
     output: { billing: { zip: '21000' }, shipping: { zip: '21000' } },
+  },
+
+  {
+    fixture: 'layout/checkout',
+    name: 'lays the fields out on a 12-column grid, with sections and slots',
+    steps: [],
+    shown: [
+      'name',
+      'email',
+      'address.street',
+      'address.city',
+      'address.zip',
+      'coupon',
+      'newsletter',
+      'acceptTerms',
+    ],
+    spans: {
+      name: 6,
+      email: 6,
+      'address.street': 8,
+      'address.city': 8,
+      'address.zip': 4,
+      coupon: 4,
+      acceptTerms: 4,
+    },
+    slots: ['shipping', 'submit'],
+  },
+  {
+    fixture: 'layout/checkout',
+    name: "lays out each item of a list with the list's items",
+    steps: [add('lines')],
+    spans: { 'lines.0.product': 9, 'lines.0.quantity': 3 },
+    values: { 'lines.0.quantity': '1' },
+  },
+  {
+    fixture: 'layout/checkout',
+    name: 'shows the issues of every field, wherever it is',
+    steps: [submit],
+    errors: {
+      name: 'Required',
+      email: 'Required',
+      'address.street': 'Required',
+      'address.city': 'Required',
+      lines: 'Add at least one product',
+      acceptTerms: 'Please accept the terms',
+    },
+  },
+  {
+    fixture: 'layout/checkout',
+    name: 'submits the value the fields give, whatever the layout',
+    steps: [
+      fill('name', 'Ana'),
+      fill('email', 'ana@example.com'),
+      fill('address.street', 'Main 1'),
+      fill('address.city', 'Graz'),
+      add('lines'),
+      fill('lines.0.product', 'Pen'),
+      fill('coupon', ' save10 '),
+      check('acceptTerms'),
+      submit,
+    ],
+    output: {
+      name: 'Ana',
+      email: 'ana@example.com',
+      address: { street: 'Main 1', city: 'Graz' },
+      lines: [{ product: 'Pen', quantity: 1 }],
+      coupon: 'SAVE10',
+      acceptTerms: true,
+    },
+  },
+
+  {
+    fixture: 'layout/sign-up',
+    name: 'Next on an empty first step stays on it',
+    steps: [next],
+    shown: ['email', 'password', 'confirmPassword'],
+    errors: { email: 'Required', password: 'Required', confirmPassword: 'Required' },
+  },
+  {
+    fixture: 'layout/sign-up',
+    name: 'a form rule keeps the user on the step its field is on',
+    steps: [
+      fill('email', 'ana@example.com'),
+      fill('password', 'longenough1'),
+      fill('confirmPassword', 'longenough2'),
+      next,
+    ],
+    shown: ['email', 'password', 'confirmPassword'],
+    errors: { confirmPassword: 'Passwords differ' },
+  },
+  {
+    fixture: 'layout/sign-up',
+    name: 'the next step starts clean, on its grid',
+    steps: [
+      fill('email', 'ana@example.com'),
+      fill('password', 'longenough1'),
+      fill('confirmPassword', 'longenough1'),
+      next,
+    ],
+    shown: ['firstName', 'lastName', 'birthDate', 'address.city', 'address.zip'],
+    spans: { firstName: 6, lastName: 6, 'address.city': 8, 'address.zip': 4 },
+  },
+  {
+    fixture: 'layout/sign-up',
+    name: 'Next on the second step shows its own issues',
+    steps: [
+      fill('email', 'ana@example.com'),
+      fill('password', 'longenough1'),
+      fill('confirmPassword', 'longenough1'),
+      next,
+      fill('address.zip', '80a'),
+      next,
+    ],
+    errors: { firstName: 'Required', lastName: 'Required', 'address.zip': 'Digits only' },
+  },
+  {
+    fixture: 'layout/sign-up',
+    name: 'Back keeps what each step holds',
+    steps: [
+      fill('email', 'ana@example.com'),
+      fill('password', 'longenough1'),
+      fill('confirmPassword', 'longenough1'),
+      next,
+      fill('firstName', 'Ana'),
+      back,
+    ],
+    shown: ['email', 'password', 'confirmPassword'],
+    values: { email: 'ana@example.com', password: 'longenough1' },
+  },
+  {
+    fixture: 'layout/sign-up',
+    name: 'Next again shows the step as the user left it',
+    steps: [
+      fill('email', 'ana@example.com'),
+      fill('password', 'longenough1'),
+      fill('confirmPassword', 'longenough1'),
+      next,
+      fill('firstName', 'Ana'),
+      back,
+      next,
+    ],
+    shown: ['firstName', 'lastName', 'birthDate', 'address.city', 'address.zip'],
+    values: { firstName: 'Ana' },
+  },
+  {
+    fixture: 'layout/sign-up',
+    name: "the last step's own issue stops the submit",
+    steps: [
+      fill('email', 'ana@example.com'),
+      fill('password', 'longenough1'),
+      fill('confirmPassword', 'longenough1'),
+      next,
+      fill('firstName', 'Ana'),
+      fill('lastName', 'Horvat'),
+      next,
+      submit,
+    ],
+    shown: ['topics', 'acceptTerms'],
+    errors: { acceptTerms: 'Please accept the terms' },
+  },
+  {
+    fixture: 'layout/sign-up',
+    name: 'submits the whole form from the last step',
+    steps: [
+      fill('email', 'ana@example.com'),
+      fill('password', 'longenough1'),
+      fill('confirmPassword', 'longenough1'),
+      next,
+      fill('firstName', 'Ana'),
+      fill('lastName', 'Horvat'),
+      fill('address.city', 'Graz'),
+      fill('address.zip', '8010'),
+      next,
+      check('topics', 'News'),
+      check('acceptTerms'),
+      submit,
+    ],
+    output: {
+      email: 'ana@example.com',
+      password: 'longenough1',
+      confirmPassword: 'longenough1',
+      firstName: 'Ana',
+      lastName: 'Horvat',
+      address: { city: 'Graz', zip: '8010' },
+      topics: ['news'],
+      acceptTerms: true,
+    },
+  },
+
+  {
+    fixture: 'layout/order',
+    name: 'Next on a list without items shows its own issue',
+    steps: [fill('customer', 'Ana'), next, next],
+    shown: [],
+    errors: { lines: 'Add at least one product' },
+  },
+  {
+    fixture: 'layout/order',
+    name: "Next shows the issues of a new item's fields, laid out",
+    steps: [fill('customer', 'Ana'), next, add('lines'), next],
+    errors: { 'lines.0.product': 'Required' },
+    spans: { 'lines.0.product': 9, 'lines.0.quantity': 3 },
+  },
+  {
+    fixture: 'layout/order',
+    name: 'the last step starts clean',
+    steps: [fill('customer', 'Ana'), next, add('lines'), fill('lines.0.product', 'Pen'), next],
+    shown: ['deliverBy', 'note'],
+  },
+  {
+    fixture: 'layout/order',
+    name: 'submits the items of a list from another step',
+    steps: [
+      fill('customer', 'Ana'),
+      next,
+      add('lines'),
+      fill('lines.0.product', 'Pen'),
+      fill('lines.0.quantity', '3'),
+      next,
+      fill('deliverBy', '2026-12-01'),
+      submit,
+    ],
+    output: { customer: 'Ana', lines: [{ product: 'Pen', quantity: 3 }], deliverBy: '2026-12-01' },
   },
 ]

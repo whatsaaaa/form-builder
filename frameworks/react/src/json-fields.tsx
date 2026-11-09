@@ -7,7 +7,7 @@ import {
   type LayoutStep,
   selectFields,
 } from '@whatsaaaa/form-builder-schema'
-import type { ReactElement, ReactNode } from 'react'
+import { Fragment, type ReactElement, type ReactNode } from 'react'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type LayoutContext, renderLayout } from './render-layout'
 import { type RenderContext, renderFields, resolveComponents } from './render-fields'
@@ -59,9 +59,11 @@ export function JsonFields(props: JsonFieldsProps): ReactElement {
   checkComponents(fieldsOf(layout.steps), ctx.components)
   checkLayoutComponents(layout, layoutCtx.layoutComponents, layoutCtx.slots)
 
-  const step = props.step === undefined ? steps.current : steps.list[props.step]
+  const index = props.step ?? steps.index
+  const step = steps.list[index]
   if (!step) throw new RangeError(`No step ${props.step}. The form has ${steps.list.length}.`)
-  return <>{renderLayout(layoutCtx, step.children, [])}</>
+  // Keyed by the step, so another step's fields don't take over this one's components.
+  return <Fragment key={index}>{renderLayout(layoutCtx, step.children, [])}</Fragment>
 }
 
 /** Every field of the steps, display elements written in the layout included. */

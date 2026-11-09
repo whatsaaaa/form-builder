@@ -1,71 +1,164 @@
 import {
   createForm,
+  focus,
   Form,
   type FormStore,
+  getInput,
   insert,
   remove,
+  setErrors,
   type SubmitHandler,
   useField,
   useFieldArray,
+  validate,
 } from '@formisch/solid'
 import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
+  fieldPathsOf,
   isRequired,
+  issuesOfStep,
   type JsonForm,
   type JsonFormSchema,
+  type LayoutField,
+  type LayoutNode,
+  type LayoutStep,
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
-import { For, type JSX, Match, Show, Switch } from 'solid-js'
+import { createSignal, For, type JSX, Match, Show, Switch } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
 const builder = createSchemaBuilder()
 
-export function JsonFormView(props: { json: JsonForm; onSubmit: SubmitHandler<JsonFormSchema> }) {
+/** The content of the layout's slots, by name. */
+type Slots = Record<string, JSX.Element>
+
+interface JsonFormViewProps {
+  json: JsonForm
+  onSubmit: SubmitHandler<JsonFormSchema>
+  slots?: Slots
+}
+
+export function JsonFormView(props: JsonFormViewProps) {
   // A component runs once, so the definition is read once.
   const form = createForm({
     schema: builder.build(props.json),
     initialInput: builder.getInitialInput(props.json),
   })
+  const { steps } = builder.getLayout(props.json)
+  const [index, setIndex] = createSignal(0)
+  const step = () => steps[index()] as LayoutStep
+  const isLast = () => index() === steps.length - 1
+
+  // Next validates the whole form, and only the issues on this step's fields keep the user here.
+  const next = async () => {
+    const found = issuesOfStep(step(), (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    for (const path of fieldPathsOf(steps[index() + 1] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    setIndex(index() + 1)
+  }
+
   return (
     <Form of={form} onSubmit={(output) => props.onSubmit(output)}>
-      <Fields form={form} nodes={builder.getFieldTree(props.json)} indexes={[]} />
-      <button type="submit">Save</button>
+      {/* Keyed by the step, so its fields render anew when it changes. */}
+      <Show when={step()} keyed>
+        {(current) => (
+          <Layout form={form} nodes={current.children} indexes={[]} slots={props.slots ?? {}} />
+        )}
+      </Show>
+      <Show when={index() > 0}>
+        <button type="button" data-back="" onClick={() => setIndex(index() - 1)}>
+          Back
+        </button>
+      </Show>
+      <Show when={!isLast()} fallback={<button type="submit">Save</button>}>
+        <button type="button" data-next="" onClick={next}>
+          Next
+        </button>
+      </Show>
     </Form>
   )
 }
 
-interface FieldsProps {
+interface LayoutProps {
   form: FormStore
-  nodes: readonly FieldNode[]
-  /** The index of each array item the fields are in, outermost first. */
+  nodes: readonly LayoutNode[]
+  /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
+  slots: Slots
 }
 
-function Fields(props: FieldsProps) {
+function Layout(props: LayoutProps) {
   return (
     <For each={props.nodes}>
       {(node) => (
         <Switch>
-          <Match when={node.role === 'display'}>
-            <Display node={node} />
+          <Match when={node.type === 'section' && node}>
+            {(section) => (
+              <fieldset>
+                <legend>{section().section.label}</legend>
+                <Layout {...props} nodes={section().children} />
+              </fieldset>
+            )}
           </Match>
-          <Match when={node.role === 'group'}>
-            <fieldset>
-              <legend>{node.field.label ?? node.field.name}</legend>
-              <Fields form={props.form} nodes={node.children} indexes={props.indexes} />
-            </fieldset>
+          <Match when={node.type === 'row' && node}>
+            {(row) => (
+              // One line of a 12-column grid, where each cell takes its span.
+              <div style={{ display: 'grid', 'grid-template-columns': 'repeat(12, 1fr)' }}>
+                <For each={row().children}>
+                  {(cell) => (
+                    <div data-span={cell.span} style={{ 'grid-column': `span ${cell.span}` }}>
+                      <Layout {...props} nodes={[cell]} />
+                    </div>
+                  )}
+                </For>
+              </div>
+            )}
           </Match>
-          <Match when={node.role === 'array'}>
-            <ArrayField form={props.form} node={node} indexes={props.indexes} />
-          </Match>
-          <Match when={node.role === 'value'}>
-            <ValueField form={props.form} node={node} indexes={props.indexes} />
+          <Match when={node.type === 'slot' && node}>{(slot) => props.slots[slot().name]}</Match>
+          <Match when={node.type === 'field' && node}>
+            {(field) => <Field {...props} node={field()} />}
           </Match>
         </Switch>
       )}
     </For>
+  )
+}
+
+/** A field by its role. A group and an array render their fields from the layout. */
+function Field(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
+  const node = () => props.node.node
+  return (
+    <Switch>
+      <Match when={node().role === 'display'}>
+        <Display node={node()} />
+      </Match>
+      <Match when={node().role === 'group'}>
+        <fieldset>
+          <legend>{node().field.label ?? node().field.name}</legend>
+          <Layout
+            form={props.form}
+            nodes={props.node.children}
+            indexes={props.indexes}
+            slots={props.slots}
+          />
+        </fieldset>
+      </Match>
+      <Match when={node().role === 'array'}>
+        <ArrayField form={props.form} node={props.node} indexes={props.indexes} />
+      </Match>
+      <Match when={node().role === 'value'}>
+        <ValueField form={props.form} node={node()} indexes={props.indexes} />
+      </Match>
+    </Switch>
   )
 }
 
@@ -83,32 +176,28 @@ function Display(props: { node: FieldNode }) {
   )
 }
 
-interface FieldProps {
-  form: FormStore
-  node: FieldNode
-  indexes: readonly number[]
-}
-
-function ArrayField(props: FieldProps) {
+/** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
+function ArrayField(props: { form: FormStore; node: LayoutField; indexes: readonly number[] }) {
   // A getter, so the path follows the item when one before it is removed. It comes from the
   // definition at runtime, so Formisch's types can't check it.
-  const path = () => toFieldPath(props.node.dataPath, props.indexes)
+  const path = () => toFieldPath(props.node.node.dataPath, props.indexes)
   const array = useFieldArray(props.form, () => ({ path: path() as never }))
   const add = () =>
     insert(props.form, {
       path: path() as never,
-      initialInput: builder.getItemInput(props.node.field) as never,
+      initialInput: builder.getItemInput(props.node.node.field) as never,
     })
   return (
     <fieldset>
-      <legend>{props.node.field.label ?? props.node.field.name}</legend>
+      <legend>{props.node.node.field.label ?? props.node.node.field.name}</legend>
       <For each={array.items}>
         {(_, index) => (
           <div>
-            <Fields
+            <Layout
               form={props.form}
               nodes={props.node.children}
               indexes={[...props.indexes, index()]}
+              slots={{}}
             />
             <button
               type="button"
@@ -144,7 +233,7 @@ const inputTypes: Record<string, string> = {
   datetime: 'datetime-local',
 }
 
-function ValueField(props: FieldProps) {
+function ValueField(props: { form: FormStore; node: FieldNode; indexes: readonly number[] }) {
   const path = () => toFieldPath(props.node.dataPath, props.indexes)
   const field = useField(props.form, () => ({ path: path() as never }))
   // Turns what the element gives into the field's value, e.g. '5' into 5 for a number.

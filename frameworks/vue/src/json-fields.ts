@@ -7,7 +7,7 @@ import {
   type LayoutStep,
   selectFields,
 } from '@whatsaaaa/form-builder-schema'
-import { defineComponent, type PropType } from 'vue'
+import { defineComponent, Fragment, h, type PropType } from 'vue'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type LayoutContext, renderLayout } from './render-layout'
 import { type RenderContext, renderFields, resolveComponents } from './render-fields'
@@ -62,9 +62,11 @@ export const JsonFields = defineComponent({
     checkLayoutComponents(layout, layoutCtx.layoutComponents, slots)
 
     return () => {
-      const step = props.step === undefined ? steps.current : steps.list[props.step]
+      const index = props.step ?? steps.index
+      const step = steps.list[index]
       if (!step) throw new RangeError(`No step ${props.step}. The form has ${steps.list.length}.`)
-      return renderLayout(layoutCtx, step.children, [])
+      // Keyed by the step, so another step's fields don't take over this one's components.
+      return h(Fragment, { key: index }, renderLayout(layoutCtx, step.children, []))
     }
   },
 })

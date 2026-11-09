@@ -6,12 +6,24 @@ import { describe, onTestFinished } from 'vitest'
 import { type RenderedForm, runScenarios } from '../../tests/run-scenarios'
 import { JsonFormView } from './json-form-view'
 
+const slots = {
+  shipping: <p data-slot="shipping">Ships in three days</p>,
+  submit: (
+    <button type="submit" data-slot="submit">
+      Place order
+    </button>
+  ),
+}
+
 function render(json: JsonForm): RenderedForm {
   const root = document.createElement('div')
   document.body.append(root)
   const submitted: unknown[] = []
   act(() =>
-    renderPreact(<JsonFormView json={json} onSubmit={(output) => submitted.push(output)} />, root),
+    renderPreact(
+      <JsonFormView json={json} onSubmit={(output) => submitted.push(output)} slots={slots} />,
+      root,
+    ),
   )
   onTestFinished(() => {
     act(() => renderPreact(null, root))

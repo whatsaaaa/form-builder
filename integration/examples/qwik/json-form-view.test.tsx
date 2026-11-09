@@ -19,7 +19,18 @@ async function render(json: JsonForm): Promise<RenderedForm> {
   const submitted: unknown[] = []
   const { cleanup } = await renderQwik(
     root,
-    <JsonFormView json={json} onSubmit$={(output) => void submitted.push(output)} />,
+    <JsonFormView
+      json={json}
+      onSubmit$={(output) => void submitted.push(output)}
+      slots={{
+        shipping: <p data-slot="shipping">Ships in three days</p>,
+        submit: (
+          <button type="submit" data-slot="submit">
+            Place order
+          </button>
+        ),
+      }}
+    />,
   )
   onTestFinished(() => {
     cleanup()

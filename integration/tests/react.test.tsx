@@ -254,6 +254,8 @@ function render(json: JsonForm): RenderedForm {
   }
 }
 
+// It shows Formisch's own wiring, field by field, in the order of the definition. The React
+// adapter and the Preact renderer run the fixtures with a layout.
 describe('the fixtures in @formisch/react, with field.props', () => {
-  runScenarios(render)
+  runScenarios(render, { layouts: false })
 })

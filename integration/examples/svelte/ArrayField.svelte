@@ -1,28 +1,32 @@
 <script lang="ts">
   import { type FormStore, insert, remove, useFieldArray } from '@formisch/svelte'
-  import { type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
+  import { type LayoutField, toFieldPath } from '@whatsaaaa/form-builder-schema'
   import { builder } from './builder'
-  import Fields from './Fields.svelte'
+  import Layout from './Layout.svelte'
 
-  let { form, node, indexes }: { form: FormStore; node: FieldNode; indexes: readonly number[] } =
+  // A list: Formisch's field array, and the layout of each item. A slot never is in one.
+  let { form, node, indexes }: { form: FormStore; node: LayoutField; indexes: readonly number[] } =
     $props()
 
   // Derived, so the path follows the item when one before it is removed. It comes from the
   // definition at runtime, so Formisch's types can't check it.
-  const path = $derived(toFieldPath(node.dataPath, indexes))
+  const path = $derived(toFieldPath(node.node.dataPath, indexes))
   const array = useFieldArray(
     () => form,
     () => ({ path: path as never }),
   )
   const add = () =>
-    insert(form, { path: path as never, initialInput: builder.getItemInput(node.field) as never })
+    insert(form, {
+      path: path as never,
+      initialInput: builder.getItemInput(node.node.field) as never,
+    })
 </script>
 
 <fieldset>
-  <legend>{node.field.label ?? node.field.name}</legend>
+  <legend>{node.node.field.label ?? node.node.field.name}</legend>
   {#each array.items as item, index (item)}
     <div>
-      <Fields {form} nodes={node.children} indexes={[...indexes, index]} />
+      <Layout {form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
       <button
         type="button"
         data-remove={`${path.join('.')}.${index}`}

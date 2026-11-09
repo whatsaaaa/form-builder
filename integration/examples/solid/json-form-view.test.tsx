@@ -10,7 +10,20 @@ function render(json: JsonForm): RenderedForm {
   document.body.append(root)
   const submitted: unknown[] = []
   const dispose = renderSolid(
-    () => <JsonFormView json={json} onSubmit={(output) => submitted.push(output)} />,
+    () => (
+      <JsonFormView
+        json={json}
+        onSubmit={(output) => submitted.push(output)}
+        slots={{
+          shipping: <p data-slot="shipping">Ships in three days</p>,
+          submit: (
+            <button type="submit" data-slot="submit">
+              Place order
+            </button>
+          ),
+        }}
+      />
+    ),
     root,
   )
   onTestFinished(() => {
