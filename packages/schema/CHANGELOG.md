@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-schema
 
+## 0.13.1
+
+### Patch Changes
+
+- [#31](https://github.com/whatsaaaa/form-builder/pull/31) [`1453b5f`](https://github.com/whatsaaaa/form-builder/commit/1453b5f470d6414150580e9c8c6b8fc0e51e16b5) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - Docs: a whole renderer for Preact, Solid, Svelte, Qwik and Angular with Formisch's own packages, in the new `docs/frameworks.md`. The integration tests run every shared fixture through each one, and `pnpm docs:gen` copies the tested files into the page.
+
 ## 0.13.0
 
 ### Minor Changes
