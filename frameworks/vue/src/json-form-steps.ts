@@ -1,12 +1,14 @@
 import {
   focus,
   type FormStore,
+  getErrors,
   getInput,
   setErrors,
   validate,
   type ValidationMode,
 } from '@formisch/vue'
 import {
+  type FieldPath,
   fieldPathsOf,
   type FormLayout,
   issuesOfStep,
@@ -40,6 +42,9 @@ export interface JsonFormSteps {
   goTo(index: number): Promise<boolean>
 }
 
+/** A field's error messages in Formisch, or null. */
+type Errors = [string, ...string[]] | null
+
 /** What a field tells the steps it was through, by Formisch's name for the validation mode. */
 export type FieldEvent = Exclude<ValidationMode, 'initial' | 'submit'>
 
@@ -52,8 +57,8 @@ const fieldEvents = new WeakMap<FormStore, FieldEvents>()
 export const fieldEventsOf = (form: FormStore): FieldEvents | undefined => fieldEvents.get(form)
 
 /**
- * The steps of `layout`, for `useJsonForm`. With more than one, each step starts clean when the
- * user first gets to it, a step that failed Next revalidates as the user fixes it, a submit
+ * The steps of `layout`, for `useJsonForm`. With more than one, a step shows the errors it had
+ * when the user left it, and none the first time they get to it, a step that failed Next revalidates as the user fixes it, a submit
  * before the last step moves on like Next, and a submit that fails because of an earlier step
  * goes back to it.
  */
@@ -68,8 +73,8 @@ export function useJsonFormSteps(
   const list = layout.steps
   const index = ref(0)
   const current = computed(() => list[index.value] as LayoutStep)
-  // The steps the user has got to. Each one starts clean the first time.
-  const seen = new Set([0])
+  // The errors each step had when the user left it, by the JSON of each field's path.
+  const left = new Map<number, Map<string, Errors>>()
   // The current step failed Next, and hasn't passed since.
   let failed = false
 
@@ -93,22 +98,33 @@ export function useJsonFormSteps(
     return true
   }
 
+  /**
+   * Moves to a step as the user left it: with the errors it had then, and none the first time.
+   * Validating the steps before set errors on its fields, which the user never saw.
+   */
   function move(target: number) {
     failed = false
-    if (!seen.has(target)) {
-      seen.add(target)
-      // The validations on the steps before set errors on this one's fields, which nobody saw.
-      for (const path of fieldPathsOf(list[target] as LayoutStep, getInput(form))) {
-        setErrors(form, { path, errors: null } as never)
-      }
+    leave()
+    const errors = left.get(target)
+    for (const path of fieldPathsOf(list[target] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
     }
     index.value = target
   }
 
+  /** Keeps the errors of the current step, for when the user comes back to it. */
+  function leave() {
+    const paths = fieldPathsOf(current.value, getInput(form))
+    const errors = paths.map((path): [string, Errors] => [JSON.stringify(path), errorsAt(path)])
+    left.set(index.value, new Map(errors))
+  }
+
+  const errorsAt = (path: FieldPath): Errors => getErrors(form, { path } as never)
+
   /** Stays on, or goes to, the step at `at`, with its issues shown. */
   async function stop(at: number, found: readonly StepIssue[]) {
     failed = true
-    seen.add(at)
+    if (at !== index.value) leave()
     index.value = at
     await nextTick()
     // A group or an array has no element: the first field that has one gets the focus.

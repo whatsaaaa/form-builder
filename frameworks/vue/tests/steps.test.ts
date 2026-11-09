@@ -146,6 +146,18 @@ describe('steps', () => {
     expect(root.textContent).toContain('Add a line')
   })
 
+  it('shows a step as the user left it, not with the errors of validating the one before', async () => {
+    const { root, jsonForm } = mountSteps()
+    await fillFirstStep(root, jsonForm)
+    type(root, 'zip', '1010')
+    jsonForm.steps.back()
+    await settle()
+
+    expect(await next(jsonForm)).toBe(true)
+    expect(errorAt(root, 'city')).toBeNull()
+    expect((root.querySelector('[data-path="zip"] input') as HTMLInputElement).value).toBe('1010')
+  })
+
   it('revalidates a step that failed Next as the user fixes it', async () => {
     const { root, jsonForm } = mountSteps()
     await next(jsonForm)

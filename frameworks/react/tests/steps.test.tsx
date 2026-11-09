@@ -145,6 +145,17 @@ describe('steps', () => {
     expect(current().steps.index).toBe(0)
   })
 
+  it('shows a step as the user left it, not with the errors of validating the one before', async () => {
+    const { root, current } = mountSteps()
+    await fillFirstStep(root, current)
+    type(root, 'zip', '1010')
+    await run(current, (steps) => steps.back())
+
+    expect(await run(current, (steps) => steps.next())).toBe(true)
+    expect(errorAt(root, 'city')).toBeNull()
+    expect((root.querySelector('[data-path="zip"] input') as HTMLInputElement).value).toBe('1010')
+  })
+
   it('revalidates a step that failed Next as the user fixes it', async () => {
     const { root, current } = mountSteps()
     await run(current, (steps) => steps.next())
