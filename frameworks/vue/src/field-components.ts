@@ -1,5 +1,11 @@
 import type { FieldElementProps } from '@formisch/vue'
-import type { FieldPath, JsonField, ValueKind } from '@whatsaaaa/form-builder-schema'
+import type {
+  FieldPath,
+  JsonField,
+  JsonLayoutRow,
+  JsonLayoutSection,
+  ValueKind,
+} from '@whatsaaaa/form-builder-schema'
 import type { Component, VNode } from 'vue'
 
 /** Your component for each field type, by type name: `{ text: TextInput, group: Fieldset }`. */
@@ -55,5 +61,38 @@ export interface ArrayFieldProps {
 
 /** The slots of an array component: its default slot renders the fields of the item at `index`. */
 export interface ArrayFieldSlots {
+  default(props: { index: number }): VNode[]
+}
+
+/**
+ * Your component for each layout type a definition's `layout` uses: `{ section: Card, row: Grid }`.
+ * A definition without sections or rows needs none.
+ */
+export interface LayoutComponents {
+  section?: Component
+  row?: Component
+}
+
+/** The props of a component for a section of the layout. */
+export interface SectionProps {
+  /** The section as written, with its `id`, `label`, `description` and `ui`. */
+  section: JsonLayoutSection
+}
+
+/** The slots of a section component: its default slot renders the section's items. */
+export interface SectionSlots {
+  default(): VNode[]
+}
+
+/** The props of a component for a row of the layout: one line of a 12-column grid. */
+export interface RowProps {
+  /** The row as written, with its `id` and `ui`. */
+  row: JsonLayoutRow
+  /** How many of the 12 columns each cell takes, in order. They add up to 12 at most. */
+  spans: number[]
+}
+
+/** The slots of a row component: its default slot renders the cell at `index`. */
+export interface RowSlots {
   default(props: { index: number }): VNode[]
 }

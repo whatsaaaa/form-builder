@@ -1,3 +1,5 @@
+import type { JsonLayout } from './json-layout'
+
 export interface JsonForm {
   /** Where the definition's JSON Schema is, for editors. This package never reads it. */
   $schema?: string
@@ -5,6 +7,8 @@ export interface JsonForm {
   fields: readonly JsonField[]
   /** Rules that check a field against other fields. They run after every field's own rules. */
   formRules?: readonly JsonFormRule[]
+  /** Where the fields go, on one page or in steps. Without it, the order of `fields`. */
+  layout?: JsonLayout
 }
 
 export interface JsonField {

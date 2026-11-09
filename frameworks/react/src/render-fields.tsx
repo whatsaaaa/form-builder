@@ -1,5 +1,5 @@
 import { dotPathOf, type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
-import type { ComponentType, ReactElement } from 'react'
+import type { ComponentType, ReactElement, ReactNode } from 'react'
 import { ArrayField } from './array-field'
 import type {
   ArrayFieldProps,
@@ -35,19 +35,27 @@ export function renderFields(
   nodes: readonly FieldNode[],
   indexes: readonly number[],
 ): ReactElement[] {
-  return nodes.map((node, position) => renderField(ctx, node, indexes, position))
+  return nodes.map((node, position) =>
+    renderField(ctx, node, indexes, dotPathOf(node) ?? `#${position}`, (inner) =>
+      renderFields(ctx, node.children, inner),
+    ),
+  )
 }
 
+/**
+ * Renders one field with its component. `children` renders the fields inside a group, or inside
+ * the item of an array, with the indexes of the items they are in.
+ */
 export function renderField(
   ctx: RenderContext,
   node: FieldNode,
   indexes: readonly number[],
-  position: number,
+  key: string,
+  children: (indexes: readonly number[]) => ReactNode,
 ): ReactElement {
   // The fields were checked for components, and the role tells which props the component takes.
   const component = ctx.components[node.type]
   const path = toFieldPath(node.dataPath, indexes)
-  const key = dotPathOf(node) ?? `#${position}`
   switch (node.role) {
     case 'display': {
       const Display = component as ComponentType<DisplayFieldProps>
@@ -57,7 +65,7 @@ export function renderField(
       const Group = component as ComponentType<GroupFieldProps>
       return (
         <Group key={key} field={node.field} path={path}>
-          {renderFields(ctx, node.children, indexes)}
+          {children(indexes)}
         </Group>
       )
     }
@@ -69,7 +77,7 @@ export function renderField(
           node={node}
           path={path}
           component={component as ComponentType<ArrayFieldProps>}
-          renderItem={(index) => renderFields(ctx, node.children, [...indexes, index])}
+          renderItem={(index) => children([...indexes, index])}
         />
       )
     case 'value':

@@ -8,9 +8,11 @@ import {
   toIssues,
 } from '../errors/definition-error'
 import type { BuildContext } from '../field-types/field-type-def'
+import type { FormLayout } from '../render/form-layout'
 import type { AnySchema } from '../shared/valibot-types'
 import { buildFieldSchema, type Messages } from './build-field-schema'
 import { checkFormRules } from './check-form-rules'
+import { checkLayout } from './check-layout'
 import { formRuleAction, type FormRuleAction } from './form-rule-action'
 import { lookup, type Registry } from './registry'
 import { type CheckedField, checkField } from './validate-definition'
@@ -24,6 +26,8 @@ export interface CompileResult {
   walked: WalkedField[]
   /** Formisch's `initialInput`, as `getInitialInput` gives it, your own containers included. */
   initialInput: Record<string, unknown>
+  /** The layout, with every reference resolved. Only there when the definition has no issues. */
+  layout: FormLayout | undefined
 }
 
 /** The schema of a list of fields: an object with a key for each field that has a value. */
@@ -42,6 +46,7 @@ const formShape = v.object({
   version: v.string(),
   fields: v.array(v.unknown()),
   formRules: v.optional(v.array(v.unknown())),
+  layout: v.optional(v.unknown()),
 })
 
 /**
@@ -54,7 +59,7 @@ export function compileDefinition(
   messages: Messages,
 ): CompileResult {
   const issues: DefinitionIssue[] = []
-  const empty = { schema: v.object({}), walked: [], initialInput: {} }
+  const empty = { schema: v.object({}), walked: [], initialInput: {}, layout: undefined }
 
   const form = v.safeParse(formShape, json)
   if (!form.success) {
@@ -75,10 +80,16 @@ export function compileDefinition(
   }
 
   const compiler = createCompiler(registry, messages, issues)
+  const issueCount = issues.length
   const { schema, input } = compiler.list(form.output.fields, ['fields'])
   const walked = [...compiler.walked]
+  // The layout places the fields that built, so it is resolved only when they have no issues.
+  const fieldsBuilt = issues.length === issueCount
   const rules = checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
-  if (issues.length || !rules.length) return { issues, schema, walked, initialInput: input }
+  const layout = checkLayout(form.output.layout, fieldsBuilt ? walked : undefined, registry, issues)
+  const result = { issues, schema, walked, initialInput: input, layout }
+  if (issues.length) return { ...result, layout: undefined }
+  if (!rules.length) return result
 
   // Form rules run after every field's schema, on the whole value. They only check, so the schema
   // keeps the object's type, entries and output, and Formisch still keeps a field for each entry.
@@ -86,7 +97,7 @@ export function compileDefinition(
     const ctx = { field: rule.field, rule: rule.name, path: rule.path }
     return formRuleAction(rule, messages.resolve(rule.message, ctx))
   })
-  return { issues, schema: v.pipe(schema, ...checks), walked, initialInput: input }
+  return { ...result, schema: v.pipe(schema, ...checks) }
 }
 
 export interface Compiler {

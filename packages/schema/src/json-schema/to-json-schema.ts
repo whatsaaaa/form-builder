@@ -3,6 +3,7 @@ import {
   type ConversionConfig,
   type JsonSchema,
 } from '@valibot/to-json-schema'
+import { LAYOUT_TYPES, ROW_COLUMNS } from '../definition/json-layout'
 import { childField, itemField } from '../field-types/child-fields'
 import type { FieldTypeDef, FieldTypeMeta } from '../field-types/field-type-def'
 import type { FormRuleDef } from '../rules/form-rule-def'
@@ -21,8 +22,9 @@ export interface JsonSchemaRegistries {
 
 /**
  * The JSON Schema of definitions for these registries, for editors and other tools.
- * It knows every type, rule and form rule by name, with their props and params. It can't know
- * what only `validate()` checks, such as duplicate names, defaults and form rule paths.
+ * It knows every type, rule and form rule by name, with their props and params, and the layout's
+ * nodes. It can't know what only `validate()` checks, such as duplicate names, defaults, form rule
+ * paths and layout references.
  */
 export function toJsonSchema(registries: JsonSchemaRegistries): JsonSchema {
   const converter = createConverter()
@@ -40,13 +42,14 @@ export function toJsonSchema(registries: JsonSchemaRegistries): JsonSchema {
     $schema: 'http://json-schema.org/draft-07/schema#',
     title: 'Form definition',
     description:
-      'A form for @whatsaaaa/form-builder-schema. Run validate() too: it also checks names, defaults and form rule paths.',
+      'A form for @whatsaaaa/form-builder-schema. Run validate() too: it also checks names, defaults, form rule paths and layout references.',
     type: 'object',
     properties: {
       $schema: { type: 'string' },
       version: { const: '1' },
       fields: { type: 'array', items: ref('field') },
       formRules: { type: 'array', items: ref('formRule') },
+      layout: ref('layout'),
     },
     required: ['version', 'fields'],
     additionalProperties: false,
@@ -78,6 +81,10 @@ export function toJsonSchema(registries: JsonSchemaRegistries): JsonSchema {
         'No form rule is registered',
       ),
       ...typeSchemas,
+      ...layoutSchemas(
+        types.filter(([, type]) => type.kind === 'none').map(([name]) => name),
+        typeSchemas,
+      ),
       ...rules.lists,
       ...rules.rules,
     },
@@ -109,6 +116,100 @@ function byName(
       // oxlint-disable-next-line unicorn/no-thenable -- JSON Schema conditional keyword
       then: schema,
     })),
+  }
+}
+
+/**
+ * The layout and its nodes. Each node is there twice: as an item, and as an item of a row, which
+ * takes `span`, so an editor flags `span` outside a row. A display element is its type's field
+ * without `name`, with `id`.
+ */
+function layoutSchemas(
+  displayTypes: readonly string[],
+  typeSchemas: Readonly<Record<string, JsonSchema>>,
+): Record<string, JsonSchema> {
+  const id: JsonSchema = { type: 'string', minLength: 1 }
+  const ui: JsonSchema = { type: 'object' }
+  const span: JsonSchema = { type: 'integer', minimum: 1, maximum: ROW_COLUMNS }
+  const list = (item: string): JsonSchema => ({ type: 'array', minItems: 1, items: ref(item) })
+
+  const nodes = (item: string, cell: boolean): Record<string, JsonSchema> => {
+    const node = (name: string, properties: NonNullable<JsonSchema['properties']>) => ({
+      [`${item}.${name}`]: {
+        type: 'object',
+        properties: cell ? { ...properties, span } : properties,
+        required:
+          name === 'field' ? ['field'] : name === 'slot' ? ['type', 'name'] : ['type', 'items'],
+        additionalProperties: false,
+      } satisfies JsonSchema,
+    })
+    const displays = displayTypes.map((name): [string, JsonSchema] => {
+      const schema = typeSchemas[`type.${name}`] as Exclude<JsonSchema, boolean>
+      // A type whose props have no JSON Schema form takes any keys here too.
+      if (!schema.properties) return [name, schema]
+      const properties = Object.fromEntries(
+        Object.entries(schema.properties).filter(([key]) => key !== 'name'),
+      )
+      return [name, { ...schema, properties: { ...properties, id, ...(cell && { span }) } }]
+    })
+    // The cells of a row are fixed, so "*" is no item of a row.
+    const path: JsonSchema = cell
+      ? { type: 'string', minLength: 1, not: { const: '*' } }
+      : { type: 'string', minLength: 1 }
+    return {
+      [item]: {
+        anyOf: [
+          path,
+          ref(`${item}.field`),
+          byName(
+            'type',
+            [
+              ...LAYOUT_TYPES.map((type): [string, JsonSchema] => [type, ref(`${item}.${type}`)]),
+              ...displays,
+            ],
+            'No layout type is registered',
+          ),
+        ],
+      },
+      ...node('field', { field: { type: 'string', minLength: 1 }, items: ref('layoutItems') }),
+      ...node('section', {
+        type: { const: 'section' },
+        id,
+        label: { type: 'string' },
+        description: { type: 'string' },
+        items: ref('layoutItems'),
+        ui,
+      }),
+      ...node('row', { type: { const: 'row' }, id, items: ref('rowItems'), ui }),
+      ...node('slot', { type: { const: 'slot' }, name: { type: 'string', minLength: 1 } }),
+    }
+  }
+
+  return {
+    layout: {
+      title: 'Layout',
+      description: 'Where the fields go: "items" for one page, or "steps" for several.',
+      type: 'object',
+      properties: { items: ref('layoutItems'), steps: { ...list('layoutStep') }, ui },
+      oneOf: [{ required: ['items'] }, { required: ['steps'] }],
+      additionalProperties: false,
+    },
+    layoutStep: {
+      type: 'object',
+      properties: {
+        id,
+        label: { type: 'string' },
+        description: { type: 'string' },
+        items: ref('layoutItems'),
+        ui,
+      },
+      required: ['items'],
+      additionalProperties: false,
+    },
+    layoutItems: list('layoutItem'),
+    rowItems: list('rowItem'),
+    ...nodes('layoutItem', false),
+    ...nodes('rowItem', true),
   }
 }
 

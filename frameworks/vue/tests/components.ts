@@ -3,6 +3,9 @@ import type {
   DisplayFieldProps,
   FieldComponents,
   GroupFieldProps,
+  LayoutComponents,
+  RowProps,
+  SectionProps,
   ValueFieldProps,
 } from '@whatsaaaa/form-builder-vue'
 import { defaultFieldTypes, type FieldTypeDef } from '@whatsaaaa/form-builder-schema'
@@ -91,3 +94,36 @@ export const builtInComponents: FieldComponents = Object.fromEntries(
     return [type, TestInput]
   }),
 )
+
+/** The props each row got last, by its id. */
+export const rows = new Map<string, RowProps>()
+
+export const TestSection = defineComponent({
+  props: propsOf<SectionProps>('section'),
+  setup(props, { slots }) {
+    return () =>
+      h('fieldset', { 'data-section': props.section.id ?? '' }, [
+        h('legend', props.section.label),
+        slots.default?.(),
+      ])
+  },
+})
+
+/** Each cell is a `<div>` with its span, like a CSS grid of 12 columns would take it. */
+export const TestRow = defineComponent({
+  props: propsOf<RowProps>('row', 'spans'),
+  setup(props, { slots }) {
+    return () => {
+      rows.set(props.row.id ?? '', { ...props })
+      return h(
+        'div',
+        { 'data-row': props.row.id ?? '' },
+        props.spans.map((span, index) =>
+          h('div', { key: index, 'data-span': span }, slots.default?.({ index })),
+        ),
+      )
+    }
+  },
+})
+
+export const layoutComponents: LayoutComponents = { section: TestSection, row: TestRow }

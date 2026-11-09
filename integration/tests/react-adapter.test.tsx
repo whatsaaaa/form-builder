@@ -14,6 +14,9 @@ import {
   type FieldPath,
   type GroupFieldProps,
   JsonFields,
+  type LayoutComponents,
+  type RowProps,
+  type SectionProps,
   useJsonForm,
   type ValueFieldProps,
 } from '@whatsaaaa/form-builder-react'
@@ -201,11 +204,54 @@ const components: FieldComponents = Object.fromEntries(
   }),
 )
 
+function Section({ section, children }: SectionProps) {
+  return (
+    <fieldset>
+      <legend>{section.label}</legend>
+      {children}
+    </fieldset>
+  )
+}
+
+function Row({ spans, children }: RowProps) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
+      {spans.map((span, index) => (
+        <div key={index} data-span={span} style={{ gridColumn: `span ${span}` }}>
+          {children(index)}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const layoutComponents: LayoutComponents = { section: Section, row: Row }
+
+const slots = {
+  shipping: <p data-slot="shipping">Ships in three days</p>,
+  submit: (
+    <button type="submit" data-slot="submit">
+      Place order
+    </button>
+  ),
+}
+
 function JsonFormView(props: { json: JsonForm; onSubmit: (output: unknown) => void }) {
-  const jsonForm = useJsonForm(props.json, { components })
+  const jsonForm = useJsonForm(props.json, { components, layoutComponents })
+  const { steps } = jsonForm
   return (
     <Form of={jsonForm.form} onSubmit={props.onSubmit}>
-      <JsonFields of={jsonForm} />
+      <JsonFields of={jsonForm} slots={slots} />
+      {!steps.isFirst && (
+        <button type="button" data-back="" onClick={steps.back}>
+          Back
+        </button>
+      )}
+      {!steps.isLast && (
+        <button type="button" data-next="" onClick={() => void steps.next()}>
+          Next
+        </button>
+      )}
     </Form>
   )
 }

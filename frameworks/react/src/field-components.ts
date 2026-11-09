@@ -1,5 +1,11 @@
 import type { FieldElementProps } from '@formisch/react'
-import type { FieldPath, JsonField, ValueKind } from '@whatsaaaa/form-builder-schema'
+import type {
+  FieldPath,
+  JsonField,
+  JsonLayoutRow,
+  JsonLayoutSection,
+  ValueKind,
+} from '@whatsaaaa/form-builder-schema'
 import type { ComponentType, ReactNode } from 'react'
 
 /**
@@ -58,5 +64,32 @@ export interface ArrayFieldProps {
   remove: (index: number) => void
   move: (from: number, to: number) => void
   /** Renders the fields of the item at `index`. */
+  children: (index: number) => ReactNode
+}
+
+/**
+ * Your component for each layout type a definition's `layout` uses: `{ section: Card, row: Grid }`.
+ * A definition without sections or rows needs none.
+ */
+export interface LayoutComponents {
+  section?: ComponentType<SectionProps>
+  row?: ComponentType<RowProps>
+}
+
+/** The props of a component for a section of the layout. */
+export interface SectionProps {
+  /** The section as written, with its `id`, `label`, `description` and `ui`. */
+  section: JsonLayoutSection
+  /** The section's items. */
+  children: ReactNode
+}
+
+/** The props of a component for a row of the layout: one line of a 12-column grid. */
+export interface RowProps {
+  /** The row as written, with its `id` and `ui`. */
+  row: JsonLayoutRow
+  /** How many of the 12 columns each cell takes, in order. They add up to 12 at most. */
+  spans: number[]
+  /** Renders the cell at `index`. */
   children: (index: number) => ReactNode
 }

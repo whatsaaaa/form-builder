@@ -12,6 +12,11 @@
   margin: 0;
 }
 
+/* A borderless fieldset, like a group of radio buttons, lines its legend up with the text around. */
+.form fieldset:not(.container) > legend {
+  padding: 0;
+}
+
 .form .container {
   display: flex;
   flex-direction: column;

@@ -4,16 +4,18 @@
 
 The schema package works with Formisch's own package for every framework, with no adapter from this repo. Here is a whole renderer for each of Preact, Solid, Svelte, Qwik and Angular. Each has the shape of the React one in [Using with Formisch](../README.md#using-with-formisch), with the native control of every built-in type from [Controls](../README.md#controls). For Vue and React, use [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue) and [`@whatsaaaa/form-builder-react`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/react).
 
-Every renderer is tested. The [integration tests](https://github.com/whatsaaaa/form-builder/tree/main/integration/examples) run every shared fixture through it, from a text field to arrays and form rules: they type, tick, pick and submit like a person, and check the errors the form shows and what it submits.
+Every renderer is tested. The [integration tests](https://github.com/whatsaaaa/form-builder/tree/main/integration/examples) run every shared fixture through it, from a text field to arrays, form rules and layouts with steps: they type, tick, pick, step and submit like a person, and check the fields on show, the errors the form shows and what it submits.
 
-Each one has the same parts:
+Each one renders the definition's [layout](../README.md#layout), so it renders a definition without one too, as one step with every field. Each one has the same parts:
 
-- **`JsonFormView`** reads the definition once: the schema and initial input for Formisch's form, and the field tree to render.
-- **`Fields`** renders each node of the tree by its `role`.
-- **`ArrayField`** renders Formisch's field array, the fields of each item, and buttons to add and remove items. A new item's input is `builder.getItemInput(node.field)`.
+- **`JsonFormView`** reads the definition once: the schema and initial input for Formisch's form, and the layout's steps. It renders the current step, Back and Next while there are steps, and Save on the last one. Next validates the whole form, and moves on only when `issuesOfStep` finds no issue on this step's fields, or focuses the first one. The step it moves to starts clean: `fieldPathsOf` gives its fields' paths, to clear the errors that validation set on them.
+- **`Layout`** renders each node of a step by its `type`: a section as a `<fieldset>`, a row as a 12-column CSS grid whose cells take their `span`, a slot with the content passed in `slots`, and a field by its `role`. A group and an array render their fields from the layout's `children`, not the field's.
+- **`ArrayField`** renders Formisch's field array, the layout of each item, and buttons to add and remove items. A new item's input is `builder.getItemInput(node.field)`.
 - **`ValueField`** connects a field to Formisch at its path, from `toFieldPath(node.dataPath, indexes)`, picks the control by the field's type, and sets what the element gives through `coerceInput`.
 
-The `data-error`, `data-add` and `data-remove` attributes only mark elements for the tests. Leave them out.
+The `data-error`, `data-add`, `data-remove`, `data-next`, `data-back` and `data-span` attributes only mark elements for the tests. Leave them out.
+
+A row's CSS grid has 12 columns at every width here. On a narrow screen, give the cells the whole row with a media query, as the layout says nothing about screen sizes. The Vue and React adapters also restore a step's errors when the user comes back to it, revalidate a step that failed Next as the user fixes it, and treat a submit before the last step as Next: see their READMEs.
 
 ## Preact
 
@@ -29,70 +31,148 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/preact @preact/signals preact 
 
 ```tsx
 import {
+  focus,
   Form,
   type FormStore,
+  getInput,
   insert,
   remove,
+  setErrors,
   type SubmitHandler,
   useField,
   useFieldArray,
   useForm,
+  validate,
 } from '@formisch/preact'
 import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
+  fieldPathsOf,
   isRequired,
+  issuesOfStep,
   type JsonForm,
   type JsonFormSchema,
+  type LayoutField,
+  type LayoutNode,
+  type LayoutStep,
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
+import { type ComponentChildren, Fragment } from 'preact'
 import { useState } from 'preact/hooks'
 
 const builder = createSchemaBuilder()
 
-export function JsonFormView(props: { json: JsonForm; onSubmit: SubmitHandler<JsonFormSchema> }) {
+/** The content of the layout's slots, by name. */
+type Slots = Record<string, ComponentChildren>
+
+interface JsonFormViewProps {
+  json: JsonForm
+  onSubmit: SubmitHandler<JsonFormSchema>
+  slots?: Slots
+}
+
+export function JsonFormView({ json, onSubmit, slots = {} }: JsonFormViewProps) {
   // Formisch reads its config once, so read the definition once too.
-  const [{ fields, ...config }] = useState(() => ({
-    schema: builder.build(props.json),
-    initialInput: builder.getInitialInput(props.json),
-    fields: builder.getFieldTree(props.json),
+  const [{ steps, ...config }] = useState(() => ({
+    schema: builder.build(json),
+    initialInput: builder.getInitialInput(json),
+    steps: builder.getLayout(json).steps,
   }))
   const form = useForm(config)
+  const [index, setIndex] = useState(0)
+  const step = steps[index] as LayoutStep
+  const isLast = index === steps.length - 1
+
+  // Next validates the whole form, and only the issues on this step's fields keep the user here.
+  const next = async () => {
+    const found = issuesOfStep(step, (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    setIndex(index + 1)
+  }
+
   return (
-    <Form of={form} onSubmit={props.onSubmit}>
-      <Fields form={form} nodes={fields} indexes={[]} />
-      <button type="submit">Save</button>
+    <Form of={form} onSubmit={onSubmit}>
+      {/* Keyed by the step, so another step's fields don't take over this one's components. */}
+      <Layout key={index} form={form} nodes={step.children} indexes={[]} slots={slots} />
+      {index > 0 && (
+        <button type="button" data-back="" onClick={() => setIndex(index - 1)}>
+          Back
+        </button>
+      )}
+      {isLast ? (
+        <button type="submit">Save</button>
+      ) : (
+        <button type="button" data-next="" onClick={next}>
+          Next
+        </button>
+      )}
     </Form>
   )
 }
 
-interface FieldsProps {
+interface LayoutProps {
   form: FormStore
-  nodes: readonly FieldNode[]
-  /** The index of each array item the fields are in, outermost first. */
+  nodes: readonly LayoutNode[]
+  /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
+  slots: Slots
 }
 
-function Fields({ form, nodes, indexes }: FieldsProps) {
-  return nodes.map((node, position) => {
-    const key = node.field.name ?? `#${position}`
-    switch (node.role) {
-      case 'display':
-        return <Display key={key} node={node} />
-      case 'group':
+function Layout({ form, nodes, indexes, slots }: LayoutProps) {
+  return nodes.map((node) => {
+    switch (node.type) {
+      case 'section':
         return (
-          <fieldset key={key}>
-            <legend>{node.field.label ?? node.field.name}</legend>
-            <Fields form={form} nodes={node.children} indexes={indexes} />
+          <fieldset key={node.key}>
+            <legend>{node.section.label}</legend>
+            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
           </fieldset>
         )
-      case 'array':
-        return <ArrayField key={key} form={form} node={node} indexes={indexes} />
-      case 'value':
-        return <ValueField key={key} form={form} node={node} indexes={indexes} />
+      case 'row':
+        // One line of a 12-column grid, where each cell takes its span.
+        return (
+          <div key={node.key} style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
+            {node.children.map((cell) => (
+              <div key={cell.key} data-span={cell.span} style={{ gridColumn: `span ${cell.span}` }}>
+                <Layout form={form} nodes={[cell]} indexes={indexes} slots={slots} />
+              </div>
+            ))}
+          </div>
+        )
+      case 'slot':
+        return <Fragment key={node.key}>{slots[node.name]}</Fragment>
+      case 'field':
+        return <Field key={node.key} form={form} node={node} indexes={indexes} slots={slots} />
     }
   })
+}
+
+/** A field by its role. A group and an array render their fields from the layout. */
+function Field({ form, node, indexes, slots }: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
+  switch (node.node.role) {
+    case 'display':
+      return <Display node={node.node} />
+    case 'group':
+      return (
+        <fieldset>
+          <legend>{node.node.field.label ?? node.node.field.name}</legend>
+          <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+        </fieldset>
+      )
+    case 'array':
+      return <ArrayField form={form} node={node} indexes={indexes} />
+    case 'value':
+      return <ValueField form={form} node={node.node} indexes={indexes} />
+  }
 }
 
 function Display({ node }: { node: FieldNode }) {
@@ -104,24 +184,28 @@ function Display({ node }: { node: FieldNode }) {
   return node.type === 'paragraph' ? <p>{text}</p> : <hr />
 }
 
-interface FieldProps {
+/** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
+function ArrayField({
+  form,
+  node,
+  indexes,
+}: {
   form: FormStore
-  node: FieldNode
+  node: LayoutField
   indexes: readonly number[]
-}
-
-function ArrayField({ form, node, indexes }: FieldProps) {
-  const path = toFieldPath(node.dataPath, indexes)
+}) {
+  const { field, dataPath } = node.node
+  const path = toFieldPath(dataPath, indexes)
   // The path comes from the definition at runtime, so Formisch's types can't check it.
   const array = useFieldArray(form, { path: path as never })
   const add = () =>
-    insert(form, { path: path as never, initialInput: builder.getItemInput(node.field) as never })
+    insert(form, { path: path as never, initialInput: builder.getItemInput(field) as never })
   return (
     <fieldset>
-      <legend>{node.field.label ?? node.field.name}</legend>
+      <legend>{field.label ?? field.name}</legend>
       {array.items.value.map((item, index) => (
         <div key={item}>
-          <Fields form={form} nodes={node.children} indexes={[...indexes, index]} />
+          <Layout form={form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
           <button
             type="button"
             data-remove={`${path.join('.')}.${index}`}
@@ -153,7 +237,15 @@ const inputTypes: Record<string, string> = {
   datetime: 'datetime-local',
 }
 
-function ValueField({ form, node, indexes }: FieldProps) {
+function ValueField({
+  form,
+  node,
+  indexes,
+}: {
+  form: FormStore
+  node: FieldNode
+  indexes: readonly number[]
+}) {
   const path = toFieldPath(node.dataPath, indexes)
   const field = useField(form, { path: path as never })
   // Turns what the element gives into the field's value, e.g. '5' into 5 for a number.
@@ -297,72 +389,165 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/solid solid-js valibot
 ```tsx
 import {
   createForm,
+  focus,
   Form,
   type FormStore,
+  getInput,
   insert,
   remove,
+  setErrors,
   type SubmitHandler,
   useField,
   useFieldArray,
+  validate,
 } from '@formisch/solid'
 import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
+  fieldPathsOf,
   isRequired,
+  issuesOfStep,
   type JsonForm,
   type JsonFormSchema,
+  type LayoutField,
+  type LayoutNode,
+  type LayoutStep,
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
-import { For, type JSX, Match, Show, Switch } from 'solid-js'
+import { createSignal, For, type JSX, Match, Show, Switch } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 
 const builder = createSchemaBuilder()
 
-export function JsonFormView(props: { json: JsonForm; onSubmit: SubmitHandler<JsonFormSchema> }) {
+/** The content of the layout's slots, by name. */
+type Slots = Record<string, JSX.Element>
+
+interface JsonFormViewProps {
+  json: JsonForm
+  onSubmit: SubmitHandler<JsonFormSchema>
+  slots?: Slots
+}
+
+export function JsonFormView(props: JsonFormViewProps) {
   // A component runs once, so the definition is read once.
   const form = createForm({
     schema: builder.build(props.json),
     initialInput: builder.getInitialInput(props.json),
   })
+  const { steps } = builder.getLayout(props.json)
+  const [index, setIndex] = createSignal(0)
+  const step = () => steps[index()] as LayoutStep
+  const isLast = () => index() === steps.length - 1
+
+  // Next validates the whole form, and only the issues on this step's fields keep the user here.
+  const next = async () => {
+    const found = issuesOfStep(step(), (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    for (const path of fieldPathsOf(steps[index() + 1] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    setIndex(index() + 1)
+  }
+
   return (
     <Form of={form} onSubmit={(output) => props.onSubmit(output)}>
-      <Fields form={form} nodes={builder.getFieldTree(props.json)} indexes={[]} />
-      <button type="submit">Save</button>
+      {/* Keyed by the step, so its fields render anew when it changes. */}
+      <Show when={step()} keyed>
+        {(current) => (
+          <Layout form={form} nodes={current.children} indexes={[]} slots={props.slots ?? {}} />
+        )}
+      </Show>
+      <Show when={index() > 0}>
+        <button type="button" data-back="" onClick={() => setIndex(index() - 1)}>
+          Back
+        </button>
+      </Show>
+      <Show when={!isLast()} fallback={<button type="submit">Save</button>}>
+        <button type="button" data-next="" onClick={next}>
+          Next
+        </button>
+      </Show>
     </Form>
   )
 }
 
-interface FieldsProps {
+interface LayoutProps {
   form: FormStore
-  nodes: readonly FieldNode[]
-  /** The index of each array item the fields are in, outermost first. */
+  nodes: readonly LayoutNode[]
+  /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
+  slots: Slots
 }
 
-function Fields(props: FieldsProps) {
+function Layout(props: LayoutProps) {
   return (
     <For each={props.nodes}>
       {(node) => (
         <Switch>
-          <Match when={node.role === 'display'}>
-            <Display node={node} />
+          <Match when={node.type === 'section' && node}>
+            {(section) => (
+              <fieldset>
+                <legend>{section().section.label}</legend>
+                <Layout {...props} nodes={section().children} />
+              </fieldset>
+            )}
           </Match>
-          <Match when={node.role === 'group'}>
-            <fieldset>
-              <legend>{node.field.label ?? node.field.name}</legend>
-              <Fields form={props.form} nodes={node.children} indexes={props.indexes} />
-            </fieldset>
+          <Match when={node.type === 'row' && node}>
+            {(row) => (
+              // One line of a 12-column grid, where each cell takes its span.
+              <div style={{ display: 'grid', 'grid-template-columns': 'repeat(12, 1fr)' }}>
+                <For each={row().children}>
+                  {(cell) => (
+                    <div data-span={cell.span} style={{ 'grid-column': `span ${cell.span}` }}>
+                      <Layout {...props} nodes={[cell]} />
+                    </div>
+                  )}
+                </For>
+              </div>
+            )}
           </Match>
-          <Match when={node.role === 'array'}>
-            <ArrayField form={props.form} node={node} indexes={props.indexes} />
-          </Match>
-          <Match when={node.role === 'value'}>
-            <ValueField form={props.form} node={node} indexes={props.indexes} />
+          <Match when={node.type === 'slot' && node}>{(slot) => props.slots[slot().name]}</Match>
+          <Match when={node.type === 'field' && node}>
+            {(field) => <Field {...props} node={field()} />}
           </Match>
         </Switch>
       )}
     </For>
+  )
+}
+
+/** A field by its role. A group and an array render their fields from the layout. */
+function Field(props: Omit<LayoutProps, 'nodes'> & { node: LayoutField }) {
+  const node = () => props.node.node
+  return (
+    <Switch>
+      <Match when={node().role === 'display'}>
+        <Display node={node()} />
+      </Match>
+      <Match when={node().role === 'group'}>
+        <fieldset>
+          <legend>{node().field.label ?? node().field.name}</legend>
+          <Layout
+            form={props.form}
+            nodes={props.node.children}
+            indexes={props.indexes}
+            slots={props.slots}
+          />
+        </fieldset>
+      </Match>
+      <Match when={node().role === 'array'}>
+        <ArrayField form={props.form} node={props.node} indexes={props.indexes} />
+      </Match>
+      <Match when={node().role === 'value'}>
+        <ValueField form={props.form} node={node()} indexes={props.indexes} />
+      </Match>
+    </Switch>
   )
 }
 
@@ -380,32 +565,28 @@ function Display(props: { node: FieldNode }) {
   )
 }
 
-interface FieldProps {
-  form: FormStore
-  node: FieldNode
-  indexes: readonly number[]
-}
-
-function ArrayField(props: FieldProps) {
+/** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
+function ArrayField(props: { form: FormStore; node: LayoutField; indexes: readonly number[] }) {
   // A getter, so the path follows the item when one before it is removed. It comes from the
   // definition at runtime, so Formisch's types can't check it.
-  const path = () => toFieldPath(props.node.dataPath, props.indexes)
+  const path = () => toFieldPath(props.node.node.dataPath, props.indexes)
   const array = useFieldArray(props.form, () => ({ path: path() as never }))
   const add = () =>
     insert(props.form, {
       path: path() as never,
-      initialInput: builder.getItemInput(props.node.field) as never,
+      initialInput: builder.getItemInput(props.node.node.field) as never,
     })
   return (
     <fieldset>
-      <legend>{props.node.field.label ?? props.node.field.name}</legend>
+      <legend>{props.node.node.field.label ?? props.node.node.field.name}</legend>
       <For each={array.items}>
         {(_, index) => (
           <div>
-            <Fields
+            <Layout
               form={props.form}
               nodes={props.node.children}
               indexes={[...props.indexes, index()]}
+              slots={{}}
             />
             <button
               type="button"
@@ -441,7 +622,7 @@ const inputTypes: Record<string, string> = {
   datetime: 'datetime-local',
 }
 
-function ValueField(props: FieldProps) {
+function ValueField(props: { form: FormStore; node: FieldNode; indexes: readonly number[] }) {
   const path = () => toFieldPath(props.node.dataPath, props.indexes)
   const field = useField(props.form, () => ({ path: path() as never }))
   // Turns what the element gives into the field's value, e.g. '5' into 5 for a number.
@@ -583,14 +764,15 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/svelte svelte valibot
 
 - `createForm` makes the form. `untrack` reads the definition once, as Formisch reads its config once.
 - Pass the form and the path to `useField` and `useFieldArray` as getters, so a field follows its item when one before it is removed.
-- Each component has a file of its own. `Fields` renders itself for a group, and `builder.ts` shares one builder.
+- Each component has a file of its own. `Layout` renders itself for a section, a row's cell and a group, and `builder.ts` shares one builder.
+- The content of a slot is a snippet, which `Layout` renders with `{@render}`.
 
 <!-- example: svelte/builder.ts -->
 
 ```ts
 import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
 
-/** One builder for the schema, the initial input, the field tree and new array items. */
+/** One builder for the schema, the initial input, the layout and new array items. */
 export const builder = createSchemaBuilder()
 ```
 
@@ -598,69 +780,141 @@ export const builder = createSchemaBuilder()
 
 ```svelte
 <script lang="ts">
-  import { createForm, Form, type SubmitHandler } from '@formisch/svelte'
-  import type { JsonForm, JsonFormSchema } from '@whatsaaaa/form-builder-schema'
-  import { untrack } from 'svelte'
+  import {
+    createForm,
+    focus,
+    Form,
+    getInput,
+    setErrors,
+    type SubmitHandler,
+    validate,
+  } from '@formisch/svelte'
+  import {
+    fieldPathsOf,
+    issuesOfStep,
+    type JsonForm,
+    type JsonFormSchema,
+    type LayoutStep,
+  } from '@whatsaaaa/form-builder-schema'
+  import { type Snippet, untrack } from 'svelte'
   import { builder } from './builder'
-  import Fields from './Fields.svelte'
+  import Layout from './Layout.svelte'
 
-  let { json, onsubmit }: { json: JsonForm; onsubmit: SubmitHandler<JsonFormSchema> } = $props()
+  let {
+    json,
+    onsubmit,
+    slots = {},
+  }: {
+    json: JsonForm
+    onsubmit: SubmitHandler<JsonFormSchema>
+    /** The content of the layout's slots, by name. */
+    slots?: Record<string, Snippet>
+  } = $props()
 
   // Formisch reads its config once, so read the definition once too.
-  const { fields, ...config } = untrack(() => ({
+  const { steps, ...config } = untrack(() => ({
     schema: builder.build(json),
     initialInput: builder.getInitialInput(json),
-    fields: builder.getFieldTree(json),
+    steps: builder.getLayout(json).steps,
   }))
   const form = createForm(config)
+  let index = $state(0)
+  const step = $derived(steps[index] as LayoutStep)
+
+  // Next validates the whole form, and only the issues on this step's fields keep the user here.
+  async function next() {
+    const found = issuesOfStep(step, (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    index += 1
+  }
 </script>
 
 <Form of={form} onsubmit={(output) => onsubmit(output)}>
-  <Fields {form} nodes={fields} indexes={[]} />
-  <button type="submit">Save</button>
+  <!-- Keyed by the step, so its fields render anew when it changes. -->
+  {#key index}
+    <Layout {form} nodes={step.children} indexes={[]} {slots} />
+  {/key}
+  {#if index > 0}
+    <button type="button" data-back="" onclick={() => (index -= 1)}>Back</button>
+  {/if}
+  {#if index < steps.length - 1}
+    <button type="button" data-next="" onclick={next}>Next</button>
+  {:else}
+    <button type="submit">Save</button>
+  {/if}
 </Form>
 ```
 
-<!-- example: svelte/Fields.svelte -->
+<!-- example: svelte/Layout.svelte -->
 
 ```svelte
 <script lang="ts">
   import type { FormStore } from '@formisch/svelte'
-  import type { FieldNode } from '@whatsaaaa/form-builder-schema'
+  import type { LayoutNode } from '@whatsaaaa/form-builder-schema'
+  import type { Snippet } from 'svelte'
   import ArrayField from './ArrayField.svelte'
-  import Fields from './Fields.svelte'
+  import Layout from './Layout.svelte'
   import ValueField from './ValueField.svelte'
 
   let {
     form,
     nodes,
     indexes,
+    slots,
   }: {
     form: FormStore
-    nodes: readonly FieldNode[]
-    /** The index of each array item the fields are in, outermost first. */
+    nodes: readonly LayoutNode[]
+    /** The index of each array item the nodes are in, outermost first. */
     indexes: readonly number[]
+    /** The content of the layout's slots, by name. */
+    slots: Record<string, Snippet>
   } = $props()
 </script>
 
-{#each nodes as node, position (node.field.name ?? `#${position}`)}
-  {#if node.role === 'display'}
-    {#if node.type === 'heading'}
-      <svelte:element this={`h${Number(node.field.level ?? 2)}`}>{node.field.text}</svelte:element>
-    {:else if node.type === 'paragraph'}
-      <p>{node.field.text}</p>
+{#each nodes as node (node.key)}
+  {#if node.type === 'section'}
+    <fieldset>
+      <legend>{node.section.label}</legend>
+      <Layout {form} nodes={node.children} {indexes} {slots} />
+    </fieldset>
+  {:else if node.type === 'row'}
+    <!-- One line of a 12-column grid, where each cell takes its span. -->
+    <div style="display: grid; grid-template-columns: repeat(12, 1fr)">
+      {#each node.children as cell (cell.key)}
+        <div data-span={cell.span} style:grid-column="span {cell.span}">
+          <Layout {form} nodes={[cell]} {indexes} {slots} />
+        </div>
+      {/each}
+    </div>
+  {:else if node.type === 'slot'}
+    {@render slots[node.name]?.()}
+  {:else if node.node.role === 'display'}
+    {#if node.node.type === 'heading'}
+      <svelte:element this={`h${Number(node.node.field.level ?? 2)}`}>
+        {node.node.field.text}
+      </svelte:element>
+    {:else if node.node.type === 'paragraph'}
+      <p>{node.node.field.text}</p>
     {:else}
       <hr />
     {/if}
-  {:else if node.role === 'group'}
+  {:else if node.node.role === 'group'}
     <fieldset>
-      <legend>{node.field.label ?? node.field.name}</legend>
-      <Fields {form} nodes={node.children} {indexes} />
+      <legend>{node.node.field.label ?? node.node.field.name}</legend>
+      <Layout {form} nodes={node.children} {indexes} {slots} />
     </fieldset>
-  {:else if node.role === 'array'}
+  {:else if node.node.role === 'array'}
     <ArrayField {form} {node} {indexes} />
   {:else}
-    <ValueField {form} {node} {indexes} />
+    <ValueField {form} node={node.node} {indexes} />
   {/if}
 {/each}
 ```
@@ -670,29 +924,33 @@ export const builder = createSchemaBuilder()
 ```svelte
 <script lang="ts">
   import { type FormStore, insert, remove, useFieldArray } from '@formisch/svelte'
-  import { type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
+  import { type LayoutField, toFieldPath } from '@whatsaaaa/form-builder-schema'
   import { builder } from './builder'
-  import Fields from './Fields.svelte'
+  import Layout from './Layout.svelte'
 
-  let { form, node, indexes }: { form: FormStore; node: FieldNode; indexes: readonly number[] } =
+  // A list: Formisch's field array, and the layout of each item. A slot never is in one.
+  let { form, node, indexes }: { form: FormStore; node: LayoutField; indexes: readonly number[] } =
     $props()
 
   // Derived, so the path follows the item when one before it is removed. It comes from the
   // definition at runtime, so Formisch's types can't check it.
-  const path = $derived(toFieldPath(node.dataPath, indexes))
+  const path = $derived(toFieldPath(node.node.dataPath, indexes))
   const array = useFieldArray(
     () => form,
     () => ({ path: path as never }),
   )
   const add = () =>
-    insert(form, { path: path as never, initialInput: builder.getItemInput(node.field) as never })
+    insert(form, {
+      path: path as never,
+      initialInput: builder.getItemInput(node.node.field) as never,
+    })
 </script>
 
 <fieldset>
-  <legend>{node.field.label ?? node.field.name}</legend>
+  <legend>{node.node.field.label ?? node.node.field.name}</legend>
   {#each array.items as item, index (item)}
     <div>
-      <Fields {form} nodes={node.children} indexes={[...indexes, index]} />
+      <Layout {form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
       <button
         type="button"
         data-remove={`${path.join('.')}.${index}`}
@@ -863,74 +1121,148 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/qwik @qwik.dev/core valibot
 
 ```tsx
 import {
+  focus,
   Form,
   type FormStore,
+  getInput,
   insert,
   remove,
+  setErrors,
   type SubmitHandler,
   useField,
   useFieldArray,
   useForm$,
+  validate,
 } from '@formisch/qwik'
-import { $, component$, type JSXOutput, type QRL } from '@qwik.dev/core'
+import { $, component$, Fragment, type JSXOutput, type QRL, useSignal } from '@qwik.dev/core'
 import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
+  fieldPathsOf,
   isRequired,
+  issuesOfStep,
   type JsonForm,
   type JsonFormSchema,
+  type LayoutField,
+  type LayoutNode,
+  type LayoutStep,
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
 
 const builder = createSchemaBuilder()
 
+/** The content of the layout's slots, by name. */
+type Slots = Record<string, JSXOutput>
+
 interface JsonFormViewProps {
   json: JsonForm
   onSubmit$: QRL<SubmitHandler<JsonFormSchema>>
+  slots?: Slots
 }
 
-export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$ }) => {
+export const JsonFormView = component$<JsonFormViewProps>(({ json, onSubmit$, slots = {} }) => {
   // Formisch makes the schema again from this function wherever the form resumes.
   const form = useForm$(() => ({
     schema: builder.build(json),
     initialInput: builder.getInitialInput(json),
   }))
+  const { steps } = builder.getLayout(json)
+  const index = useSignal(0)
+  const step = steps[index.value] as LayoutStep
+
+  // Next validates the whole form, and only the issues on this step's fields keep the user here.
+  const next = $(async () => {
+    const found = issuesOfStep(step, (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    for (const path of fieldPathsOf(steps[index.value + 1] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    index.value += 1
+  })
+
   return (
     <Form of={form} onSubmit$={onSubmit$}>
-      <Fields form={form} nodes={builder.getFieldTree(json)} indexes={[]} />
-      <button type="submit">Save</button>
+      {/* Keyed by the step, so another step's fields don't take over this one's components. */}
+      <Layout key={index.value} form={form} nodes={step.children} indexes={[]} slots={slots} />
+      {index.value > 0 && (
+        <button type="button" data-back="" onClick$={() => (index.value -= 1)}>
+          Back
+        </button>
+      )}
+      {index.value < steps.length - 1 ? (
+        <button type="button" data-next="" onClick$={next}>
+          Next
+        </button>
+      ) : (
+        <button type="submit">Save</button>
+      )}
     </Form>
   )
 })
 
-interface FieldsProps {
+interface LayoutProps {
   form: FormStore
-  nodes: readonly FieldNode[]
-  /** The index of each array item the fields are in, outermost first. */
+  nodes: readonly LayoutNode[]
+  /** The index of each array item the nodes are in, outermost first. */
   indexes: readonly number[]
+  slots: Slots
 }
 
-const Fields = component$<FieldsProps>(({ form, nodes, indexes }) => {
-  return nodes.map((node, position) => {
-    const key = node.field.name ?? `#${position}`
-    switch (node.role) {
-      case 'display':
-        return <Display key={key} node={node} />
-      case 'group':
+const Layout = component$<LayoutProps>(({ form, nodes, indexes, slots }) => {
+  return nodes.map((node) => {
+    switch (node.type) {
+      case 'section':
         return (
-          <fieldset key={key}>
-            <legend>{node.field.label ?? node.field.name}</legend>
-            <Fields form={form} nodes={node.children} indexes={indexes} />
+          <fieldset key={node.key}>
+            <legend>{node.section.label}</legend>
+            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
           </fieldset>
         )
-      case 'array':
-        return <ArrayField key={key} form={form} node={node} indexes={indexes} />
-      case 'value':
-        return <ValueField key={key} form={form} node={node} indexes={indexes} />
+      case 'row':
+        // One line of a 12-column grid, where each cell takes its span.
+        return (
+          <div key={node.key} style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' }}>
+            {node.children.map((cell) => (
+              <div key={cell.key} data-span={cell.span} style={{ gridColumn: `span ${cell.span}` }}>
+                <Layout form={form} nodes={[cell]} indexes={indexes} slots={slots} />
+              </div>
+            ))}
+          </div>
+        )
+      case 'slot':
+        return <Fragment key={node.key}>{slots[node.name]}</Fragment>
+      case 'field':
+        return <Field key={node.key} form={form} node={node} indexes={indexes} slots={slots} />
     }
   })
 })
+
+/** A field by its role. A group and an array render their fields from the layout. */
+const Field = component$<Omit<LayoutProps, 'nodes'> & { node: LayoutField }>(
+  ({ form, node, indexes, slots }) => {
+    switch (node.node.role) {
+      case 'display':
+        return <Display node={node.node} />
+      case 'group':
+        return (
+          <fieldset>
+            <legend>{node.node.field.label ?? node.node.field.name}</legend>
+            <Layout form={form} nodes={node.children} indexes={indexes} slots={slots} />
+          </fieldset>
+        )
+      case 'array':
+        return <ArrayField form={form} node={node} indexes={indexes} />
+      case 'value':
+        return <ValueField form={form} node={node.node} indexes={indexes} />
+    }
+  },
+)
 
 const Display = component$<{ node: FieldNode }>(({ node }) => {
   const text = String(node.field.text ?? '')
@@ -941,47 +1273,45 @@ const Display = component$<{ node: FieldNode }>(({ node }) => {
   return node.type === 'paragraph' ? <p>{text}</p> : <hr />
 })
 
-interface FieldProps {
-  form: FormStore
-  node: FieldNode
-  indexes: readonly number[]
-}
-
-const ArrayField = component$<FieldProps>(({ form, node, indexes }) => {
-  const path = toFieldPath(node.dataPath, indexes)
-  // The path comes from the definition at runtime, so Formisch's types can't check it.
-  const array = useFieldArray(form, { path: path as never })
-  return (
-    <fieldset>
-      <legend>{node.field.label ?? node.field.name}</legend>
-      {array.items.value.map((item, index) => (
-        <div key={item}>
-          <Fields form={form} nodes={node.children} indexes={[...indexes, index]} />
-          <button
-            type="button"
-            data-remove={`${path.join('.')}.${index}`}
-            onClick$={() => remove(form, { path: path as never, at: index })}
-          >
-            Remove
-          </button>
-        </div>
-      ))}
-      <button
-        type="button"
-        data-add={path.join('.')}
-        onClick$={() =>
-          insert(form, {
-            path: path as never,
-            initialInput: builder.getItemInput(node.field) as never,
-          })
-        }
-      >
-        Add
-      </button>
-      {array.errors.value && <small data-error={path.join('.')}>{array.errors.value[0]}</small>}
-    </fieldset>
-  )
-})
+/** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
+const ArrayField = component$<{ form: FormStore; node: LayoutField; indexes: readonly number[] }>(
+  ({ form, node, indexes }) => {
+    const { field, dataPath } = node.node
+    const path = toFieldPath(dataPath, indexes)
+    // The path comes from the definition at runtime, so Formisch's types can't check it.
+    const array = useFieldArray(form, { path: path as never })
+    return (
+      <fieldset>
+        <legend>{field.label ?? field.name}</legend>
+        {array.items.value.map((item, index) => (
+          <div key={item}>
+            <Layout form={form} nodes={node.children} indexes={[...indexes, index]} slots={{}} />
+            <button
+              type="button"
+              data-remove={`${path.join('.')}.${index}`}
+              onClick$={() => remove(form, { path: path as never, at: index })}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          data-add={path.join('.')}
+          onClick$={() =>
+            insert(form, {
+              path: path as never,
+              initialInput: builder.getItemInput(field) as never,
+            })
+          }
+        >
+          Add
+        </button>
+        {array.errors.value && <small data-error={path.join('.')}>{array.errors.value[0]}</small>}
+      </fieldset>
+    )
+  },
+)
 
 type Option = { value: string | number | boolean; label: string }
 
@@ -997,132 +1327,134 @@ const inputTypes: Record<string, string> = {
   datetime: 'datetime-local',
 }
 
-const ValueField = component$<FieldProps>(({ form, node, indexes }) => {
-  const path = toFieldPath(node.dataPath, indexes)
-  const field = useField(form, { path: path as never })
-  // Turns what the element gives into the field's value, e.g. '5' into 5 for a number.
-  const set = $((input: unknown) => field.onInput(coerceInput(input, node) as never))
-  const input = field.input.value as unknown
-  const options = (node.field.options ?? []) as Option[]
-  const picked = Array.isArray(input) ? (input as unknown[]) : []
-  const label = (
-    <span>
-      {node.field.label ?? node.field.name}
-      {isRequired(node.field) && ' *'}
-    </span>
-  )
-  const error = field.errors.value && (
-    <small data-error={path.join('.')}>{field.errors.value[0]}</small>
-  )
+const ValueField = component$<{ form: FormStore; node: FieldNode; indexes: readonly number[] }>(
+  ({ form, node, indexes }) => {
+    const path = toFieldPath(node.dataPath, indexes)
+    const field = useField(form, { path: path as never })
+    // Turns what the element gives into the field's value, e.g. '5' into 5 for a number.
+    const set = $((input: unknown) => field.onInput(coerceInput(input, node) as never))
+    const input = field.input.value as unknown
+    const options = (node.field.options ?? []) as Option[]
+    const picked = Array.isArray(input) ? (input as unknown[]) : []
+    const label = (
+      <span>
+        {node.field.label ?? node.field.name}
+        {isRequired(node.field) && ' *'}
+      </span>
+    )
+    const error = field.errors.value && (
+      <small data-error={path.join('.')}>{field.errors.value[0]}</small>
+    )
 
-  // Radio buttons and checkboxes set their option's own value, so 2 stays a number.
-  if (
-    node.type === 'radio' ||
-    (node.type === 'multiselect' && node.field.ui?.widget === 'checkboxes')
-  ) {
-    const radio = node.type === 'radio'
+    // Radio buttons and checkboxes set their option's own value, so 2 stays a number.
+    if (
+      node.type === 'radio' ||
+      (node.type === 'multiselect' && node.field.ui?.widget === 'checkboxes')
+    ) {
+      const radio = node.type === 'radio'
+      return (
+        <fieldset>
+          <legend>{label}</legend>
+          {options.map((option) => (
+            <label key={String(option.value)}>
+              <input
+                {...field.props}
+                type={radio ? 'radio' : 'checkbox'}
+                checked={radio ? input === option.value : picked.includes(option.value)}
+                onInput$={(_, element) =>
+                  set(
+                    radio
+                      ? option.value
+                      : element.checked
+                        ? [...picked, option.value]
+                        : picked.filter((value) => value !== option.value),
+                  )
+                }
+              />
+              {option.label}
+            </label>
+          ))}
+          {error}
+        </fieldset>
+      )
+    }
+
+    let control: JSXOutput
+    if (node.type === 'checkbox') {
+      control = (
+        <input
+          {...field.props}
+          type="checkbox"
+          checked={input === true}
+          onInput$={(_, element) => set(element.checked)}
+        />
+      )
+    } else if (options.length) {
+      // A select's value is the option's index, and the option sets its own value.
+      const multiple = node.kind === 'array'
+      control = (
+        <select
+          {...field.props}
+          multiple={multiple}
+          onInput$={(_, element) => {
+            const values = [...element.selectedOptions].map(
+              (option) => options[Number(option.value)]?.value,
+            )
+            return set(multiple ? values : values[0])
+          }}
+        >
+          {!multiple && <option value={-1}>Choose…</option>}
+          {options.map((option, i) => (
+            <option
+              key={i}
+              value={i}
+              selected={multiple ? picked.includes(option.value) : input === option.value}
+            >
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )
+    } else if (node.type === 'file') {
+      // Never set a file input's value. It gives a FileList, which coerceInput reads.
+      control = (
+        <input
+          {...field.props}
+          type="file"
+          multiple={node.kind === 'array'}
+          accept={node.field.accept as string | undefined}
+          onInput$={(_, element) => set(element.files)}
+        />
+      )
+    } else if (node.type === 'textarea') {
+      control = (
+        <textarea
+          {...field.props}
+          value={(input as string | undefined) ?? ''}
+          onInput$={(_, element) => set(element.value)}
+        />
+      )
+    } else {
+      control = (
+        <input
+          {...field.props}
+          type={inputTypes[node.type] ?? 'text'}
+          value={(input as string | number | undefined) ?? ''}
+          placeholder={node.field.placeholder}
+          onInput$={(_, element) => set(element.value)}
+        />
+      )
+    }
+
     return (
-      <fieldset>
-        <legend>{label}</legend>
-        {options.map((option) => (
-          <label key={String(option.value)}>
-            <input
-              {...field.props}
-              type={radio ? 'radio' : 'checkbox'}
-              checked={radio ? input === option.value : picked.includes(option.value)}
-              onInput$={(_, element) =>
-                set(
-                  radio
-                    ? option.value
-                    : element.checked
-                      ? [...picked, option.value]
-                      : picked.filter((value) => value !== option.value),
-                )
-              }
-            />
-            {option.label}
-          </label>
-        ))}
+      <label>
+        {label}
+        {control}
         {error}
-      </fieldset>
+      </label>
     )
-  }
-
-  let control: JSXOutput
-  if (node.type === 'checkbox') {
-    control = (
-      <input
-        {...field.props}
-        type="checkbox"
-        checked={input === true}
-        onInput$={(_, element) => set(element.checked)}
-      />
-    )
-  } else if (options.length) {
-    // A select's value is the option's index, and the option sets its own value.
-    const multiple = node.kind === 'array'
-    control = (
-      <select
-        {...field.props}
-        multiple={multiple}
-        onInput$={(_, element) => {
-          const values = [...element.selectedOptions].map(
-            (option) => options[Number(option.value)]?.value,
-          )
-          return set(multiple ? values : values[0])
-        }}
-      >
-        {!multiple && <option value={-1}>Choose…</option>}
-        {options.map((option, i) => (
-          <option
-            key={i}
-            value={i}
-            selected={multiple ? picked.includes(option.value) : input === option.value}
-          >
-            {option.label}
-          </option>
-        ))}
-      </select>
-    )
-  } else if (node.type === 'file') {
-    // Never set a file input's value. It gives a FileList, which coerceInput reads.
-    control = (
-      <input
-        {...field.props}
-        type="file"
-        multiple={node.kind === 'array'}
-        accept={node.field.accept as string | undefined}
-        onInput$={(_, element) => set(element.files)}
-      />
-    )
-  } else if (node.type === 'textarea') {
-    control = (
-      <textarea
-        {...field.props}
-        value={(input as string | undefined) ?? ''}
-        onInput$={(_, element) => set(element.value)}
-      />
-    )
-  } else {
-    control = (
-      <input
-        {...field.props}
-        type={inputTypes[node.type] ?? 'text'}
-        value={(input as string | number | undefined) ?? ''}
-        placeholder={node.field.placeholder}
-        onInput$={(_, element) => set(element.value)}
-      />
-    )
-  }
-
-  return (
-    <label>
-      {label}
-      {control}
-      {error}
-    </label>
-  )
-})
+  },
+)
 ```
 
 ## Angular
@@ -1134,6 +1466,7 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/angular valibot
 - `injectForm` needs an injection context, and the definition is an input, which is set from `ngOnInit`. So `ngOnInit` makes the form in the component's injector.
 - Pass the path to `injectField` and `injectFieldArray` as a signal, so a field follows its item when one before it is removed.
 - `[formischControl]` reads and writes the element when the element holds the field's value: text, a checkbox, files. A number, and an option's own value, are set with `field.setInput` instead, with the field's name bound to the element.
+- The content of a slot is an `<ng-template>`: pass the `TemplateRef`s in `slots`, and `ngTemplateOutlet` renders each where the layout puts it.
 - A new Angular app turns on `noPropertyAccessFromIndexSignature`, so the props of a field's type, which `JsonField` doesn't name, are read with brackets: `node.field['text']`, `field.ui?.['widget']`.
 
 <!-- example: angular/json-form-view.ts -->
@@ -1150,23 +1483,34 @@ import {
   type OnInit,
   output,
   runInInjectionContext,
+  signal,
+  type TemplateRef,
 } from '@angular/core'
 import {
+  focus,
   FormischControl,
   FormischForm,
   type FormStore,
+  getInput,
   injectField,
   injectFieldArray,
   injectForm,
   insert,
   remove,
+  setErrors,
+  validate,
 } from '@formisch/angular'
 import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
+  fieldPathsOf,
   isRequired,
+  issuesOfStep,
   type JsonForm,
+  type LayoutField,
+  type LayoutNode,
+  type LayoutStep,
   toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
 
@@ -1348,19 +1692,20 @@ export class ValueField {
   }
 }
 
-/** A container of kind `array`: Formisch's field array, and the fields of each item. */
+/** A list: Formisch's field array, and the layout of each item. A slot never is in one. */
 @Component({
   selector: 'json-array-field',
-  imports: [forwardRef(() => JsonFields)],
+  imports: [forwardRef(() => JsonLayout)],
   template: `
     <fieldset>
-      <legend>{{ node().field.label ?? node().field.name }}</legend>
+      <legend>{{ field().label ?? field().name }}</legend>
       @for (item of array.items(); track item; let index = $index) {
         <div>
-          <json-fields
+          <json-layout
             [form]="form()"
             [nodes]="node().children"
             [indexes]="[...indexes(), index]"
+            [slots]="{}"
           />
           <button
             type="button"
@@ -1380,17 +1725,18 @@ export class ValueField {
 })
 export class ArrayField {
   readonly form = input.required<FormStore>()
-  readonly node = input.required<FieldNode>()
+  readonly node = input.required<LayoutField>()
   readonly indexes = input.required<readonly number[]>()
 
-  protected readonly path = computed(() => toFieldPath(this.node().dataPath, this.indexes()))
+  protected readonly field = computed(() => this.node().node.field)
+  protected readonly path = computed(() => toFieldPath(this.node().node.dataPath, this.indexes()))
   protected readonly dotPath = computed(() => this.path().join('.'))
   protected readonly array = injectFieldArray(this.form, { path: this.path as never })
 
   protected add(): void {
     insert(this.form(), {
       path: this.path() as never,
-      initialInput: builder.getItemInput(this.node().field) as never,
+      initialInput: builder.getItemInput(this.field()) as never,
     })
   }
 
@@ -1399,91 +1745,152 @@ export class ArrayField {
   }
 }
 
-/** The fields of a definition, a group or an array item, each by its role. */
+/** The content of the layout's slots, by name. */
+type Slots = Readonly<Record<string, TemplateRef<unknown>>>
+
+/** The nodes of a step, a section, a row's cell, a group or an array item, each by its type. */
 @Component({
-  selector: 'json-fields',
-  imports: [ArrayField, ValueField],
+  selector: 'json-layout',
+  imports: [ArrayField, NgTemplateOutlet, ValueField],
   template: `
-    @for (node of nodes(); track $index) {
-      @switch (node.role) {
-        @case ('display') {
-          @if (node.type === 'heading') {
-            @switch (node.field['level'] ?? 2) {
-              @case (1) {
-                <h1>{{ node.field['text'] }}</h1>
-              }
-              @case (3) {
-                <h3>{{ node.field['text'] }}</h3>
-              }
-              @case (4) {
-                <h4>{{ node.field['text'] }}</h4>
-              }
-              @case (5) {
-                <h5>{{ node.field['text'] }}</h5>
-              }
-              @case (6) {
-                <h6>{{ node.field['text'] }}</h6>
-              }
-              @default {
-                <h2>{{ node.field['text'] }}</h2>
-              }
-            }
-          } @else if (node.type === 'paragraph') {
-            <p>{{ node.field['text'] }}</p>
-          } @else {
-            <hr />
+    @for (node of nodes(); track node.key) {
+      @if (node.type === 'section') {
+        <fieldset>
+          <legend>{{ node.section.label }}</legend>
+          <json-layout
+            [form]="form()"
+            [nodes]="node.children"
+            [indexes]="indexes()"
+            [slots]="slots()"
+          />
+        </fieldset>
+      } @else if (node.type === 'row') {
+        <!-- One line of a 12-column grid, where each cell takes its span. -->
+        <div style="display: grid; grid-template-columns: repeat(12, 1fr)">
+          @for (cell of node.children; track cell.key) {
+            <div [attr.data-span]="cell.span" [style.grid-column]="'span ' + cell.span">
+              <json-layout
+                [form]="form()"
+                [nodes]="[cell]"
+                [indexes]="indexes()"
+                [slots]="slots()"
+              />
+            </div>
           }
+        </div>
+      } @else if (node.type === 'slot') {
+        <ng-container [ngTemplateOutlet]="slots()[node.name] ?? null" />
+      } @else if (node.node.role === 'display') {
+        @if (node.node.type === 'heading') {
+          @switch (node.node.field['level'] ?? 2) {
+            @case (1) {
+              <h1>{{ node.node.field['text'] }}</h1>
+            }
+            @case (3) {
+              <h3>{{ node.node.field['text'] }}</h3>
+            }
+            @case (4) {
+              <h4>{{ node.node.field['text'] }}</h4>
+            }
+            @case (5) {
+              <h5>{{ node.node.field['text'] }}</h5>
+            }
+            @case (6) {
+              <h6>{{ node.node.field['text'] }}</h6>
+            }
+            @default {
+              <h2>{{ node.node.field['text'] }}</h2>
+            }
+          }
+        } @else if (node.node.type === 'paragraph') {
+          <p>{{ node.node.field['text'] }}</p>
+        } @else {
+          <hr />
         }
-        @case ('group') {
-          <fieldset>
-            <legend>{{ node.field.label ?? node.field.name }}</legend>
-            <json-fields [form]="form()" [nodes]="node.children" [indexes]="indexes()" />
-          </fieldset>
-        }
-        @case ('array') {
-          <json-array-field [form]="form()" [node]="node" [indexes]="indexes()" />
-        }
-        @case ('value') {
-          <json-value-field [form]="form()" [node]="node" [indexes]="indexes()" />
-        }
+      } @else if (node.node.role === 'group') {
+        <fieldset>
+          <legend>{{ node.node.field.label ?? node.node.field.name }}</legend>
+          <json-layout
+            [form]="form()"
+            [nodes]="node.children"
+            [indexes]="indexes()"
+            [slots]="slots()"
+          />
+        </fieldset>
+      } @else if (node.node.role === 'array') {
+        <json-array-field [form]="form()" [node]="node" [indexes]="indexes()" />
+      } @else {
+        <json-value-field [form]="form()" [node]="node.node" [indexes]="indexes()" />
       }
     }
   `,
 })
-export class JsonFields {
+export class JsonLayout {
   readonly form = input.required<FormStore>()
-  readonly nodes = input.required<readonly FieldNode[]>()
+  readonly nodes = input.required<readonly LayoutNode[]>()
+  /** The index of each array item the nodes are in, outermost first. */
   readonly indexes = input.required<readonly number[]>()
+  readonly slots = input.required<Slots>()
 }
 
-/** Renders a definition as a Formisch form, and emits the output when it submits. */
+/** Renders a definition as a Formisch form, a step at a time, and emits the output on submit. */
 @Component({
   selector: 'json-form-view',
-  imports: [FormischForm, JsonFields],
+  imports: [FormischForm, JsonLayout],
   template: `
     @if (form; as form) {
       <form [formischForm]="form" [formischSubmit]="handleSubmit">
-        <json-fields [form]="form" [nodes]="fields" [indexes]="[]" />
-        <button type="submit">Save</button>
+        <!-- Tracked by the step, so its fields render anew when it changes. -->
+        @for (current of [step()]; track current) {
+          <json-layout [form]="form" [nodes]="current.children" [indexes]="[]" [slots]="slots()" />
+        }
+        @if (index() > 0) {
+          <button type="button" data-back="" (click)="index.set(index() - 1)">Back</button>
+        }
+        @if (index() < steps.length - 1) {
+          <button type="button" data-next="" (click)="next()">Next</button>
+        } @else {
+          <button type="submit">Save</button>
+        }
       </form>
     }
   `,
 })
 export class JsonFormView implements OnInit {
   readonly json = input.required<JsonForm>()
+  readonly slots = input<Slots>({})
   readonly submitted = output<unknown>()
 
   private readonly injector = inject(Injector)
   protected form: FormStore | undefined
-  protected fields: readonly FieldNode[] = []
+  protected steps: readonly LayoutStep[] = []
+  protected readonly index = signal(0)
+  protected readonly step = computed(() => this.steps[this.index()] as LayoutStep)
 
   // Formisch reads its config once, in an injection context. Inputs are set from ngOnInit.
   ngOnInit(): void {
     const json = this.json()
-    this.fields = builder.getFieldTree(json)
+    this.steps = builder.getLayout(json).steps
     this.form = runInInjectionContext(this.injector, () =>
       injectForm({ schema: builder.build(json), initialInput: builder.getInitialInput(json) }),
     )
+  }
+
+  /** Validates the whole form. Only the issues on this step's fields keep the user here. */
+  protected async next(): Promise<void> {
+    const form = this.form as FormStore
+    const found = issuesOfStep(this.step(), (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    const following = this.steps[this.index() + 1] as LayoutStep
+    for (const path of fieldPathsOf(following, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    this.index.set(this.index() + 1)
   }
 
   protected readonly handleSubmit = (output: unknown) => this.submitted.emit(output)

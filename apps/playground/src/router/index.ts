@@ -29,6 +29,11 @@ const router = createRouter({
       name: 'checkout',
       component: () => import('../views/CheckoutView.vue'),
     },
+    {
+      path: '/stepped-signup',
+      name: 'stepped-signup',
+      component: () => import('../views/SteppedSignupView.vue'),
+    },
   ],
 })
 

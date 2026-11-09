@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Form definition",
-  "description": "A form for @whatsaaaa/form-builder-schema. Run validate() too: it also checks names, defaults and form rule paths.",
+  "description": "A form for @whatsaaaa/form-builder-schema. Run validate() too: it also checks names, defaults, form rule paths and layout references.",
   "type": "object",
   "properties": {
     "$schema": {
@@ -21,6 +21,9 @@
       "items": {
         "$ref": "#/definitions/formRule"
       }
+    },
+    "layout": {
+      "$ref": "#/definitions/layout"
     }
   },
   "required": [
@@ -2088,6 +2091,706 @@
         }
       },
       "type": "object",
+      "additionalProperties": false
+    },
+    "layout": {
+      "title": "Layout",
+      "description": "Where the fields go: \"items\" for one page, or \"steps\" for several.",
+      "type": "object",
+      "properties": {
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/layoutStep"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "items"
+          ]
+        },
+        {
+          "required": [
+            "steps"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "layoutStep": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItems": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/layoutItem"
+      }
+    },
+    "rowItems": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/rowItem"
+      }
+    },
+    "layoutItem": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "$ref": "#/definitions/layoutItem.field"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "section",
+                "row",
+                "slot",
+                "heading",
+                "paragraph",
+                "divider"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "section"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/layoutItem.section"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "row"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/layoutItem.row"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "slot"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/layoutItem.slot"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Heading",
+                "description": "A title between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Paragraph",
+                "description": "Plain text between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Divider",
+                "description": "A line between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "layoutItem.field": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItem.section": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "section"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItem.row": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "row"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/rowItems"
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItem.slot": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "slot"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "const": "*"
+          }
+        },
+        {
+          "$ref": "#/definitions/rowItem.field"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "section",
+                "row",
+                "slot",
+                "heading",
+                "paragraph",
+                "divider"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "section"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/rowItem.section"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "row"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/rowItem.row"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "slot"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/rowItem.slot"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Heading",
+                "description": "A title between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Paragraph",
+                "description": "Plain text between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Divider",
+                "description": "A line between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  }
+                },
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "rowItem.field": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem.section": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "section"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "ui": {
+          "type": "object"
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem.row": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "row"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/rowItems"
+        },
+        "ui": {
+          "type": "object"
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem.slot": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "slot"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
       "additionalProperties": false
     },
     "rules.string": {

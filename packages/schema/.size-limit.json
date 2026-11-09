@@ -12,9 +12,9 @@
     "limit": "12 kB"
   },
   {
-    "name": "createSchemaBuilder with the render helpers",
+    "name": "createSchemaBuilder with the render and layout helpers",
     "path": "dist/index.js",
-    "import": "{ allFields, checkComponents, coerceInput, createSchemaBuilder, dotPathOf, findField, isRequired, selectFields, toFieldPath }",
-    "limit": "12 kB"
+    "import": "{ allFields, checkComponents, checkLayoutComponents, coerceInput, createSchemaBuilder, dotPathOf, fieldPathsOf, findField, isRequired, issuesOfStep, selectFields, shownNodes, toFieldPath }",
+    "limit": "13 kB"
   }
 ]

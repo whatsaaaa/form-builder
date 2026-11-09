@@ -6,6 +6,7 @@ import type { defaultFieldTypes } from '../field-types/default-field-types'
 import type { FieldTypeDef } from '../field-types/field-type-def'
 import type { KindDef } from '../kinds/kind-def'
 import { type FieldNode, fieldTree } from '../render/field-tree'
+import type { FormLayout } from '../render/form-layout'
 import type { defaultRules } from '../rules/default-rules'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import type { defaultFormRules } from '../rules/form-rules'
@@ -113,6 +114,13 @@ export interface SchemaBuilder<
    * with every issue the definition has, like `build()`.
    */
   getFieldTree(json: JsonForm): FieldNode[]
+  /**
+   * The definition's layout, with every reference resolved, for a renderer: its steps, each a tree
+   * of sections, rows, slots and fields. Without a `layout`, one step with every field in the order
+   * of the definition. Throws one `DefinitionError` with every issue the definition has, like
+   * `build()`.
+   */
+  getLayout(json: JsonForm): FormLayout
   /** The registered rules that can be used on a field of `kind`, e.g. for a rule picker. */
   rulesForKind(kind: ValueKind): [name: string, def: RuleDef][]
   readonly kinds: Readonly<Record<string, KindDef>>
@@ -189,6 +197,13 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     return fieldTree(walked, (type) => lookup(registry.fieldTypes, type)?.container === true)
   }
 
+  function getLayout(json: JsonForm): FormLayout {
+    const { issues, layout } = compileDefinition(json, registry, messages)
+    if (issues.length) throw new DefinitionError(issues)
+    // A definition without issues always has its layout.
+    return layout as FormLayout
+  }
+
   function rulesForKind(kind: ValueKind): [name: string, def: RuleDef][] {
     return Object.entries(registry.rules).filter(([, def]) => def.kinds.includes(kind))
   }
@@ -202,6 +217,7 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     getInitialInput,
     getItemInput,
     getFieldTree,
+    getLayout,
     rulesForKind,
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,

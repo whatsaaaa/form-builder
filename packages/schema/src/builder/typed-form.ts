@@ -1,5 +1,6 @@
 import type * as v from 'valibot'
 import type { JsonField } from '../definition/json-form-schema'
+import type { LAYOUT_TYPES } from '../definition/json-layout'
 import type { FieldTypeDef } from '../field-types/field-type-def'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import type { RuleDef } from '../rules/rule-def'
@@ -86,6 +87,65 @@ type FieldKeys<TType extends string, TRules extends Record<string, RuleDef>> = {
   ui?: Record<string, unknown>
 }
 
+/** A layout's `ui`, and that of its steps, sections and rows. */
+type Ui = Record<string, unknown>
+
+/** A list of layout items. An interface, so the items can hold lists of their own. */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface TypedLayoutList<TFieldTypes extends Record<string, FieldTypeDef>> extends ReadonlyArray<
+  TypedLayoutItem<TFieldTypes>
+> {}
+
+/**
+ * A display element written in a layout: a registered type, with its props, and an `id` instead of
+ * a `name`. Types with a value fit too, as TypeScript can't tell them apart: `validate()` rejects
+ * them.
+ */
+type TypedLayoutDisplay<TFieldTypes extends Record<string, FieldTypeDef>> = {
+  [K in Exclude<keyof TFieldTypes & string, (typeof LAYOUT_TYPES)[number]>]: Simplify<
+    {
+      type: K
+      id?: string
+      label?: string
+      description?: string
+      placeholder?: string
+      ui?: Ui
+      span?: number
+    } & PropsOf<TFieldTypes[K]>
+  >
+}[Exclude<keyof TFieldTypes & string, (typeof LAYOUT_TYPES)[number]>]
+
+/** One item of a layout, with display elements typed by their props. */
+export type TypedLayoutItem<TFieldTypes extends Record<string, FieldTypeDef>> =
+  | string
+  | { field: string; items?: TypedLayoutList<TFieldTypes>; span?: number }
+  | {
+      type: 'section'
+      id?: string
+      label?: string
+      description?: string
+      items: TypedLayoutList<TFieldTypes>
+      ui?: Ui
+      span?: number
+    }
+  | { type: 'row'; id?: string; items: TypedLayoutList<TFieldTypes>; ui?: Ui; span?: number }
+  | { type: 'slot'; name: string; span?: number }
+  | TypedLayoutDisplay<TFieldTypes>
+
+/** A layout written against one builder's field types. */
+export type TypedLayout<TFieldTypes extends Record<string, FieldTypeDef>> =
+  | { items: TypedLayoutList<TFieldTypes>; ui?: Ui }
+  | {
+      steps: readonly {
+        id?: string
+        label?: string
+        description?: string
+        items: TypedLayoutList<TFieldTypes>
+        ui?: Ui
+      }[]
+      ui?: Ui
+    }
+
 /** A definition written against one builder's registries. It is also a `JsonForm`. */
 export type TypedForm<
   TFieldTypes extends Record<string, FieldTypeDef>,
@@ -96,4 +156,5 @@ export type TypedForm<
   version: '1'
   fields: readonly TypedField<TFieldTypes, TRules>[]
   formRules?: readonly TypedFormRule<TFormRules>[]
+  layout?: TypedLayout<TFieldTypes>
 }

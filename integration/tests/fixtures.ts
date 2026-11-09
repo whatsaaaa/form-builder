@@ -22,6 +22,9 @@ import array from '../../fixtures/field-types/array.json'
 import signUp from '../../fixtures/form-rules/sign-up.json'
 import order from '../../fixtures/form-rules/order.json'
 import shipping from '../../fixtures/form-rules/shipping.json'
+import checkout from '../../fixtures/layout/checkout.json'
+import layoutOrder from '../../fixtures/layout/order.json'
+import layoutSignUp from '../../fixtures/layout/sign-up.json'
 
 const all = {
   text,
@@ -47,12 +50,16 @@ const all = {
   'form-rules/sign-up': signUp,
   'form-rules/order': order,
   'form-rules/shipping': shipping,
+  'layout/checkout': checkout,
+  'layout/sign-up': layoutSignUp,
+  'layout/order': layoutOrder,
 }
 
 export type FixtureName = keyof typeof all
 
 /**
- * Every shared fixture: one per built-in type, and the ones with form rules. TypeScript reads
+ * Every shared fixture: one per built-in type, the ones with form rules, and the ones with a
+ * layout. TypeScript reads
  * `version` in a JSON file as any string, so they are cast once here.
  */
 export const fixtures = all as unknown as Record<FixtureName, JsonForm>

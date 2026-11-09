@@ -3,9 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
 import definitionSchema from '@whatsaaaa/form-builder-schema/definition.schema.json'
 import { toJsonSchema } from '@whatsaaaa/form-builder-schema/json-schema'
-import { type Fixture, fixtures } from '../fixtures'
+import { type Fixture, fixtures, formRuleFixtures, layoutFixtures } from '../fixtures'
 
 const form = (...fields: object[]) => ({ version: '1', fields })
+const layout = (value: object) => ({ ...form({ name: 'a', type: 'text' }), layout: value })
 
 describe('definition.schema.json', () => {
   const check = new Ajv({ allErrors: true }).compile(definitionSchema)
@@ -15,8 +16,46 @@ describe('definition.schema.json', () => {
     expect(definitionSchema).toEqual(toJsonSchema(createSchemaBuilder()))
   })
 
-  it.each(Object.entries(fixtures))('accepts the %s fixture', (_, fixture: Fixture) => {
+  it.each<[string, Fixture]>([
+    ...Object.entries(fixtures),
+    ...Object.entries(formRuleFixtures).map(([name, fixture]): [string, Fixture] => [
+      `form-rules/${name}`,
+      fixture,
+    ]),
+    ...Object.entries(layoutFixtures).map(([name, fixture]): [string, Fixture] => [
+      `layout/${name}`,
+      fixture,
+    ]),
+  ])('accepts the %s fixture', (_, fixture: Fixture) => {
     check(fixture)
+    expect(check.errors ?? []).toEqual([])
+  })
+
+  it('accepts every layout node, in a row and out of one', () => {
+    const json = layout({
+      ui: { steps: 'tabs' },
+      steps: [
+        { id: 'one', label: 'One', description: 'First', ui: {}, items: ['a'] },
+        {
+          items: [
+            { type: 'heading', id: 'h', text: 'Hi', level: 2 },
+            { type: 'section', id: 's', label: 'S', description: 'D', ui: {}, items: ['*'] },
+            {
+              type: 'row',
+              id: 'r',
+              ui: {},
+              items: [
+                { field: 'a', span: 4 },
+                { type: 'divider', span: 2 },
+                { type: 'slot', name: 'submit', span: 2 },
+                { type: 'section', span: 4, items: ['a'] },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+    check(json)
     expect(check.errors ?? []).toEqual([])
   })
 
@@ -54,6 +93,24 @@ describe('definition.schema.json', () => {
       { ...form(), formRules: [{ rule: 'sameAs', field: 'a', other: 'b' }] },
     ],
     ['another version', { version: '2', fields: [] }],
+    ['a layout with items and steps', layout({ items: ['a'], steps: [{ items: ['a'] }] })],
+    ['a layout with neither', layout({ ui: {} })],
+    ['an empty list of items', layout({ items: [] })],
+    ['a step without items', layout({ steps: [{ label: 'One' }] })],
+    [
+      'an unknown key on a section',
+      layout({ items: [{ type: 'section', title: 'A', items: ['a'] }] }),
+    ],
+    ['a value type in the layout', layout({ items: [{ type: 'text', id: 'b' }] })],
+    [
+      'a name on a heading in the layout',
+      layout({ items: [{ type: 'heading', text: 'Hi', name: 'h' }] }),
+    ],
+    ['a span outside a row', layout({ items: [{ field: 'a', span: 6 }] })],
+    ['a span of 13', layout({ items: [{ type: 'row', items: [{ field: 'a', span: 13 }] }] })],
+    ['a span of 1.5', layout({ items: [{ type: 'row', items: [{ field: 'a', span: 1.5 }] }] })],
+    ['"*" in a row', layout({ items: [{ type: 'row', items: ['a', '*'] }] })],
+    ['a slot without a name', layout({ items: [{ type: 'slot' }] })],
   ])('rejects %s', (_, json) => {
     expect(check(json)).toBe(false)
   })

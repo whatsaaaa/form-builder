@@ -12,6 +12,9 @@ import {
   type FieldComponents,
   type FieldPath,
   JsonFields,
+  type LayoutComponents,
+  type RowProps,
+  type SectionProps,
   useJsonForm,
   type ValueFieldProps,
 } from '@whatsaaaa/form-builder-vue'
@@ -206,6 +209,32 @@ const components: FieldComponents = Object.fromEntries(
   }),
 )
 
+const Section = defineComponent({
+  props: propsOf<SectionProps>('section'),
+  setup:
+    (props, { slots }) =>
+    () =>
+      h('fieldset', [h('legend', props.section.label), slots.default?.()]),
+})
+
+const Row = defineComponent({
+  props: propsOf<RowProps>('row', 'spans'),
+  setup:
+    (props, { slots }) =>
+    () =>
+      h(
+        'div',
+        { style: { display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)' } },
+        props.spans.map((span, index) =>
+          h('div', { key: index, 'data-span': span, style: { gridColumn: `span ${span}` } }, [
+            slots.default?.({ index }),
+          ]),
+        ),
+      ),
+})
+
+const layoutComponents: LayoutComponents = { section: Section, row: Row }
+
 function render(json: JsonForm): RenderedForm {
   const root = document.createElement('div')
   document.body.append(root)
@@ -213,12 +242,35 @@ function render(json: JsonForm): RenderedForm {
   const app = createApp(
     defineComponent({
       setup() {
-        const jsonForm = useJsonForm(json, { components })
+        const jsonForm = useJsonForm(json, { components, layoutComponents })
+        const { steps } = jsonForm
         return () =>
           h(
             Form as Component,
             { of: jsonForm.form, onSubmit: (output: unknown) => submitted.push(output) },
-            { default: () => h(JsonFields, { of: jsonForm }) },
+            {
+              default: () => [
+                h(
+                  JsonFields,
+                  { of: jsonForm },
+                  {
+                    shipping: () => h('p', { 'data-slot': 'shipping' }, 'Ships in three days'),
+                    submit: () =>
+                      h('button', { type: 'submit', 'data-slot': 'submit' }, 'Place order'),
+                  },
+                ),
+                steps.isFirst
+                  ? null
+                  : h('button', { type: 'button', 'data-back': '', onClick: steps.back }, 'Back'),
+                steps.isLast
+                  ? null
+                  : h(
+                      'button',
+                      { type: 'button', 'data-next': '', onClick: () => void steps.next() },
+                      'Next',
+                    ),
+              ],
+            },
           )
       },
     }),

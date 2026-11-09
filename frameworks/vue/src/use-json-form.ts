@@ -2,18 +2,22 @@ import { type FormSchema, type FormStore, useForm, type ValidationMode } from '@
 import {
   createSchemaBuilder,
   type FieldNode,
+  type FormLayout,
   type JsonForm,
   type JsonFormSchema,
   type SchemaBuilder,
   type TypedJsonFormSchema,
 } from '@whatsaaaa/form-builder-schema'
-import type { FieldComponents } from './field-components'
+import type { FieldComponents, LayoutComponents } from './field-components'
+import { type JsonFormSteps, useJsonFormSteps } from './json-form-steps'
 
 export interface UseJsonFormOptions {
   /** Builds the schema and knows your own types and rules. Defaults to `createSchemaBuilder()`. */
   builder?: SchemaBuilder
   /** Your component for each field type, so `<JsonFields>` and `<JsonField>` don't need them. */
   components?: FieldComponents
+  /** Your component for each layout type the definition's `layout` uses, like `section`. */
+  layoutComponents?: LayoutComponents
   /** When a field is validated the first time, as in Formisch. */
   validate?: ValidationMode
   /** When a field is validated again after that, as in Formisch. */
@@ -28,8 +32,14 @@ export interface JsonFormInstance<TSchema extends FormSchema = JsonFormSchema> {
   readonly builder: SchemaBuilder
   /** The components from the options, if any. */
   readonly components: FieldComponents | undefined
-  /** The definition's fields as a tree, the way `<JsonFields>` renders them. */
+  /** The layout components from the options, if any. */
+  readonly layoutComponents: LayoutComponents | undefined
+  /** The definition's fields as a tree, for `<JsonFields :only>` and `<JsonField>`. */
   readonly fields: readonly FieldNode[]
+  /** The definition's layout, the way `<JsonFields>` renders it. */
+  readonly layout: FormLayout
+  /** The layout's steps: the current one, and Next, Back and Go to. A form without steps has one. */
+  readonly steps: JsonFormSteps
 }
 
 /** Any form `useJsonForm` returns, typed or not: what the components take. */
@@ -61,6 +71,15 @@ export function useJsonForm(
     validate: options.validate,
     revalidate: options.revalidate,
   })
-  const { components } = options
-  return { form, definition, builder, components, fields: builder.getFieldTree(definition) }
+  const layout = builder.getLayout(definition)
+  return {
+    form,
+    definition,
+    builder,
+    components: options.components,
+    layoutComponents: options.layoutComponents,
+    fields: builder.getFieldTree(definition),
+    layout,
+    steps: useJsonFormSteps(form, layout, options),
+  }
 }

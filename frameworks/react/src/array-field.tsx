@@ -2,6 +2,7 @@ import { insert, move, remove, useFieldArray } from '@formisch/react'
 import type { FieldNode, FieldPath } from '@whatsaaaa/form-builder-schema'
 import { type ComponentType, type ReactElement, type ReactNode, useMemo } from 'react'
 import type { ArrayFieldProps } from './field-components'
+import { fieldEventsOf } from './json-form-steps'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 interface ArrayFieldConnectionProps {
@@ -28,12 +29,22 @@ export function ArrayField({
   const { form, builder } = of
   const { field } = node
   const at = array.path
+  // In a form with steps, a step that failed Next revalidates on a change of its items too.
   const methods = useMemo(
     () => ({
       // A new item starts with the defaults of its fields, like the items of a new form.
-      add: () => insert(form, { path: at, initialInput: builder.getItemInput(field) as never }),
-      remove: (index: number) => remove(form, { path: at, at: index }),
-      move: (from: number, to: number) => move(form, { path: at, from, to }),
+      add: () => {
+        insert(form, { path: at, initialInput: builder.getItemInput(field) as never })
+        fieldEventsOf(form)?.('input')
+      },
+      remove: (index: number) => {
+        remove(form, { path: at, at: index })
+        fieldEventsOf(form)?.('input')
+      },
+      move: (from: number, to: number) => {
+        move(form, { path: at, from, to })
+        fieldEventsOf(form)?.('input')
+      },
     }),
     [form, builder, field, at],
   )

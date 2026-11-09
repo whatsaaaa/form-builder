@@ -7,6 +7,7 @@ import {
 } from '@whatsaaaa/form-builder-schema'
 import { type ComponentType, type ReactElement, useCallback } from 'react'
 import type { ValueFieldProps } from './field-components'
+import { fieldEventsOf } from './json-form-steps'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 interface ValueFieldConnectionProps {
@@ -25,10 +26,34 @@ export function ValueField({
 }: ValueFieldConnectionProps): ReactElement {
   // The path comes from the definition at runtime, so the schema's types can't check it.
   const field = useField(of.form, { path: path as never })
+  const { form } = of
   const setInput = useCallback(
-    (input: unknown) => field.onChange(coerceInput(input, node) as never),
-    [field, node],
+    (input: unknown) => {
+      field.onChange(coerceInput(input, node) as never)
+      fieldEventsOf(form)?.('input')
+    },
+    [field, node, form],
   )
+  // In a form with steps, a step that failed Next revalidates on these events too.
+  const inputProps =
+    of.steps.list.length > 1
+      ? {
+          ...field.props,
+          onFocus: () => {
+            field.props.onFocus()
+            fieldEventsOf(form)?.('touch')
+          },
+          onChange: (event: Parameters<typeof field.props.onChange>[0]) => {
+            field.props.onChange(event)
+            fieldEventsOf(form)?.('input')
+            fieldEventsOf(form)?.('change')
+          },
+          onBlur: () => {
+            field.props.onBlur()
+            fieldEventsOf(form)?.('blur')
+          },
+        }
+      : field.props
 
   return (
     <Component
@@ -38,7 +63,7 @@ export function ValueField({
       required={isRequired(node.field)}
       input={field.input}
       errors={field.errors}
-      inputProps={field.props}
+      inputProps={inputProps}
       setInput={setInput}
     />
   )
