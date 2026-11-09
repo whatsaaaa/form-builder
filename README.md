@@ -112,6 +112,7 @@ pnpm --filter @whatsaaaa/form-builder-schema test
 📁 frameworks/   thin adapters: Vue today, the other Formisch frameworks later
 📁 apps/         the playground (a builder and docs are planned)
 📁 fixtures/     sample JSON forms every test suite shares
+📁 integration/  tests that run the fixtures through Formisch's own bindings
 ```
 
 The JSON Schema for the definition format (editor autocomplete!) ships with the schema package as
