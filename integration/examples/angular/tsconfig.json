@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["."],
+  "compilerOptions": {
+    // The Angular compiler builds an empty program from a config that doesn't emit.
+    "noEmit": false,
+    "rootDir": "../..",
+    "outDir": "../../node_modules/.cache/angular-examples"
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "strictInjectionParameters": true
+  }
+}

@@ -1,5 +1,5 @@
-// Formisch for Qwik needs Qwik's optimizer to render, so this checks the form store it makes from
-// a built schema. Every binding makes its store this way, but only Qwik's rejects `v.lazy`.
+// The form store Formisch for Qwik makes from a built schema, field by field. Every binding makes
+// its store this way, but only Qwik's rejects `v.lazy`. examples/qwik renders the forms.
 import { createFormStore, getFieldInput, getFieldStore } from '@formisch/qwik/internals'
 import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
 import * as v from 'valibot'

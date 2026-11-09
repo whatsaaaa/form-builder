@@ -1,0 +1,7 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["."],
+  "compilerOptions": {
+    "jsxImportSource": "@qwik.dev/core"
+  }
+}

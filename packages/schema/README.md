@@ -409,6 +409,18 @@ const set = (input: unknown) => {
 </template>
 ```
 
+### Other frameworks
+
+Preact, Solid, Svelte, Qwik and Angular have the same shape too. [Formisch in each framework](docs/frameworks.md) has a whole renderer for each, with every control below, and the tests run every shared fixture through it. What changes:
+
+| Framework | Package             | What changes                                                                                  |
+| --------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| Preact    | `@formisch/preact`  | A field's state is a signal: `field.input.value`, `field.errors.value`                        |
+| Solid     | `@formisch/solid`   | `createForm`, and the path as a getter, like in Vue                                           |
+| Svelte    | `@formisch/svelte`  | `createForm`, and the form and the path as getters                                            |
+| Qwik      | `@formisch/qwik`    | `useForm$`, which builds the schema again wherever the form resumes                           |
+| Angular   | `@formisch/angular` | `injectForm` in `ngOnInit`, and `[formischControl]` where the element holds the field's value |
+
 ### Setting values
 
 An element doesn't always give what the schema expects: an `<input type="number">` gives `'5'`, and a file input gives a `FileList`. `coerceInput(input, node)` turns it into the value of the field's kind:
