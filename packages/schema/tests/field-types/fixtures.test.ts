@@ -4,7 +4,7 @@ import {
   defaultFieldTypes,
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
-import { type Fixture, fixtures, formRuleFixtures } from '../fixtures'
+import { type Fixture, fixtures, formRuleFixtures, layoutFixtures } from '../fixtures'
 
 const { build, validate } = createSchemaBuilder()
 
@@ -24,5 +24,10 @@ describe('fixtures', () => {
 
   it.each(Object.entries(formRuleFixtures))('%s with form rules is valid', (_, json: Fixture) => {
     expect(validate(json).issues).toEqual([])
+  })
+
+  it.each(Object.entries(layoutFixtures))('%s with a layout is valid', (_, json: Fixture) => {
+    expect(validate(json).issues).toEqual([])
+    expect(json).toHaveProperty('layout')
   })
 })

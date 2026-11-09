@@ -19,6 +19,9 @@ export type DefinitionIssueCode =
   | 'invalid_params'
   | 'kind_mismatch'
   | 'unknown_field'
+  | 'duplicate_placement'
+  | 'unplaced_field'
+  | 'duplicate_id'
 
 export interface DefinitionIssue {
   code: DefinitionIssueCode

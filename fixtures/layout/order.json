@@ -1,0 +1,45 @@
+{
+  "$schema": "../../packages/schema/definition.schema.json",
+  "version": "1",
+  "fields": [
+    { "name": "customer", "type": "text", "label": "Customer", "required": true },
+    {
+      "name": "lines",
+      "type": "array",
+      "label": "Order lines",
+      "required": { "message": "Add at least one product" },
+      "fields": [
+        { "name": "product", "type": "text", "label": "Product", "required": true },
+        {
+          "name": "quantity",
+          "type": "number",
+          "label": "Quantity",
+          "default": 1,
+          "rules": [{ "rule": "minValue", "value": 1, "message": "At least 1" }]
+        }
+      ]
+    },
+    { "name": "deliverBy", "type": "date", "label": "Deliver by", "required": true },
+    { "name": "note", "type": "textarea", "label": "Note for the driver" }
+  ],
+  "layout": {
+    "steps": [
+      { "id": "customer", "label": "Customer", "items": ["customer"] },
+      {
+        "id": "lines",
+        "label": "Order",
+        "items": [
+          {
+            "field": "lines",
+            "items": [{ "type": "row", "items": [{ "field": "product", "span": 9 }, "quantity"] }]
+          }
+        ]
+      },
+      {
+        "id": "delivery",
+        "label": "Delivery",
+        "items": [{ "type": "section", "label": "When and how", "items": ["deliverBy", "note"] }]
+      }
+    ]
+  }
+}

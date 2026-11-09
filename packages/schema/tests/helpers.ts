@@ -1,6 +1,6 @@
 import * as v from 'valibot'
 import { onTestFinished, vi } from 'vitest'
-import type { JsonField, JsonForm } from '@whatsaaaa/form-builder-schema'
+import type { JsonField, JsonForm, LayoutNode } from '@whatsaaaa/form-builder-schema'
 
 export const form = (...fields: JsonField[]): JsonForm => ({ version: '1', fields })
 
@@ -32,5 +32,27 @@ export function useTimeZone(timeZone: string) {
   vi.stubEnv('TZ', timeZone)
   onTestFinished(() => {
     vi.unstubAllEnvs()
+  })
+}
+
+/**
+ * A layout tree as text, one line per node, indented by depth: a field by its dot path, or its
+ * type when it has none, a section or row by its type and `id`, a slot by its name. A span other
+ * than 12 follows a colon: `email:6`.
+ */
+export function outline(nodes: readonly LayoutNode[], depth = 0): string[] {
+  return nodes.flatMap((node) => {
+    const name =
+      node.type === 'field'
+        ? node.node.field.name === undefined
+          ? node.node.type
+          : node.node.dataPath.join('.')
+        : node.type === 'slot'
+          ? `slot ${node.name}`
+          : [node.type, node.type === 'section' ? node.section.id : node.row.id]
+              .filter(Boolean)
+              .join(' ')
+    const line = `${'  '.repeat(depth)}${name}${node.span === 12 ? '' : `:${node.span}`}`
+    return [line, ...(node.type === 'slot' ? [] : outline(node.children, depth + 1))]
   })
 }

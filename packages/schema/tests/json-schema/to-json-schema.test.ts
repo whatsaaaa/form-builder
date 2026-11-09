@@ -157,6 +157,33 @@ describe('toJsonSchema', () => {
     expect(own.definitions?.['type.when']).not.toHaveProperty('properties')
   })
 
+  it('lets your own display types into the layout, and leaves out types with a value', () => {
+    const banner = defineFieldType({
+      kind: 'none',
+      props: v.object({ tone: v.picklist(['info', 'warning']) }),
+      meta: { label: 'Banner' },
+    })
+    const loose = defineFieldType({ kind: 'none', props: v.object({ at: v.instance(Date) }) })
+    let own: JsonSchema = {}
+    warnings(() => {
+      own = toJsonSchema(createSchemaBuilder({ fieldTypes: { banner, loose } }))
+    })
+    const check = new Ajv({ allErrors: true }).compile(own)
+    const layout = (...items: unknown[]) => ({
+      version: '1',
+      fields: [{ name: 'a', type: 'text' }],
+      layout: { items },
+    })
+
+    expect(names(own, 'layoutItem.type')).toBeUndefined()
+    expect(check(layout({ type: 'banner', id: 'b', tone: 'info' }, '*'))).toBe(true)
+    expect(check(layout({ type: 'banner', tone: 'loud' }, '*'))).toBe(false)
+    expect(check(layout({ type: 'banner', name: 'b', tone: 'info' }, '*'))).toBe(false)
+    expect(check(layout({ type: 'text' }, '*'))).toBe(false)
+    // Its props have no JSON Schema form, so it takes any keys, in the layout too.
+    expect(check(layout({ type: 'loose', anything: 1 }, '*'))).toBe(true)
+  })
+
   it('lists the rules for the items of an array type that has an item kind', () => {
     const files = defineFieldType({
       kind: 'array',

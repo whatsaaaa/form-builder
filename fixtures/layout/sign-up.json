@@ -1,0 +1,79 @@
+{
+  "$schema": "../../packages/schema/definition.schema.json",
+  "version": "1",
+  "fields": [
+    { "name": "email", "type": "email", "label": "Email", "required": true },
+    {
+      "name": "password",
+      "type": "password",
+      "label": "Password",
+      "required": true,
+      "rules": [{ "rule": "minLength", "value": 10, "message": "At least 10 characters" }]
+    },
+    {
+      "name": "confirmPassword",
+      "type": "password",
+      "label": "Repeat the password",
+      "required": true
+    },
+    { "name": "firstName", "type": "text", "label": "First name", "required": true },
+    { "name": "lastName", "type": "text", "label": "Last name", "required": true },
+    { "name": "birthDate", "type": "date", "label": "Birth date" },
+    {
+      "name": "address",
+      "type": "group",
+      "fields": [
+        { "name": "city", "type": "text", "label": "City" },
+        {
+          "name": "zip",
+          "type": "text",
+          "label": "ZIP code",
+          "rules": [{ "rule": "digits", "message": "Digits only" }]
+        }
+      ]
+    },
+    {
+      "name": "topics",
+      "type": "multiselect",
+      "label": "Topics",
+      "ui": { "widget": "checkboxes" },
+      "options": [
+        { "value": "news", "label": "News" },
+        { "value": "offers", "label": "Offers" }
+      ]
+    },
+    {
+      "name": "acceptTerms",
+      "type": "checkbox",
+      "label": "I accept the terms",
+      "required": { "message": "Please accept the terms" }
+    }
+  ],
+  "formRules": [
+    {
+      "rule": "sameAs",
+      "field": "confirmPassword",
+      "other": "password",
+      "message": "Passwords differ"
+    }
+  ],
+  "layout": {
+    "steps": [
+      { "id": "account", "label": "Account", "items": ["email", "password", "confirmPassword"] },
+      {
+        "id": "profile",
+        "label": "About you",
+        "items": [
+          { "type": "row", "items": ["firstName", "lastName"] },
+          "birthDate",
+          { "type": "row", "items": [{ "field": "address.city", "span": 8 }, "address.zip"] }
+        ]
+      },
+      {
+        "id": "finish",
+        "label": "Almost done",
+        "items": [{ "type": "paragraph", "text": "Pick what you'd like to hear about." }, "*"]
+      }
+    ]
+  }
+}

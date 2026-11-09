@@ -104,6 +104,73 @@ describe('defineForm', () => {
     expect(forms).toHaveLength(7)
   })
 
+  it('types a layout, with display elements by their props', () => {
+    const form = builder.defineForm({
+      version: '1',
+      fields: [
+        { name: 'name', type: 'text' },
+        { name: 'address', type: 'group', fields: [{ name: 'city', type: 'text' }] },
+      ],
+      layout: {
+        ui: { steps: 'tabs' },
+        steps: [
+          {
+            id: 'one',
+            label: 'One',
+            items: [
+              { type: 'heading', id: 'title', text: 'Hi', level: 2 },
+              {
+                type: 'row',
+                items: [
+                  { field: 'name', span: 8 },
+                  { type: 'slot', name: 'help' },
+                ],
+              },
+            ],
+          },
+          {
+            items: [
+              { type: 'section', label: 'Where', items: [{ field: 'address', items: ['*'] }] },
+            ],
+          },
+        ],
+      },
+    })
+
+    expect(builder.validate(form).issues).toEqual([])
+  })
+
+  it('rejects mistakes in a layout at compile time', () => {
+    const forms = [
+      builder.defineForm({
+        version: '1',
+        fields: [],
+        // @ts-expect-error a section without items
+        layout: { items: [{ type: 'section', label: 'A' }] },
+      }),
+      builder.defineForm({
+        version: '1',
+        fields: [],
+        // @ts-expect-error a prop of the wrong type on a display element
+        layout: { items: [{ type: 'heading', text: 1 }] },
+      }),
+      builder.defineForm({
+        version: '1',
+        fields: [],
+        // @ts-expect-error a slot without a name
+        layout: { items: [{ type: 'slot' }] },
+      }),
+      builder.defineForm({
+        version: '1',
+        fields: [],
+        // @ts-expect-error a step without items
+        layout: { steps: [{ label: 'One' }] },
+      }),
+    ]
+
+    expect(forms).toHaveLength(4)
+  })
+
   it('knows only your rules with includeDefaultRules: false', () => {
     const lean = createSchemaBuilder({ includeDefaultRules: false, rules: formatRules })
     const form = lean.defineForm({

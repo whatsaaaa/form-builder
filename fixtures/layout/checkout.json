@@ -1,0 +1,95 @@
+{
+  "$schema": "../../packages/schema/definition.schema.json",
+  "version": "1",
+  "fields": [
+    { "name": "name", "type": "text", "label": "Name", "required": true },
+    { "name": "email", "type": "email", "label": "Email", "required": true },
+    {
+      "name": "address",
+      "type": "group",
+      "label": "Address",
+      "fields": [
+        { "name": "street", "type": "text", "label": "Street", "required": true },
+        { "name": "city", "type": "text", "label": "City", "required": true },
+        {
+          "name": "zip",
+          "type": "text",
+          "label": "ZIP code",
+          "rules": [{ "rule": "digits", "message": "Digits only" }]
+        }
+      ]
+    },
+    {
+      "name": "lines",
+      "type": "array",
+      "label": "Order lines",
+      "required": { "message": "Add at least one product" },
+      "fields": [
+        { "name": "product", "type": "text", "label": "Product", "required": true },
+        {
+          "name": "quantity",
+          "type": "number",
+          "label": "Quantity",
+          "default": 1,
+          "rules": [{ "rule": "minValue", "value": 1, "message": "At least 1" }]
+        }
+      ]
+    },
+    {
+      "name": "coupon",
+      "type": "text",
+      "label": "Coupon",
+      "rules": [{ "rule": "trim" }, { "rule": "toUpperCase" }]
+    },
+    { "name": "newsletter", "type": "checkbox", "label": "Send me the newsletter" },
+    {
+      "name": "acceptTerms",
+      "type": "checkbox",
+      "label": "I accept the terms",
+      "required": { "message": "Please accept the terms" }
+    }
+  ],
+  "layout": {
+    "items": [
+      {
+        "type": "row",
+        "items": [
+          {
+            "type": "section",
+            "id": "delivery",
+            "label": "Delivery",
+            "span": 8,
+            "items": [
+              { "type": "row", "items": ["name", "email"] },
+              {
+                "field": "address",
+                "items": [
+                  "street",
+                  { "type": "row", "items": [{ "field": "city", "span": 8 }, "zip"] }
+                ]
+              },
+              {
+                "field": "lines",
+                "items": [
+                  { "type": "row", "items": [{ "field": "product", "span": 9 }, "quantity"] }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "id": "summary",
+            "label": "Summary",
+            "ui": { "variant": "card" },
+            "items": [
+              { "type": "slot", "name": "shipping" },
+              "*",
+              { "type": "paragraph", "id": "terms-note", "text": "We ship within three days." },
+              { "type": "slot", "name": "submit" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

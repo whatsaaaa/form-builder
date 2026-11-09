@@ -21,6 +21,9 @@ import array from '../../../fixtures/field-types/array.json'
 import signUp from '../../../fixtures/form-rules/sign-up.json'
 import order from '../../../fixtures/form-rules/order.json'
 import shipping from '../../../fixtures/form-rules/shipping.json'
+import checkout from '../../../fixtures/layout/checkout.json'
+import layoutOrder from '../../../fixtures/layout/order.json'
+import layoutSignUp from '../../../fixtures/layout/sign-up.json'
 
 /** A fixture as TypeScript reads its JSON file, where `version` is any string. */
 export type Fixture = { fields: readonly { type: string }[] }
@@ -54,4 +57,11 @@ export const formRuleFixtures: Record<string, Fixture> = {
   'sign-up': signUp,
   order,
   shipping,
+}
+
+/** The shared fixtures with a layout. */
+export const layoutFixtures: Record<string, Fixture> = {
+  checkout,
+  'sign-up': layoutSignUp,
+  order: layoutOrder,
 }

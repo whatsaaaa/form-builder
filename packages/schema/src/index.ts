@@ -8,10 +8,27 @@ export type {
   SchemaBuilderOptions,
   TypedJsonFormSchema,
 } from './builder/create-schema-builder'
-export type { TypedField, TypedForm, TypedFormRule, TypedRule } from './builder/typed-form'
+export type {
+  TypedField,
+  TypedForm,
+  TypedFormRule,
+  TypedLayout,
+  TypedLayoutItem,
+  TypedRule,
+} from './builder/typed-form'
 export { getInitialInput } from './definition/initial-input'
 export { isRequired } from './definition/is-required'
 export type { JsonField, JsonForm, JsonFormRule, JsonRule } from './definition/json-form-schema'
+export type {
+  JsonLayout,
+  JsonLayoutDisplay,
+  JsonLayoutField,
+  JsonLayoutItem,
+  JsonLayoutRow,
+  JsonLayoutSection,
+  JsonLayoutSlot,
+  JsonLayoutStep,
+} from './definition/json-layout'
 export { walkFields } from './definition/walk-fields'
 export type { WalkedField } from './definition/walk-fields'
 export { DefinitionError, formatPath } from './errors/definition-error'
@@ -31,13 +48,29 @@ export type {
 } from './field-types/field-type-def'
 export { defaultKinds } from './kinds/default-kinds'
 export type { KindDef } from './kinds/kind-def'
+export { allLayoutNodes } from './render/all-layout-nodes'
 export { checkComponents } from './render/check-components'
+export { checkLayoutComponents } from './render/check-layout-components'
 export { coerceInput } from './render/coerce-input'
+export { fieldPathsOf } from './render/field-paths-of'
 export type { FieldNode, FieldRole } from './render/field-tree'
 export { allFields, dotPathOf, findField } from './render/find-field'
 export type { FindFieldOptions } from './render/find-field'
+export type {
+  FormLayout,
+  LayoutField,
+  LayoutNode,
+  LayoutRow,
+  LayoutSection,
+  LayoutSlot,
+  LayoutStep,
+} from './render/form-layout'
+export { issuesOfStep } from './render/issues-of-step'
+export type { StepIssue } from './render/issues-of-step'
 export { selectFields } from './render/select-fields'
 export type { SelectFieldsOptions } from './render/select-fields'
+export { shownNodes, shownSteps } from './render/shown-nodes'
+export type { IsFieldShown } from './render/shown-nodes'
 export { toFieldPath } from './render/to-field-path'
 export type { FieldPath } from './render/to-field-path'
 export { comparisonRules } from './rules/comparison-rules'

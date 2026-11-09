@@ -168,7 +168,7 @@ packages/schema/
   an entry is internal and free to change. Feature folders don't get their own `index.ts`, so imports always point at
   the real file.
 - ⬇️ **Dependencies flow one way.** `shared` ← `errors`, `kinds`, `definition` ← `rules`, `field-types`, `render` ←
-  `builder` ← `index.ts`, and `rules`, `field-types` ← `json-schema` ← `json-schema.ts`.
+  `builder` ← `index.ts`, and `definition`, `rules`, `field-types` ← `json-schema` ← `json-schema.ts`.
   Each package lists its features and what they may import in `packageFeatures` in
   [`eslint.config.ts`](./eslint.config.ts). Add a new feature folder there, and lint will enforce the rest.
 - 🧪 **Tests live in `tests/`.** They mirror the `src/` tree, end in `.test.ts`, and import the package by its name
