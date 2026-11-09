@@ -1,13 +1,14 @@
 import * as v from 'valibot'
+import type { AnyAction } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 import { defineRule } from './define-rule'
-import type { AnyAction } from '../shared/valibot-types'
 import type { RuleDef } from './rule-def'
 
 const meta = (label: string, description?: string) =>
   ({ label, description, category: 'content' }) as const
 
-const regexError = (pattern: string, flags = '') => {
+/** The message `new RegExp()` throws for the pattern, or undefined when it compiles. */
+const regexError = (pattern: string, flags?: string) => {
   try {
     new RegExp(pattern, flags)
     return undefined
@@ -25,8 +26,10 @@ const regexParams = v.pipe(
   }),
   v.forward(
     v.check(
+      // Flags that aren't allowed have their own issue.
       (p) => !FLAGS.test(p.flags ?? '') || regexError(p.pattern, p.flags) === undefined,
-      (issue) => regexError(issue.input.pattern, issue.input.flags) ?? 'Invalid pattern',
+      // The check failed, so the pattern throws.
+      (issue) => regexError(issue.input.pattern, issue.input.flags) as string,
     ),
     ['pattern'],
   ),

@@ -183,6 +183,14 @@ describe('value types', () => {
       ])
     })
 
+    it('checks no rules while the options have issues', () => {
+      const rules = [{ rule: 'maxValue', value: 3 }]
+
+      expect(issues({ name: 'm', type: 'multiselect', options: [], rules })).toEqual([
+        { code: 'invalid_props', path: ['fields', 0, 'options'] },
+      ])
+    })
+
     it('reports a radio or multiselect without options', () => {
       expect(issues({ name: 'r', type: 'radio' }, { name: 'm', type: 'multiselect' })).toEqual([
         { code: 'invalid_props', path: ['fields', 0, 'options'] },
@@ -289,6 +297,8 @@ describe('value types', () => {
           .safeParse(many, { f: [file(1, 'text/plain')] })
           .issues?.map((issue) => v.getDotPath(issue)),
       ).toEqual(['f'])
+      // Something that is no File fails once, not once more for its MIME type.
+      expect(messages(many, { f: ['a.png'] })).toHaveLength(1)
     })
 
     it.each(['.pdf', 'image/*', 'image/png,'])('reports accept %j as invalid_props', (accept) => {

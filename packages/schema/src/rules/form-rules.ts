@@ -7,9 +7,15 @@ type Ordered = number | string
 const meta = (label: string, description: string) =>
   ({ label, description, category: 'comparison' }) as const
 
-// A date field with `output: 'date'` holds a Date by the time form rules run. Two Dates are
-// compared by their time, because `===` compares the objects.
-const comparable = (value: unknown) => (value instanceof Date ? value.getTime() : value)
+/**
+ * The values to compare. A date field with `output: 'date'` holds a Date by the time form rules
+ * run, and one without it holds the ISO string. When either is a Date, both are compared by their
+ * time, with the string read the way `v.toDate()` reads it, because `===` compares the objects.
+ */
+const comparable = (values: readonly unknown[]): unknown[] =>
+  values.some((value) => value instanceof Date)
+    ? values.map((value) => new Date(value as Date | string).getTime())
+    : [...values]
 
 const otherParams = v.object({ other: v.string() })
 
@@ -28,7 +34,10 @@ export const defaultFormRules = {
     kinds: ['string', 'number', 'boolean', 'date'],
     sameKind: true,
     meta: meta('Same as', 'Equals another field, e.g. to confirm a password'),
-    check: ([value, other]) => comparable(value) === comparable(other),
+    check: (values) => {
+      const [value, other] = comparable(values)
+      return value === other
+    },
   }),
   differentFrom: defineFormRule({
     params: otherParams,
@@ -36,7 +45,10 @@ export const defaultFormRules = {
     kinds: ['string', 'number', 'boolean', 'date'],
     sameKind: true,
     meta: meta('Different from', 'Differs from another field, e.g. a new password'),
-    check: ([value, other]) => comparable(value) !== comparable(other),
+    check: (values) => {
+      const [value, other] = comparable(values)
+      return value !== other
+    },
   }),
   compare: defineFormRule({
     params: v.object({ op: v.picklist(['lt', 'lte', 'gt', 'gte']), other: v.string() }),
@@ -44,7 +56,9 @@ export const defaultFormRules = {
     kinds: ['number', 'date'],
     sameKind: true,
     meta: meta('Compare', 'Less or greater than another field, e.g. an end date after the start'),
-    check: ([value, other], { op }) =>
-      operators[op](comparable(value) as Ordered, comparable(other) as Ordered),
+    check: (values, { op }) => {
+      const [value, other] = comparable(values) as [Ordered, Ordered]
+      return operators[op](value, other)
+    },
   }),
 } satisfies Record<string, FormRuleDef>

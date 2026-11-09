@@ -54,6 +54,14 @@ describe('field type definitions', () => {
       expect(() => validate(form({ name: 'a', type: 'odd' }))).toThrow(TypeError)
     })
 
+    it("throws a TypeError for a kind() that returns 'none'", () => {
+      const { validate } = createSchemaBuilder({
+        fieldTypes: { odd: defineFieldType({ kind: () => 'none', schema: () => v.string() }) },
+      })
+
+      expect(() => validate(form({ name: 'a', type: 'odd' }))).toThrow("kind() can't return 'none'")
+    })
+
     it('throws a TypeError for a default rule that does not fit the kind', () => {
       const { validate } = createSchemaBuilder({
         fieldTypes: {
@@ -95,6 +103,16 @@ describe('field type definitions', () => {
       const result = v.safeParse(schema, { n: [5, 0] })
 
       expect(result.issues?.map((issue) => v.getDotPath(issue))).toEqual(['n'])
+    })
+
+    it("reports an item issue with the rule's own message", () => {
+      const schema = build(
+        form({ name: 'n', type: 'list', of: 'string', rules: [{ rule: 'email' }] }),
+      )
+
+      expect(messages(schema, { n: ['a@b.co', 'nope'] })).toEqual([
+        'Invalid email: Received "nope"',
+      ])
     })
 
     it('checks item params against the item kind', () => {

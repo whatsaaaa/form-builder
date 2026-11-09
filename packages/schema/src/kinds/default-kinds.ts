@@ -3,22 +3,25 @@ import type { KindDef } from './kind-def'
 
 const isNil = (input: unknown) => input === undefined || input === null
 
+// A cleared text input holds ''. Dates and times are ISO strings, so they are empty the same way.
+const isBlank = (input: unknown) => isNil(input) || input === ''
+
 export const defaultKinds = {
   string: {
-    isEmpty: (input) => isNil(input) || input === '',
+    isEmpty: isBlank,
     required: (message) => v.nonEmpty(message),
   },
   // A cleared <input type="number"/> holds '' or NaN, depending on the adapter.
   number: {
-    isEmpty: (input) => isNil(input) || input === '' || Number.isNaN(input),
+    isEmpty: (input) => isBlank(input) || Number.isNaN(input),
   },
-  // Required means "must be ticked", e.g accepting terms.
+  // Required means "must be ticked", e.g. accepting terms.
   boolean: {
     isEmpty: isNil,
     required: (message) => v.value(true, message),
   },
   date: {
-    isEmpty: (input) => isNil(input) || input === '',
+    isEmpty: isBlank,
     required: (message) => v.nonEmpty(message),
   },
   array: {

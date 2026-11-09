@@ -1,10 +1,10 @@
 import { DefinitionError, type DefinitionIssue } from '../errors/definition-error'
 import type { BuildContext } from '../field-types/field-type-def'
-import type { Messages } from './build-field-schema'
 import { type Compiler, createCompiler } from './compile-definition'
+import { createMessages } from './create-schema-builder'
 import { mergeRegistry } from './registry'
 
-const messages: Messages = { required: 'Required', resolve: (text) => text }
+const messages = createMessages()
 
 /**
  * A build context for testing a field type on its own, without a definition around it.

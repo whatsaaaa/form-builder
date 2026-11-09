@@ -159,6 +159,19 @@ describe('build', () => {
       expect(messages(schema, { a: '' })).toEqual(['Obavezno'])
     })
 
+    it('resolves the required message only for required fields', () => {
+      const keys: string[] = []
+      const { build } = createSchemaBuilder({
+        resolveMessage: (key) => {
+          keys.push(key)
+          return undefined
+        },
+      })
+      build(form({ name: 'a', type: 'text' }, { name: 'b', type: 'text', required: true }))
+
+      expect(keys).toEqual(['Required'])
+    })
+
     it('passes every message through resolveMessage', () => {
       const texts: Record<string, string> = { 'errors.email': 'Ungültig', Required: 'Pflichtfeld' }
       const { build } = createSchemaBuilder({ resolveMessage: (key) => texts[key] })

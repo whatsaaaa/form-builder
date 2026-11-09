@@ -1,20 +1,18 @@
 import * as v from 'valibot'
 import { eachItem } from '../shared/each-item'
+import { isMimeType, type MimeType } from '../shared/mime-type'
 import { defineFieldType } from './define-field-type'
-
-type MimeType = `${string}/${string}`
 
 const mimeTypes = (accept: string) => accept.split(',').map((type) => type.trim()) as MimeType[]
 
 const fileProps = v.object({
   multiple: v.optional(v.boolean()),
-  // A File only carries its MIME type, so extensions (.pdf) and wildcards (image/*) can't be
-  // checked against it.
+  // Only exact MIME types: see MIME_TYPE_REGEX.
   accept: v.optional(
     v.pipe(
       v.string(),
       v.check(
-        (input) => mimeTypes(input).every((type) => /^[\w.+-]+\/[\w.+-]+$/.test(type)),
+        (input) => mimeTypes(input).every(isMimeType),
         'Use MIME types separated by commas, such as image/png,image/jpeg',
       ),
     ),

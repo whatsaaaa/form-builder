@@ -25,11 +25,12 @@ export const containerTypes = {
         'Give exactly one of "of" and "fields"',
       ),
     ),
+    // Any `of` is built, so one that is no field, like null, gets its own issue.
     schema: (field, ctx) =>
       v.array(
-        field.of
-          ? ctx.buildField(field.of, [...ctx.path, 'of'])
-          : ctx.buildFields(field.fields ?? [], [...ctx.path, 'fields']),
+        field.of === undefined
+          ? ctx.buildFields(field.fields ?? [], [...ctx.path, 'fields'])
+          : ctx.buildField(field.of, [...ctx.path, 'of']),
       ),
     meta: {
       label: 'List',

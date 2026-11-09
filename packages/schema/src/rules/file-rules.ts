@@ -1,4 +1,5 @@
 import * as v from 'valibot'
+import { MIME_TYPE_REGEX, type MimeType } from '../shared/mime-type'
 import { defineRule } from './define-rule'
 import { countParams } from './param-schemas'
 import type { RuleDef } from './rule-def'
@@ -8,14 +9,10 @@ const meta = (label: string, description?: string) =>
   ({ label, description, category: 'file' }) as const
 const bytes = 'In bytes, e.g. 1048576 for 1 MiB.'
 
-type MimeType = `${string}/${string}`
-
-// A File only carries its MIME type, and Valibot compares it exactly, so image/* can't work.
+// Only exact MIME types: see MIME_TYPE_REGEX.
 const mimeTypeParams = v.object({
   types: v.pipe(
-    v.array(
-      v.pipe(v.string(), v.regex(/^[\w.+-]+\/[\w.+-]+$/, 'Use a MIME type, such as image/png')),
-    ),
+    v.array(v.pipe(v.string(), v.regex(MIME_TYPE_REGEX, 'Use a MIME type, such as image/png'))),
     v.minLength(1, 'Give at least one MIME type'),
   ),
 })

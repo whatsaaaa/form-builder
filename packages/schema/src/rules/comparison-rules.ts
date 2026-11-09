@@ -7,8 +7,9 @@ import type { RuleDef } from './rule-def'
 
 type Value = string | number | boolean
 
+// Kinds whose values have an order, and the kinds whose values can be equal.
 const ordered = ['number', 'date'] as const
-const any = ['number', 'date', 'string', 'boolean'] as const
+const equatable = ['number', 'date', 'string', 'boolean'] as const
 const meta = (label: string) => ({ label, category: 'comparison' }) as const
 
 // The param has the field's type: a number on a number field, an ISO string on a date field.
@@ -45,13 +46,13 @@ export const comparisonRules = {
     create: (p, m) => v.ltValue(p.value as Value, m) as AnyAction,
   }),
   value: defineRule({
-    kinds: any,
+    kinds: equatable,
     params: valueParams,
     meta: meta('Equals'),
     create: (p, m) => v.value(p.value as Value, m) as AnyAction,
   }),
   notValue: defineRule({
-    kinds: any,
+    kinds: equatable,
     params: valueParams,
     meta: meta('Does not equal'),
     create: (p, m) => v.notValue(p.value as Value, m) as AnyAction,

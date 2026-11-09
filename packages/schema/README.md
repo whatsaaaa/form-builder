@@ -69,7 +69,7 @@ There is a type for every native control, two types that hold other fields, and 
 | `paragraph` | `text`, plain text                       |
 | `divider`   |                                          |
 
-They need no `name`, add no output key, and can't have `rules` or `required`. Their `text` can be an i18n key: renderers resolve it with the same function you pass as `resolveMessage`. Whether a paragraph renders markdown is up to the renderer.
+They need no `name`, add no output key, and can't have a `default`, `rules` or `required`. Their `text` can be an i18n key: renderers resolve it with the same function you pass as `resolveMessage`. Whether a paragraph renders markdown is up to the renderer.
 
 ### Groups and arrays
 
@@ -177,7 +177,7 @@ A form rule checks a field against other fields, such as a repeated password or 
 - **Paths** name fields by their value: `'password2'`, `'address.zip'` for a field in a group, and `'lines.*.qty'` for a field in the items of an array. A rule on a path with `*` runs once per item, and its error shows on that item's field. A path it reads with `*` means the same item, so `{ "field": "lines.*.qty", "op": "lte", "other": "lines.*.stock" }` compares each line with itself.
 - **A form rule runs last**, after every field's own rules, and only when the fields it reads have no issues. So a password that is too short never also shows "Passwords differ". It never runs on an empty value either: make the fields required when they must be filled.
 - **`message` is required**, unlike on a field's rules. Without it, the error would be Valibot's generic "Invalid input", which says nothing about the other field. It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
-- The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` is compared by its time, so compare it with another date that has `output: 'date'`.
+- The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` holds a `Date`, which is compared by its time, also with a date that holds the ISO string.
 
 ## Checking definitions
 
@@ -192,11 +192,11 @@ if (!result.success) {
 
 `build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params`, `kind_mismatch` and `unknown_field`. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
 
-- **Names** are one key of the value, so a name with `.`, `[` or `]` is `invalid_name`.
+- **Names** are one key of the value, so a name with `.`, `[` or `]` is `invalid_name`, and so are `*`, which paths use for the items of a list, and `__proto__`, which no object can hold as a key.
 - **Defaults** must pass the field's own schema, rules included, or they are `invalid_default`. An empty default, like `''`, counts as none.
 - **Form rules** report on `['formRules', 0]` and below. A `field` path that names no field with a value is `unknown_field` on `['formRules', 0, 'field']`, and a path the rule reads gets it on `['formRules', 0]`. When a field the rule reads has issues of its own, the rule adds none.
 
-Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, which is never checked. `$schema` at the top of a definition is allowed and never read.
+Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, an object that is never checked. A definition itself takes `version`, `fields`, `formRules` and `$schema`, which is allowed and never read. Any other key, on a field or on the definition, is `unknown_key`.
 
 ## Writing definitions in TypeScript
 
@@ -342,14 +342,14 @@ const form = useForm({ schema: build(json), initialInput: getInitialInput(json) 
 ```
 
 - A container of kind `object` gives an object of its fields' input, and one of kind `array` without a default gives `[]`.
-- They never throw. A container with issues isn't built, so the fields inside it are left out of both, and a field with issues is left out of the initial input.
+- They never throw. A container with issues isn't built, so the fields inside it are left out of both, and a field with issues is left out of the initial input. A field whose only issue is its default still gets that default.
 
 ## Messages
 
 ```ts
 createSchemaBuilder({
   messages: { required: 'Obavezno' },
-  resolveMessage: (key) => t(key), // every message, label and description, and messages.required
+  resolveMessage: (key) => t(key), // every message, label and description, and messages.required for required fields
 })
 ```
 

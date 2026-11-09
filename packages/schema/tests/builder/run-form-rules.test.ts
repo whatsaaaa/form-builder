@@ -58,6 +58,10 @@ describe('running form rules', () => {
     ])
   })
 
+  it('never runs on a value that is no object', () => {
+    expect(issuesOf(passwords, null)).toEqual([{ path: [], message: expect.any(String) }])
+  })
+
   it('never runs on an empty value', () => {
     const schema = build(
       formWith(
@@ -104,6 +108,34 @@ describe('running form rules', () => {
 
     expect(issuesOf(schema, { start: '2026-03-01', end: '2026-03-01' })).toEqual([])
     expect(issuesOf(schema, { start: '2026-03-01', end: '2026-03-02' })).toEqual([
+      { path: ['end'], message: 'Same day' },
+    ])
+  })
+
+  it('compares a date with output: date with one without it by their time', () => {
+    const dates: JsonField[] = [
+      { name: 'start', type: 'date', output: 'date' },
+      { name: 'end', type: 'date' },
+    ]
+    const after = build(
+      formWith(dates, {
+        rule: 'compare',
+        op: 'gt',
+        field: 'end',
+        other: 'start',
+        message: 'End after start',
+      }),
+    )
+    const same = build(
+      formWith(dates, { rule: 'sameAs', field: 'end', other: 'start', message: 'Same day' }),
+    )
+
+    expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-02' })).toEqual([])
+    expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-01' })).toEqual([
+      { path: ['end'], message: 'End after start' },
+    ])
+    expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-01' })).toEqual([])
+    expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-02' })).toEqual([
       { path: ['end'], message: 'Same day' },
     ])
   })
@@ -166,6 +198,15 @@ describe('running form rules', () => {
         ],
       )
       expect(issuesOf(schema, { lines: [] })).toEqual([])
+    })
+
+    it('never runs on a list that is no array', () => {
+      const schema = build(formWith([lines], atMost('lines.*.stock')))
+
+      expect(issuesOf(schema, null)).toEqual([{ path: [], message: expect.any(String) }])
+      expect(issuesOf(schema, { lines: 'x' })).toEqual([
+        { path: ['lines'], message: expect.any(String) },
+      ])
     })
 
     it('skips an item whose fields have issues', () => {

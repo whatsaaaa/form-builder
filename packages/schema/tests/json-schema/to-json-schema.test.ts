@@ -7,6 +7,7 @@ import {
   defaultFormRules,
   defaultRules,
   defineFieldType,
+  defineFormRule,
   defineRule,
   formatRules,
 } from '@whatsaaaa/form-builder-schema'
@@ -128,18 +129,51 @@ describe('toJsonSchema', () => {
   })
 
   it('takes any keys, with a warning, where a schema has no JSON Schema form', () => {
-    const odd = defineRule({
-      kinds: ['string'],
-      params: v.object({ at: v.instance(Date) }),
-      create: () => v.check(() => true),
+    const at = () => v.object({ at: v.instance(Date) })
+    const odd = defineRule({ kinds: ['string'], params: at(), create: () => v.check(() => true) })
+    const when = defineFieldType({
+      kind: 'string',
+      props: at(),
+      schema: () => v.string(),
+      meta: { label: 'When' },
     })
+    const after = defineFormRule({ params: at(), reads: () => [], check: () => true })
     let own: JsonSchema = {}
     const logged = warnings(() => {
-      own = toJsonSchema(createSchemaBuilder({ rules: { odd } }))
+      own = toJsonSchema(
+        createSchemaBuilder({ fieldTypes: { when }, rules: { odd }, formRules: { after } }),
+      )
     })
 
-    expect(logged).toEqual([expect.stringContaining('the params of rule "odd"')])
-    expect(own.definitions?.['rule.odd']).toEqual({ type: 'object' })
+    expect(logged).toEqual([
+      expect.stringContaining('the params of rule "odd"'),
+      expect.stringContaining('the props of field type "when"'),
+      expect.stringContaining('the params of form rule "after"'),
+    ])
+    expect(own.definitions).toMatchObject({
+      'rule.odd': { type: 'object' },
+      'type.when': { type: 'object', title: 'When' },
+    })
+    expect(own.definitions?.['type.when']).not.toHaveProperty('properties')
+  })
+
+  it('lists the rules for the items of an array type that has an item kind', () => {
+    const files = defineFieldType({
+      kind: 'array',
+      itemKind: 'file',
+      schema: () => v.array(v.string()),
+    })
+    const own = toJsonSchema(createSchemaBuilder({ fieldTypes: { files } }))
+
+    expect(own.definitions).toMatchObject({
+      'type.files': {
+        properties: { rules: { items: { $ref: '#/definitions/rules.array.file' } } },
+      },
+    })
+    expect(names(own, 'rules.array.file')).toEqual(
+      expect.arrayContaining(['minLength', 'includes', 'maxSize', 'mimeType']),
+    )
+    expect(names(own, 'rules.array.file')).not.toContain('email')
   })
 
   it('is still a valid JSON Schema when nothing fits', () => {

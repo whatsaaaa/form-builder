@@ -919,7 +919,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "text"
@@ -970,7 +976,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "textarea"
@@ -1021,7 +1033,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "email"
@@ -1072,7 +1090,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "password"
@@ -1123,7 +1147,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "url"
@@ -1174,7 +1204,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "tel"
@@ -1224,7 +1260,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "number"
@@ -1275,7 +1317,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "checkbox"
@@ -1326,7 +1374,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "date"
@@ -1384,7 +1438,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "time"
@@ -1435,7 +1495,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "datetime"
@@ -1493,7 +1559,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "select"
@@ -1577,7 +1649,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "radio"
@@ -1660,7 +1738,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "multiselect"
@@ -1740,7 +1824,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "file"
@@ -1809,7 +1899,6 @@
         "placeholder": {
           "type": "string"
         },
-        "default": {},
         "ui": {
           "type": "object"
         },
@@ -1847,7 +1936,6 @@
         "placeholder": {
           "type": "string"
         },
-        "default": {},
         "ui": {
           "type": "object"
         },
@@ -1880,7 +1968,6 @@
         "placeholder": {
           "type": "string"
         },
-        "default": {},
         "ui": {
           "type": "object"
         }
@@ -1895,7 +1982,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "group"
@@ -1938,7 +2031,13 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "pattern": "^[^.[\\]]*$"
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
         },
         "type": {
           "const": "array"
@@ -6028,7 +6127,7 @@
     },
     "rule.isoTimestamp": {
       "title": "ISO timestamp",
-      "description": "Like 2026-10-28T14:30:15.000z",
+      "description": "Like 2026-10-28T14:30:15.000Z",
       "properties": {
         "rule": {
           "const": "isoTimestamp"
