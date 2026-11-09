@@ -81,7 +81,7 @@ Every built-in rule, by category. Params go next to `rule` in a field's `rules`,
 | `isoDateTime` | ISO date and time | string, date |  | Like 2026-10-28T14:30 |
 | `isoTime` | ISO time | string, date |  | Like 14:30 |
 | `isoTimeSecond` | ISO time with seconds | string, date |  | Like 14:30:15 |
-| `isoTimestamp` | ISO timestamp | string, date |  | Like 2026-10-28T14:30:15.000z |
+| `isoTimestamp` | ISO timestamp | string, date |  | Like 2026-10-28T14:30:15.000Z |
 | `isoWeek` | ISO week | string, date |  | Like 2026-W44 |
 
 ## Comparison

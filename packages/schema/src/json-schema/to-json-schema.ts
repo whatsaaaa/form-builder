@@ -6,7 +6,7 @@ import {
 import { childField, itemField } from '../field-types/child-fields'
 import type { FieldTypeDef, FieldTypeMeta } from '../field-types/field-type-def'
 import type { FormRuleDef } from '../rules/form-rule-def'
-import type { RuleDef } from '../rules/rule-def'
+import type { RuleDef, RuleMeta } from '../rules/rule-def'
 import { paramsFor } from '../rules/rule-params'
 import type { AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
@@ -111,8 +111,8 @@ function byName(
   }
 }
 
-/** The title and description from a type's or rule's `meta`. */
-function describe(meta: FieldTypeMeta | undefined): JsonSchema {
+/** The title and description from a type's, rule's or form rule's `meta`. */
+function describe(meta: FieldTypeMeta | RuleMeta | undefined): JsonSchema {
   return {
     ...(meta && { title: meta.label }),
     ...(meta?.description && { description: meta.description }),
@@ -192,15 +192,7 @@ function createRuleLists(
     lists[key] ??= byName(
       'rule',
       Object.entries(registry).flatMap(([name, def]): [string, JsonSchema][] => {
-        // A rule for the item kind but not for arrays runs on each item, as in validate().
-        const kinds =
-          kind === undefined
-            ? def.kinds
-            : def.kinds.includes(kind)
-              ? [kind]
-              : itemKind !== undefined && def.kinds.includes(itemKind)
-                ? [itemKind]
-                : []
+        const kinds = kind === undefined ? def.kinds : kindsOn(def, kind, itemKind)
         const refs = [...new Set(kinds.map((each) => ruleFor(name, def, each)))].map(ref)
         const [first, ...more] = refs
         if (!first) return []
@@ -225,6 +217,16 @@ function createRuleLists(
     lists,
     rules,
   }
+}
+
+/**
+ * The kind whose params a rule takes on a field of `kind`: that kind, or the item kind for a rule
+ * that runs on each item, as in validate(). None when the rule doesn't fit the field.
+ */
+function kindsOn(def: RuleDef, kind: ValueKind, itemKind: ValueKind | undefined): ValueKind[] {
+  if (def.kinds.includes(kind)) return [kind]
+  if (itemKind !== undefined && def.kinds.includes(itemKind)) return [itemKind]
+  return []
 }
 
 function ruleSchema(name: string, def: RuleDef, kind: ValueKind, converter: Converter): JsonSchema {

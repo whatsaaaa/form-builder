@@ -1,23 +1,20 @@
 import * as v from 'valibot'
 import type { JsonField, JsonRule } from '../definition/json-form-schema'
 import {
-  type DefinitionPath,
   type DefinitionIssue,
-  type DefinitionIssueCode,
+  type DefinitionPath,
   formatPath,
+  issue,
+  toIssues,
 } from '../errors/definition-error'
 import type { FieldTypeDef, KindOf } from '../field-types/field-type-def'
 import type { KindDef } from '../kinds/kind-def'
 import type { RuleDef } from '../rules/rule-def'
 import { paramsFor } from '../rules/rule-params'
-import { lookup, type Registry } from './registry'
-import {
-  isReservedFieldKey,
-  isReservedFormRuleKey,
-  isReservedRuleKey,
-} from '../shared/reserved-keys'
+import { isReservedFieldKey, isReservedRuleKey } from '../shared/reserved-keys'
 import type { AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
+import { lookup, type Registry } from './registry'
 
 export interface CheckedField {
   /** Undefined for the field of a list's items, which has no name. */
@@ -60,7 +57,7 @@ const fieldShape = v.looseObject({
   ui: v.optional(v.record(v.string(), v.unknown())),
 })
 const ruleShape = v.looseObject({ rule: v.string(), message: v.optional(v.string()) })
-const noParams = v.object({})
+const noKeys = v.object({})
 
 /**
  * Checks one field's shape, name, type, props and rules, and adds its issues to `issues`.
@@ -85,27 +82,8 @@ export function checkField(
   const field = shape.output as JsonField
   const issueCount = issues.length
   const type = lookup(registry.fieldTypes, field.type)
-  // Only a fixed kind can be 'none'. A kind() function that returns it throws in kindDef.
-  const hasValue = type?.kind !== 'none'
 
-  if (!names) {
-    // The field of a list's items has no name.
-  } else if (!field.name) {
-    if (type && hasValue) {
-      issues.push(issue('missing_name', [...path, 'name'], 'A field needs a name'))
-    }
-  } else if (hasValue) {
-    // A name is one key of the value. Paths like 'address.city' and 'lines[0]' use these as
-    // separators.
-    if (/[.[\]]/.test(field.name)) {
-      const message = `Name "${field.name}" can't contain ".", "[" or "]"`
-      issues.push(issue('invalid_name', [...path, 'name'], message))
-    }
-    if (names.has(field.name)) {
-      issues.push(issue('duplicate_name', [...path, 'name'], `Duplicate name "${field.name}"`))
-    }
-    names.add(field.name)
-  }
+  if (names) checkName(field, type, path, names, issues)
 
   if (!type) {
     issues.push(issue('unknown_type', [...path, 'type'], `Unknown field type "${field.type}"`))
@@ -114,13 +92,10 @@ export function checkField(
 
   const props = checkProps(field, type, path, issues)
 
-  if (!hasValue) {
-    for (const key of ['required', 'rules'] as const) {
-      if (field[key] !== undefined) {
-        const message = `A "${field.type}" field has no value, so it can't have "${key}"`
-        issues.push(issue('invalid_shape', [...path, key], message))
-      }
-    }
+  // Only a fixed kind can be 'none'. A kind() function that returns it throws in kindDef.
+  if (type.kind === 'none') {
+    const noValue = `A "${field.type}" field has no value`
+    rejectKeys(field, ['required', 'rules'], noValue, path, issues)
     if (!names) {
       const message = `A list's items need a value, and a "${field.type}" field has none`
       issues.push(issue('invalid_shape', [...path, 'type'], message))
@@ -140,18 +115,19 @@ export function checkField(
 
   // A group is always there, and its fields decide what is required.
   if (type.container && kind === 'object') {
-    for (const key of ['required', 'default'] as const) {
-      if (field[key] !== undefined) {
-        const message = `A "${field.type}" field is always there, so it can't have "${key}"`
-        issues.push(issue('invalid_shape', [...path, key], message))
-      }
-    }
+    rejectKeys(
+      field,
+      ['required', 'default'],
+      `A "${field.type}" field is always there`,
+      path,
+      issues,
+    )
   }
 
   const fieldRules = (shape.output.rules ?? []).flatMap(
     (rule, j) => checkRule(rule, kinds, [...path, 'rules', j], registry, issues) ?? [],
   )
-  if (issues.length > issueCount || (names && !field.name) || !withProps) return undefined
+  if (issues.length > issueCount || !withProps) return undefined
 
   const overridden = new Set(fieldRules.map((rule) => rule.name))
   const defaultRules = checkDefaultRules(field.type, type, kinds, registry).filter(
@@ -167,6 +143,50 @@ export function checkField(
     valueKind: kind,
     itemKind: kinds.itemKind,
     rules: [...defaultRules, ...fieldRules],
+  }
+}
+
+/**
+ * Checks the name of a field in a list of fields, and adds it to `names`. A field without a
+ * value needs no name, and its name is no key of the value, so it isn't checked.
+ */
+function checkName(
+  field: JsonField,
+  type: FieldTypeDef | undefined,
+  path: DefinitionPath,
+  names: Set<string>,
+  issues: DefinitionIssue[],
+): void {
+  if (type?.kind === 'none') return
+  if (!field.name) {
+    // Without a type, it isn't known whether the field has a value.
+    if (type) issues.push(issue('missing_name', [...path, 'name'], 'A field needs a name'))
+    return
+  }
+  // A name is one key of the value. Paths like 'address.city' and 'lines[0]' use these as
+  // separators.
+  if (/[.[\]]/.test(field.name)) {
+    const message = `Name "${field.name}" can't contain ".", "[" or "]"`
+    issues.push(issue('invalid_name', [...path, 'name'], message))
+  }
+  if (names.has(field.name)) {
+    issues.push(issue('duplicate_name', [...path, 'name'], `Duplicate name "${field.name}"`))
+  }
+  names.add(field.name)
+}
+
+/** Reports each of `keys` the field has. `reason` says why it can't have them. */
+function rejectKeys(
+  field: JsonField,
+  keys: readonly ('required' | 'rules' | 'default')[],
+  reason: string,
+  path: DefinitionPath,
+  issues: DefinitionIssue[],
+): void {
+  for (const key of keys) {
+    if (field[key] !== undefined) {
+      issues.push(issue('invalid_shape', [...path, key], `${reason}, so it can't have "${key}"`))
+    }
   }
 }
 
@@ -188,7 +208,7 @@ function kindDef(typeName: string, kind: ValueKind, registry: Registry): KindDef
 }
 
 /** Throws for a default rule that doesn't fit, because that is a mistake in the type. */
-function checkDefaultRules(
+export function checkDefaultRules(
   typeName: string,
   type: FieldTypeDef,
   kinds: FieldKinds,
@@ -205,28 +225,20 @@ function checkDefaultRules(
   return rules
 }
 
+/**
+ * Checks the props of a field: every key that isn't reserved must be one of its type's props,
+ * and together they must pass them. Returns the parsed props, or undefined when they fail.
+ */
 function checkProps(
   field: JsonField,
   type: FieldTypeDef,
   path: DefinitionPath,
   issues: DefinitionIssue[],
 ): Record<string, unknown> | undefined {
-  const propKeys = Object.keys(type.props?.entries ?? {})
-  const input: Record<string, unknown> = {}
-
-  for (const key of Object.keys(field)) {
-    if (isReservedFieldKey(key)) continue
-    if (propKeys.includes(key)) {
-      input[key] = field[key]
-    } else {
-      issues.push(
-        issue('unknown_key', [...path, key], `Unknown key "${key}" on a "${field.type}" field`),
-      )
-    }
-  }
-
-  if (!type.props) return {}
-  const parsed = v.safeParse(type.props, input)
+  const input = pickKeys(field, type.props, isReservedFieldKey, issues, (key) =>
+    issue('unknown_key', [...path, key], `Unknown key "${key}" on a "${field.type}" field`),
+  )
+  const parsed = v.safeParse(type.props ?? noKeys, input)
   if (parsed.success) return parsed.output
   issues.push(...toIssues('invalid_props', path, parsed.issues))
   return undefined
@@ -290,88 +302,35 @@ export function checkParams(
   issues: DefinitionIssue[],
 ): Record<string, unknown> | undefined {
   const issueCount = issues.length
-  const paramKeys = Object.keys(params?.entries ?? {})
-  const input: Record<string, unknown> = {}
-  for (const key of Object.keys(raw)) {
-    if (isReserved(key)) continue
-    if (paramKeys.includes(key)) {
-      input[key] = raw[key]
-    } else {
-      issues.push(issue('unknown_param', [...path, key], `${at} has no param "${key}"`))
-    }
-  }
-
-  const parsed = v.safeParse(params ?? noParams, input)
+  const input = pickKeys(raw, params, isReserved, issues, (key) =>
+    issue('unknown_param', [...path, key], `${at} has no param "${key}"`),
+  )
+  const parsed = v.safeParse(params ?? noKeys, input)
   if (!parsed.success) issues.push(...toIssues('invalid_params', path, parsed.issues))
   if (!parsed.success || issues.length > issueCount) return undefined
   return parsed.output
 }
 
-export function checkRegistry(registry: Registry): void {
-  for (const [name, rule] of Object.entries(registry.rules)) {
-    // Params can depend on the kind, so check them for every kind the rule supports.
-    for (const kind of rule.kinds) {
-      for (const key of Object.keys(paramsFor(rule, kind)?.entries ?? {})) {
-        if (isReservedRuleKey(key)) {
-          throw new TypeError(`Rule "${name}": params can't use the reserved key "${key}"`)
-        }
-      }
+/**
+ * The keys of `raw` that are entries of `schema`, to parse with it. Reserved keys are skipped,
+ * and every other key adds the issue `unknown` gives for it.
+ */
+function pickKeys(
+  raw: Record<string, unknown>,
+  schema: AnyObjectSchema | undefined,
+  isReserved: (key: string) => boolean,
+  issues: DefinitionIssue[],
+  unknown: (key: string) => DefinitionIssue,
+): Record<string, unknown> {
+  const known = new Set(Object.keys(schema?.entries ?? {}))
+  const picked: Record<string, unknown> = {}
+  for (const key of Object.keys(raw)) {
+    if (isReserved(key)) continue
+    if (known.has(key)) {
+      picked[key] = raw[key]
+    } else {
+      issues.push(unknown(key))
     }
   }
-
-  for (const [name, rule] of Object.entries(registry.formRules)) {
-    for (const key of Object.keys(rule.params?.entries ?? {})) {
-      if (isReservedFormRuleKey(key)) {
-        throw new TypeError(`Form rule "${name}": params can't use the reserved key "${key}"`)
-      }
-    }
-  }
-
-  for (const [name, type] of Object.entries(registry.fieldTypes)) {
-    const at = `Field type "${name}"`
-    for (const kind of [type.kind, type.itemKind]) {
-      if (typeof kind === 'string' && !lookup(registry.kinds, kind)) {
-        throw new TypeError(`${at}: kind "${kind}" is not registered`)
-      }
-    }
-    if (type.container && type.kind !== 'object' && type.kind !== 'array') {
-      throw new TypeError(`${at}: a container's kind must be 'object' or 'array'`)
-    }
-    if (type.kind !== 'none' && !type.schema) {
-      throw new TypeError(`${at}: schema() is required unless the kind is 'none'`)
-    }
-    for (const key of Object.keys(type.props?.entries ?? {})) {
-      if (isReservedFieldKey(key)) {
-        throw new TypeError(`${at}: props can't use the reserved key "${key}"`)
-      }
-    }
-
-    // A kind from a function is only known per field, so checkField checks those default rules.
-    if (typeof type.kind === 'string' && typeof type.itemKind !== 'function') {
-      const kinds: FieldKinds = {
-        kind: type.kind,
-        itemKind: type.kind === 'array' ? type.itemKind : undefined,
-      }
-      checkDefaultRules(name, type, kinds, registry)
-    }
-  }
-}
-
-export function issue(
-  code: DefinitionIssueCode,
-  path: DefinitionPath,
-  message: string,
-): DefinitionIssue {
-  return { code, path, message }
-}
-
-export function toIssues(
-  code: DefinitionIssueCode,
-  path: DefinitionPath,
-  valibotIssues: readonly v.BaseIssue<unknown>[],
-): DefinitionIssue[] {
-  return valibotIssues.map((valibotIssue) => {
-    const keys = valibotIssue.path?.map((item) => item.key as string | number) ?? []
-    return issue(code, [...path, ...keys], valibotIssue.message)
-  })
+  return picked
 }

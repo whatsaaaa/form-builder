@@ -6028,7 +6028,7 @@
     },
     "rule.isoTimestamp": {
       "title": "ISO timestamp",
-      "description": "Like 2026-10-28T14:30:15.000z",
+      "description": "Like 2026-10-28T14:30:15.000Z",
       "properties": {
         "rule": {
           "const": "isoTimestamp"

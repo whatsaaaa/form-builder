@@ -3,9 +3,9 @@ import type { JsonField } from '../definition/json-form-schema'
 import type { DefinitionPath } from '../errors/definition-error'
 import type { BuildContext } from '../field-types/field-type-def'
 import type { RuleStage } from '../rules/rule-def'
-import type { CheckedField } from './validate-definition'
 import { eachItem } from '../shared/each-item'
 import type { AnyAction, AnySchema } from '../shared/valibot-types'
+import type { CheckedField } from './validate-definition'
 
 export interface MessageContext {
   field: JsonField
@@ -17,6 +17,9 @@ export interface Messages {
   required: string
   resolve(text: string, ctx: MessageContext): string
 }
+
+/** An action, or a schema that runs on the value so far, e.g. on each item of an array. */
+type PipeItem = AnyAction | AnySchema
 
 /**
  * The schema runs in this order: empty check, base schema, normalize rules, required check,
@@ -36,7 +39,47 @@ export function buildFieldSchema(
     { field, path },
   )
 
-  // Rules for a whole value, and rules that run on each item of an array value.
+  const rules = ruleActions(checked, messages)
+  const finalize = type.finalize?.(field)
+  if (finalize) rules.validate.push(finalize)
+
+  // checkRegistry makes sure that every type with a value has a schema().
+  const base = (type.schema as NonNullable<typeof type.schema>)(field, ctx)
+  const requiredCheck = required ? requiredCheckOf(checked, requiredMessage) : undefined
+  const head = pipe(base, requiredCheck ? [...rules.normalize, requiredCheck] : rules.normalize)
+
+  if (type.container) {
+    // Formisch reads the object or array schema to keep a field for each child, so nothing may
+    // wrap it but optional. A missing value is read as an empty one, and the rules still run.
+    // They sit in a nested pipe, so an empty required list reports only the required message.
+    const validate = rules.validate.length ? [pipe(v.unknown(), rules.validate)] : []
+    const schema = v.optional(pipe(head, validate), valueKind === 'object' ? () => ({}) : () => [])
+    return withMetadata(schema, field, path, messages)
+  }
+
+  const empty = required
+    ? v.never(requiredMessage)
+    : v.pipe(
+        v.unknown(),
+        v.transform(() => undefined),
+      )
+
+  const whenFilled = (schema: AnySchema): AnySchema =>
+    v.lazy((input) => (kind.isEmpty(input) ? empty : schema))
+
+  // The value is checked for emptiness as it comes in, and again after the normalize rules, so
+  // '   ' with trim counts as empty too.
+  const schema = whenFilled(v.pipe(head, whenFilled(pipe(v.unknown(), rules.validate))))
+
+  return withMetadata(required ? schema : v.optional(schema), field, path, messages)
+}
+
+/**
+ * The actions of the field's rules, by stage. Rules that run on each item of an array value
+ * come before the rules for the whole array.
+ */
+function ruleActions(checked: CheckedField, messages: Messages): Record<RuleStage, PipeItem[]> {
+  const { field, path } = checked
   const whole: Record<RuleStage, PipeItem[]> = { normalize: [], validate: [] }
   const each: Record<RuleStage, AnyAction[]> = { normalize: [], validate: [] }
 
@@ -54,48 +97,24 @@ export function buildFieldSchema(
     }
   }
 
-  // Item rules run before the rules for the whole array.
   if (each.normalize.length) {
     whole.normalize.unshift(v.array(pipe(v.unknown(), each.normalize)))
   }
   if (each.validate.length) {
     whole.validate.unshift(eachItem(pipe(v.unknown(), each.validate)))
   }
+  return whole
+}
 
-  const finalize = type.finalize?.(field)
-  if (finalize) whole.validate.push(finalize)
-
-  const base = (type.schema as NonNullable<typeof type.schema>)(field, ctx)
-  // The type can replace the kind's required check, e.g. a yes/no radio accepts false.
-  const requiredCheck = !required
-    ? undefined
-    : type.required
-      ? type.required(requiredMessage)
-      : kind.required?.(requiredMessage)
-  const head = pipe(base, requiredCheck ? [...whole.normalize, requiredCheck] : whole.normalize)
-
-  if (type.container) {
-    // Formisch reads the object or array schema to keep a field for each child, so nothing may
-    // wrap it but optional. A missing value is read as an empty one, and the rules still run.
-    // They sit in a nested pipe, so an empty required list reports only the required message.
-    const rules = whole.validate.length ? [pipe(v.unknown(), whole.validate)] : []
-    const schema = v.optional(pipe(head, rules), valueKind === 'object' ? () => ({}) : () => [])
-    return withMetadata(schema, field, path, messages)
-  }
-
-  const empty = required
-    ? v.never(requiredMessage)
-    : v.pipe(
-        v.unknown(),
-        v.transform(() => undefined),
-      )
-
-  const whenFilled = (schema: AnySchema): AnySchema =>
-    v.lazy((input) => (kind.isEmpty(input) ? empty : schema))
-
-  const schema = whenFilled(v.pipe(head, whenFilled(pipe(v.unknown(), whole.validate))))
-
-  return withMetadata(required ? schema : v.optional(schema), field, path, messages)
+/**
+ * Checks that a required field has a value, after the normalize rules ran. The type can replace
+ * the kind's check, e.g. a yes/no radio accepts false. Null or undefined when there is none.
+ */
+function requiredCheckOf(
+  { type, kind }: CheckedField,
+  message: string,
+): AnyAction | null | undefined {
+  return type.required ? type.required(message) : kind.required?.(message)
 }
 
 /**
@@ -117,9 +136,6 @@ function withMetadata(
   }
   return pipe(schema, metadata)
 }
-
-/** An action, or a schema that runs on the value so far, e.g. on each item of an array. */
-type PipeItem = AnyAction | AnySchema
 
 const pipe = (schema: AnySchema, items: readonly PipeItem[]): AnySchema =>
   items.reduce<AnySchema>((acc, item) => v.pipe(acc, item), schema)

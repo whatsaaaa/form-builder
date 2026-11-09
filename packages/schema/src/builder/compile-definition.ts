@@ -1,14 +1,19 @@
 import * as v from 'valibot'
 import type { JsonField } from '../definition/json-form-schema'
 import type { WalkedField } from '../definition/walk-fields'
-import type { DefinitionIssue, DefinitionPath } from '../errors/definition-error'
+import {
+  type DefinitionIssue,
+  type DefinitionPath,
+  issue,
+  toIssues,
+} from '../errors/definition-error'
 import type { BuildContext } from '../field-types/field-type-def'
 import type { AnySchema } from '../shared/valibot-types'
 import { buildFieldSchema, type Messages } from './build-field-schema'
 import { checkFormRules } from './check-form-rules'
 import { formRuleAction } from './form-rule-action'
 import { lookup, type Registry } from './registry'
-import { type CheckedField, checkField, toIssues } from './validate-definition'
+import { type CheckedField, checkField } from './validate-definition'
 
 export interface CompileResult {
   /** Every issue in the definition, in document order. */
@@ -50,7 +55,7 @@ export function compileDefinition(
 
   if (form.output.version !== '1') {
     const message = `Unsupported version "${form.output.version}". This package reads version '1'.`
-    issues.push({ code: 'unsupported_version', path: ['version'], message })
+    issues.push(issue('unsupported_version', ['version'], message))
     return { ...empty, issues }
   }
 

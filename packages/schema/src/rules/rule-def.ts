@@ -3,7 +3,7 @@ import type { AnyAction, AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 
 /**
- * `normalize` rules (trim, change case) run before the required check, so `'    '` with `trim` counts
+ * `normalize` rules (trim, change case) run before the required check, so `'   '` with `trim` counts
  * as empty. `validate` rules run after it.
  */
 export type RuleStage = 'normalize' | 'validate'

@@ -6,7 +6,7 @@ import type { RuleDef } from './rule-def'
 const kinds = ['string', 'array'] as const
 const meta = (label: string) => ({ label, category: 'length' }) as const
 
-/** Characters of a string, or items of an array */
+/** Characters of a string, or items of an array. */
 export const lengthRules = {
   length: defineRule({
     kinds,

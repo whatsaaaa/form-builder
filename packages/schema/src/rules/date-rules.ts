@@ -15,6 +15,6 @@ export const dateRules = {
   isoDateTime: iso('ISO date and time', 'Like 2026-10-28T14:30', (m) => v.isoDateTime(m)),
   isoTime: iso('ISO time', 'Like 14:30', (m) => v.isoTime(m)),
   isoTimeSecond: iso('ISO time with seconds', 'Like 14:30:15', (m) => v.isoTimeSecond(m)),
-  isoTimestamp: iso('ISO timestamp', 'Like 2026-10-28T14:30:15.000z', (m) => v.isoTimestamp(m)),
+  isoTimestamp: iso('ISO timestamp', 'Like 2026-10-28T14:30:15.000Z', (m) => v.isoTimestamp(m)),
   isoWeek: iso('ISO week', 'Like 2026-W44', (m) => v.isoWeek(m)),
 } satisfies Record<string, RuleDef>

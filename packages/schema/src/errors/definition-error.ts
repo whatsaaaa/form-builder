@@ -1,3 +1,5 @@
+import type * as v from 'valibot'
+
 /** Where something is in a definition, e.g. `['fields', 0, 'rules', 1]`. */
 export type DefinitionPath = readonly (string | number)[]
 
@@ -27,6 +29,26 @@ export interface DefinitionIssue {
 export type ValidateResult =
   | { success: true; issues: [] }
   | { success: false; issues: DefinitionIssue[] }
+
+export function issue(
+  code: DefinitionIssueCode,
+  path: DefinitionPath,
+  message: string,
+): DefinitionIssue {
+  return { code, path, message }
+}
+
+/** Valibot's issues from parsing the part of the definition at `path`, with `code`. */
+export function toIssues(
+  code: DefinitionIssueCode,
+  path: DefinitionPath,
+  valibotIssues: readonly v.BaseIssue<unknown>[],
+): DefinitionIssue[] {
+  return valibotIssues.map((valibotIssue) => {
+    const keys = valibotIssue.path?.map((item) => item.key as string | number) ?? []
+    return issue(code, [...path, ...keys], valibotIssue.message)
+  })
+}
 
 export function formatPath(path: DefinitionPath): string {
   return path.reduce<string>((out, key) => {

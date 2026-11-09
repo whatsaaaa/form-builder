@@ -1,20 +1,20 @@
 import type * as v from 'valibot'
-import type { KindDef } from '../kinds/kind-def'
-import type { FieldTypeDef } from '../field-types/field-type-def'
+import type { JsonForm } from '../definition/json-form-schema'
+import type { WalkedField } from '../definition/walk-fields'
+import { DefinitionError, type ValidateResult } from '../errors/definition-error'
 import type { defaultFieldTypes } from '../field-types/default-field-types'
+import type { FieldTypeDef } from '../field-types/field-type-def'
+import type { KindDef } from '../kinds/kind-def'
+import type { defaultRules } from '../rules/default-rules'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import type { defaultFormRules } from '../rules/form-rules'
 import type { RuleDef } from '../rules/rule-def'
-import type { defaultRules } from '../rules/default-rules'
+import type { ValueKind } from '../shared/value-kind'
 import type { MessageContext, Messages } from './build-field-schema'
+import { checkRegistry } from './check-registry'
 import { compileDefinition } from './compile-definition'
 import { mergeRegistry } from './registry'
 import type { TypedForm } from './typed-form'
-import { checkRegistry } from './validate-definition'
-import { DefinitionError, type ValidateResult } from '../errors/definition-error'
-import type { JsonForm } from '../definition/json-form-schema'
-import type { WalkedField } from '../definition/walk-fields'
-import type { ValueKind } from '../shared/value-kind'
 
 export interface SchemaBuilderOptions {
   kinds?: Record<string, KindDef>
@@ -30,6 +30,20 @@ export interface SchemaBuilderOptions {
    * written.
    */
   resolveMessage?(key: string, ctx: MessageContext): string | undefined
+}
+
+/**
+ * The messages a builder uses: `messages.required` defaults to `'Required'`, and
+ * `resolveMessage` can replace any text, falling back to the text as written.
+ */
+export function createMessages(
+  options: Pick<SchemaBuilderOptions, 'messages' | 'resolveMessage'> = {},
+): Messages {
+  return {
+    required: options.messages?.required ?? 'Required',
+    // Called on `options`, so a `resolveMessage` method keeps its `this`.
+    resolve: (text, ctx) => options.resolveMessage?.(text, ctx) ?? text,
+  }
 }
 
 /** What `createSchemaBuilder` returns. Its type parameters are the registries, by key. */
@@ -107,11 +121,7 @@ export function createSchemaBuilder(options?: SchemaBuilderOptions): SchemaBuild
 export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaBuilder {
   const registry = mergeRegistry(options)
   checkRegistry(registry)
-
-  const messages: Messages = {
-    required: options.messages?.required ?? 'Required',
-    resolve: (text, ctx) => options.resolveMessage?.(text, ctx) ?? text,
-  }
+  const messages = createMessages(options)
 
   function validate(json: unknown): ValidateResult {
     const { issues } = compileDefinition(json, registry, messages)

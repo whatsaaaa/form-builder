@@ -1,10 +1,16 @@
 import * as v from 'valibot'
 import type { JsonField, JsonFormRule } from '../definition/json-form-schema'
-import type { DefinitionIssue, DefinitionPath } from '../errors/definition-error'
+import {
+  type DefinitionIssue,
+  type DefinitionPath,
+  issue,
+  toIssues,
+} from '../errors/definition-error'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import { isReservedFormRuleKey } from '../shared/reserved-keys'
+import type { ValueKind } from '../shared/value-kind'
 import { lookup, type Registry } from './registry'
-import { type CheckedField, checkParams, issue, toIssues } from './validate-definition'
+import { type CheckedField, checkParams } from './validate-definition'
 
 export interface CheckedFormRule {
   name: string
@@ -19,6 +25,9 @@ export interface CheckedFormRule {
   paths: string[][]
 }
 
+/** Every field with a value, by the dot path of its value. A field with issues is null. */
+type FieldsByPath = ReadonlyMap<string, CheckedField | null>
+
 // A form rule needs its own message: Valibot's would only say the value is invalid.
 const ruleShape = v.looseObject({ rule: v.string(), field: v.string(), message: v.string() })
 
@@ -29,7 +38,7 @@ const ruleShape = v.looseObject({ rule: v.string(), field: v.string(), message: 
 export function checkFormRules(
   rules: readonly unknown[],
   registry: Registry,
-  fieldsByPath: ReadonlyMap<string, CheckedField | null>,
+  fieldsByPath: FieldsByPath,
   issues: DefinitionIssue[],
 ): CheckedFormRule[] {
   return rules.flatMap(
@@ -41,7 +50,7 @@ function checkFormRule(
   raw: unknown,
   path: DefinitionPath,
   registry: Registry,
-  fieldsByPath: ReadonlyMap<string, CheckedField | null>,
+  fieldsByPath: FieldsByPath,
   issues: DefinitionIssue[],
 ): CheckedFormRule | undefined {
   const shape = v.safeParse(ruleShape, raw)
@@ -61,78 +70,102 @@ function checkFormRule(
   const params = checkParams(rule, def.params, isReservedFormRuleKey, at, path, issues)
   if (!params) return undefined
 
-  const dotPaths = [rule.field, ...def.reads(params)]
-  const paths = dotPaths.map((dotPath) => dotPath.split('.'))
-  const fieldKeys = paths[0] as string[]
-  const issueCount = issues.length
-  const fields = dotPaths.map((dotPath, i) => {
-    const found = findField(dotPath, fieldsByPath)
-    const message =
-      typeof found === 'string' ? found : i > 0 && outsideItem(paths[i] as string[], fieldKeys)
-    if (!message) return found as CheckedField | null
-    // `field` has its own key. The paths from reads() come from the params, so their issues go on
-    // the rule.
-    issues.push(issue('unknown_field', i === 0 ? [...path, 'field'] : path, message))
-    return null
-  })
-  if (issues.length > issueCount) return undefined
+  const paths = [rule.field, ...def.reads(params)].map((dotPath) => dotPath.split('.'))
+  const fields = findReadFields(paths, path, fieldsByPath, issues)
+  if (!fields) return undefined
 
-  // A field with issues of its own has them reported already.
-  if (fields.some((field) => !field)) return undefined
-  const checked = fields as CheckedField[]
-
-  const kinds = checked.map((field) => field.valueKind)
-  const wrong = kinds.find((kind) => def.kinds && !def.kinds.includes(kind))
-  if (wrong !== undefined) {
-    const message = `${at} can't be used on ${wrong} fields`
-    issues.push(issue('kind_mismatch', [...path, 'rule'], message))
-    return undefined
-  }
-  if (def.sameKind && new Set(kinds).size > 1) {
-    const message = `${at} needs fields of one kind, not ${[...new Set(kinds)].join(' and ')}`
-    issues.push(issue('kind_mismatch', [...path, 'rule'], message))
+  const mismatch = kindMismatch(
+    def,
+    fields.map((field) => field.valueKind),
+    at,
+  )
+  if (mismatch) {
+    issues.push(issue('kind_mismatch', [...path, 'rule'], mismatch))
     return undefined
   }
 
-  const field = (checked[0] as CheckedField).field
+  const field = (fields[0] as CheckedField).field
   return { name: rule.rule, def, params, message: rule.message, path, field, paths }
 }
 
 /**
- * The field with a value at `dotPath`. Null when a field on the way has issues of its own, and
+ * The fields at `paths`, the first one being the rule's `field`. Adds an issue for each path
+ * without a field, and returns undefined when any of them has issues, its own or from here.
+ */
+function findReadFields(
+  paths: readonly string[][],
+  path: DefinitionPath,
+  fieldsByPath: FieldsByPath,
+  issues: DefinitionIssue[],
+): CheckedField[] | undefined {
+  const fieldKeys = paths[0] as string[]
+  const fields = paths.map((keys, i) => {
+    const found = findField(keys, fieldsByPath)
+    const result = typeof found === 'string' ? found : (outsideItem(keys, fieldKeys) ?? found)
+    if (typeof result !== 'string') return result
+    // `field` has its own key. The paths from reads() come from the params, so their issues go
+    // on the rule.
+    issues.push(issue('unknown_field', i === 0 ? [...path, 'field'] : path, result))
+    return null
+  })
+  // A field with issues of its own has them reported already.
+  return fields.every((field): field is CheckedField => field !== null) ? fields : undefined
+}
+
+/**
+ * The field with a value at `keys`. Null when a field on the way has issues of its own, and
  * the issue's message when there is no such field.
  */
 function findField(
-  dotPath: string,
-  fieldsByPath: ReadonlyMap<string, CheckedField | null>,
+  keys: readonly string[],
+  fieldsByPath: FieldsByPath,
 ): CheckedField | null | string {
-  const keys = dotPath.split('.')
-  let found: CheckedField | null | undefined
-  for (let i = 1; i <= keys.length; i++) {
-    found = fieldsByPath.get(keys.slice(0, i).join('.'))
+  for (let at = 0; at < keys.length - 1; at++) {
+    const found = fieldsByPath.get(keys.slice(0, at + 1).join('.'))
     if (found === null) return null
-    if (found) continue
     // The items of a list of objects have no field of their own. The next key is checked.
-    if (keys[i - 1] === '*' && i < keys.length) continue
-    const parent = fieldsByPath.get(keys.slice(0, i - 1).join('.'))
-    if (parent?.valueKind === 'array' && keys[i - 1] !== '*') {
-      const withStar = [...keys.slice(0, i - 1), '*', ...keys.slice(i - 1)].join('.')
-      return `Unknown field "${dotPath}". A list's items are read with "*": "${withStar}"`
-    }
-    return `Unknown field "${dotPath}"`
+    if (found === undefined && keys[at] !== '*') return unknownField(keys, at, fieldsByPath)
   }
-  return found ?? `Unknown field "${dotPath}"`
+  const found = fieldsByPath.get(keys.join('.'))
+  return found === undefined ? unknownField(keys, keys.length - 1, fieldsByPath) : found
+}
+
+/** The message for `keys` when the key at index `at` has no field. */
+function unknownField(keys: readonly string[], at: number, fieldsByPath: FieldsByPath): string {
+  const dotPath = keys.join('.')
+  const parent = fieldsByPath.get(keys.slice(0, at).join('.'))
+  if (parent?.valueKind === 'array' && keys[at] !== '*') {
+    const withStar = [...keys.slice(0, at), '*', ...keys.slice(at)].join('.')
+    return `Unknown field "${dotPath}". A list's items are read with "*": "${withStar}"`
+  }
+  return `Unknown field "${dotPath}"`
 }
 
 /**
  * A path into the items of a list is read once per item, so `field` must be in the same items.
  * Returns the issue's message when it isn't.
  */
-function outsideItem(keys: string[], fieldKeys: string[]): string | undefined {
+function outsideItem(keys: readonly string[], fieldKeys: readonly string[]): string | undefined {
   const star = keys.lastIndexOf('*')
-  const item = (path: string[]) => path.slice(0, star + 1).join('.')
+  const item = (path: readonly string[]) => path.slice(0, star + 1).join('.')
   if (star === -1 || item(keys) === item(fieldKeys)) return undefined
   const list = keys.slice(0, star).join('.')
   const read = keys.join('.')
   return `"${read}" is read from each item of "${list}", so "${fieldKeys.join('.')}" must be too`
+}
+
+/** The issue's message when the kinds of the fields a rule reads don't fit it. */
+function kindMismatch(
+  def: FormRuleDef,
+  kinds: readonly ValueKind[],
+  at: string,
+): string | undefined {
+  const allowed = def.kinds
+  const wrong = allowed && kinds.find((kind) => !allowed.includes(kind))
+  if (wrong !== undefined) return `${at} can't be used on ${wrong} fields`
+  const distinct = new Set(kinds)
+  if (def.sameKind && distinct.size > 1) {
+    return `${at} needs fields of one kind, not ${[...distinct].join(' and ')}`
+  }
+  return undefined
 }
