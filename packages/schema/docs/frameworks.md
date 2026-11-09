@@ -1134,6 +1134,7 @@ pnpm add @whatsaaaa/form-builder-schema @formisch/angular valibot
 - `injectForm` needs an injection context, and the definition is an input, which is set from `ngOnInit`. So `ngOnInit` makes the form in the component's injector.
 - Pass the path to `injectField` and `injectFieldArray` as a signal, so a field follows its item when one before it is removed.
 - `[formischControl]` reads and writes the element when the element holds the field's value: text, a checkbox, files. A number, and an option's own value, are set with `field.setInput` instead, with the field's name bound to the element.
+- A new Angular app turns on `noPropertyAccessFromIndexSignature`, so the props of a field's type, which `JsonField` doesn't name, are read with brackets: `node.field['text']`, `field.ui?.['widget']`.
 
 <!-- example: angular/json-form-view.ts -->
 
@@ -1263,7 +1264,7 @@ const inputTypes: Record<string, string> = {
                 [formischControl]="field"
                 type="file"
                 [multiple]="multiple()"
-                [attr.accept]="node().field.accept"
+                [attr.accept]="node().field['accept']"
               />
             }
             @case ('textarea') {
@@ -1305,7 +1306,7 @@ export class ValueField {
 
   protected readonly input = computed((): unknown => this.field.input())
   protected readonly required = computed(() => isRequired(this.node().field))
-  protected readonly options = computed(() => (this.node().field.options ?? []) as Option[])
+  protected readonly options = computed(() => (this.node().field['options'] ?? []) as Option[])
   protected readonly multiple = computed(() => this.node().kind === 'array')
   protected readonly picked = computed(() => {
     const input = this.input()
@@ -1317,7 +1318,7 @@ export class ValueField {
   protected readonly control = computed(() => {
     const { type, kind, field } = this.node()
     if (type === 'radio') return 'radio'
-    if (type === 'multiselect' && field.ui?.widget === 'checkboxes') return 'checkboxes'
+    if (type === 'multiselect' && field.ui?.['widget'] === 'checkboxes') return 'checkboxes'
     if (type === 'checkbox' || type === 'file' || type === 'textarea') return type
     if (this.options().length) return 'select'
     return kind === 'number' ? 'number' : 'input'
@@ -1407,28 +1408,28 @@ export class ArrayField {
       @switch (node.role) {
         @case ('display') {
           @if (node.type === 'heading') {
-            @switch (node.field.level ?? 2) {
+            @switch (node.field['level'] ?? 2) {
               @case (1) {
-                <h1>{{ node.field.text }}</h1>
+                <h1>{{ node.field['text'] }}</h1>
               }
               @case (3) {
-                <h3>{{ node.field.text }}</h3>
+                <h3>{{ node.field['text'] }}</h3>
               }
               @case (4) {
-                <h4>{{ node.field.text }}</h4>
+                <h4>{{ node.field['text'] }}</h4>
               }
               @case (5) {
-                <h5>{{ node.field.text }}</h5>
+                <h5>{{ node.field['text'] }}</h5>
               }
               @case (6) {
-                <h6>{{ node.field.text }}</h6>
+                <h6>{{ node.field['text'] }}</h6>
               }
               @default {
-                <h2>{{ node.field.text }}</h2>
+                <h2>{{ node.field['text'] }}</h2>
               }
             }
           } @else if (node.type === 'paragraph') {
-            <p>{{ node.field.text }}</p>
+            <p>{{ node.field['text'] }}</p>
           } @else {
             <hr />
           }

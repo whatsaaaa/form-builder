@@ -24,7 +24,7 @@ function inputOf(fields: readonly JsonField[]): Record<string, unknown> {
 }
 
 function initialValue(field: JsonField): unknown {
-  if (field.type === 'group') return inputOf(Array.isArray(field.fields) ? field.fields : [])
+  if (field.type === 'group') return inputOf(Array.isArray(field['fields']) ? field['fields'] : [])
   if (field.type === 'array') return field.default ?? []
   return field.default
 }

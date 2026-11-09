@@ -118,7 +118,7 @@ function upload(input: HTMLInputElement, files: readonly FileSpec[]): void {
 const errorsIn = (root: HTMLElement) =>
   Object.fromEntries(
     [...root.querySelectorAll<HTMLElement>('[data-error]')].map((element) => [
-      element.dataset.error,
+      element.dataset['error'],
       element.textContent,
     ]),
   )

@@ -57,15 +57,15 @@ function* walkField(
 ): Generator<WalkedField, void, undefined> {
   yield { field, type: field.type, dataPath, definitionPath, depth }
 
-  if (field.type === 'group' && Array.isArray(field.fields)) {
-    yield* walkList(field.fields, [...definitionPath, 'fields'], dataPath, depth + 1)
+  if (field.type === 'group' && Array.isArray(field['fields'])) {
+    yield* walkList(field['fields'], [...definitionPath, 'fields'], dataPath, depth + 1)
   } else if (field.type === 'array') {
     const items = [...dataPath, '*']
-    if (isField(field.of)) {
+    if (isField(field['of'])) {
       // The field of a list of single values has no name: its value is the item itself.
-      yield* walkField(field.of, [...definitionPath, 'of'], items, depth + 1)
-    } else if (Array.isArray(field.fields)) {
-      yield* walkList(field.fields, [...definitionPath, 'fields'], items, depth + 1)
+      yield* walkField(field['of'], [...definitionPath, 'of'], items, depth + 1)
+    } else if (Array.isArray(field['fields'])) {
+      yield* walkList(field['fields'], [...definitionPath, 'fields'], items, depth + 1)
     }
   }
 }

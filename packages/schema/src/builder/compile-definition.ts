@@ -219,11 +219,11 @@ export function createCompiler(
     dataPath: DataPath,
     checked: CheckedField | undefined,
   ): void {
-    if (!isRecord(raw) || typeof raw.type !== 'string') return
+    if (!isRecord(raw) || typeof raw['type'] !== 'string') return
     const field = raw as JsonField
     walked.push({
       field,
-      type: raw.type,
+      type: raw['type'],
       dataPath,
       definitionPath,
       depth: parents.length,
@@ -252,13 +252,13 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null
 
 const nameOf = (raw: unknown) =>
-  isRecord(raw) && typeof raw.name === 'string' ? raw.name : undefined
+  isRecord(raw) && typeof raw['name'] === 'string' ? raw['name'] : undefined
 
 /** An unknown type counts as one with a value, so a form rule that reads the field is fine. */
 const hasValue = (raw: unknown, registry: Registry) =>
   isRecord(raw) &&
-  typeof raw.type === 'string' &&
-  lookup(registry.fieldTypes, raw.type)?.kind !== 'none'
+  typeof raw['type'] === 'string' &&
+  lookup(registry.fieldTypes, raw['type'])?.kind !== 'none'
 
 /**
  * A field's kinds, as `walkFields` gives them. A field with issues has none, but a display element
