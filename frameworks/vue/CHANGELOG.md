@@ -1,5 +1,16 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.2.0
+
+### Minor Changes
+
+- [#36](https://github.com/whatsaaaa/form-builder/pull/36) [`f65a34d`](https://github.com/whatsaaaa/form-builder/commit/f65a34d93c5b36fabfbf804eb14104558377922b) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `<JsonFields>` renders the definition's `layout`: its current step, with your components for sections and rows from the new `layoutComponents` option, and named slots for its slots. `jsonForm.steps` moves through the steps: Next validates the whole form and stays on issues of the current step, a step shows the errors it had when the user left it, a step that failed Next revalidates as the user fixes it, and a submit before the last step moves on like Next. `jsonForm.layout` is the resolved layout, and `<JsonFields :step>` renders a given step. Definitions without a `layout` render as before.
+
+### Patch Changes
+
+- Updated dependencies [[`f65a34d`](https://github.com/whatsaaaa/form-builder/commit/f65a34d93c5b36fabfbf804eb14104558377922b)]:
+  - @whatsaaaa/form-builder-schema@0.14.0
+
 ## 0.1.5
 
 ### Patch Changes
