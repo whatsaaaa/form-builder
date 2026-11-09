@@ -1,5 +1,5 @@
 // Public API. Everything a consumer can import is exported here and nowhere else.
-import { defineExtension, type SchemaExtension } from '@whatsaaaa/form-builder-schema'
+import type { SchemaExtension } from '@whatsaaaa/form-builder-schema'
 import { checkAffects } from './check/check-affects'
 import { affect, affectsProps, condition } from './definition/affect'
 
@@ -18,11 +18,11 @@ export interface AffectsExtension extends SchemaExtension {
  * hidden fields, and the builder's `getVisibility()` tells renderers what to hide and to clear.
  */
 export function affects(): AffectsExtension {
-  return defineExtension({
+  return {
     name: 'affects',
     fieldProps: affectsProps,
     layoutProps: affectsProps,
     definitions: { affect, condition },
     check: checkAffects,
-  })
+  }
 }

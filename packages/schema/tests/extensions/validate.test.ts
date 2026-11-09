@@ -2,9 +2,9 @@ import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import {
   createSchemaBuilder,
-  defineExtension,
   defineFieldType,
   type ExtensionTarget,
+  type FieldNode,
   type JsonForm,
   type ResolvedField,
   type SchemaExtension,
@@ -15,30 +15,44 @@ import { hideWhen } from './hide-when'
 const builder = createSchemaBuilder({ extensions: [hideWhen()] })
 
 describe('creating a builder with extensions', () => {
-  const extension = (props: v.ObjectEntries, layout?: v.ObjectEntries): SchemaExtension =>
-    defineExtension({
-      name: 'x',
-      fieldProps: v.object(props),
-      ...(layout && { layoutProps: v.object(layout) }),
-      check: () => new Map(),
-    })
-
-  it('rejects an extension not made with defineExtension()', () => {
-    const plain: SchemaExtension = { name: 'plain', check: () => new Map() }
-    expect(() => createSchemaBuilder({ extensions: [plain] })).toThrow(
-      new TypeError('Extension "plain": make it with defineExtension()'),
-    )
+  const extension = (props: v.ObjectEntries, layout?: v.ObjectEntries): SchemaExtension => ({
+    name: 'x',
+    fieldProps: v.object(props),
+    ...(layout && { layoutProps: v.object(layout) }),
+    check: () => new Map(),
   })
 
-  it('rejects extensions made with two copies of the schema package', () => {
-    const made = defineExtension({ name: 'a', check: () => new Map() })
-    const [key] = Object.getOwnPropertySymbols(made)
-    const other = { ...made, name: 'b', [key as symbol]: {} }
-    expect(() => createSchemaBuilder({ extensions: [made, other] })).toThrow(
-      new TypeError(
-        'Extension "b" and extension "a" were made with two copies of @whatsaaaa/form-builder-schema. Install one',
-      ),
+  it('runs a plain object that matches SchemaExtension', () => {
+    const hideNick: SchemaExtension = {
+      name: 'hideNick',
+      fieldProps: v.object({ hideNick: v.optional(v.boolean()) }),
+      check(ctx) {
+        const target = ctx.targets.find((each) => each.json['hideNick'] === true)
+        if (!target) return new Map()
+        const anon = ctx.resolve('anonymous', target)
+        if (anon === null || typeof anon === 'string') return new Map()
+        return new Map([
+          [
+            target,
+            {
+              reads: [{ field: anon, at: [...target.definitionPath, 'hideNick'] }],
+              evaluate: (read) => ({ hidden: read(0) === true, clear: false }),
+            },
+          ],
+        ])
+      },
+    }
+    const plain = createSchemaBuilder({ extensions: [hideNick] })
+    const json = form(
+      { name: 'anonymous', type: 'checkbox' },
+      { name: 'nick', type: 'text', required: true, hideNick: true },
     )
+    const schema = plain.build(json)
+    expect(v.safeParse(schema, { anonymous: true, nick: '' }).success).toBe(true)
+    expect(v.safeParse(schema, { anonymous: false, nick: '' }).success).toBe(false)
+    const [, nick] = plain.getFieldTree(json)
+    const state = plain.getVisibility(json).of({ anonymous: true, nick: '' })
+    expect(state.isHidden(nick as FieldNode, [])).toBe(true)
   })
 
   it("rejects a key that is reserved, or a field type's prop", () => {
@@ -183,7 +197,7 @@ describe('resolving a path', () => {
   /** What `resolve` gives each target for each path, from an extension that only records it. */
   function resolved(json: JsonForm, paths: readonly string[]) {
     const results: Record<string, unknown> = {}
-    const recorder: SchemaExtension = defineExtension({
+    const recorder: SchemaExtension = {
       name: 'recorder',
       fieldProps: v.object({ reads: v.optional(v.string()) }),
       layoutProps: v.object({ reads: v.optional(v.string()) }),
@@ -197,7 +211,7 @@ describe('resolving a path', () => {
         }
         return new Map()
       },
-    })
+    }
     createSchemaBuilder({ extensions: [recorder] }).validate(json)
     return results
   }

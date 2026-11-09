@@ -6,7 +6,6 @@ import {
   isReservedRuleKey,
 } from '../shared/reserved-keys'
 import type { AnyObjectSchema } from '../shared/valibot-types'
-import { runtimeOf } from './extension-runtime'
 import { lookup, type Registry } from './registry'
 import { checkDefaultRules } from './validate-definition'
 
@@ -43,17 +42,8 @@ const LAYOUT_KEYS = ['type', 'id', 'label', 'description', 'items', 'ui', 'span'
  */
 function checkExtensions(registry: Registry): void {
   const owners = new Map<string, string>()
-  const [first] = registry.extensions
   for (const extension of registry.extensions) {
     const at = `Extension "${extension.name}"`
-    const runtime = runtimeOf(extension)
-    if (!runtime) throw new TypeError(`${at}: make it with defineExtension()`)
-    if (runtime !== runtimeOf(first)) {
-      const other = (first as { name: string }).name
-      throw new TypeError(
-        `${at} and extension "${other}" were made with two copies of @whatsaaaa/form-builder-schema. Install one`,
-      )
-    }
     for (const key of Object.keys(extension.fieldProps?.entries ?? {})) {
       if (isReservedFieldKey(key)) {
         throw new TypeError(`${at}: fieldProps can't use the reserved key "${key}"`)

@@ -837,10 +837,10 @@ const builder = createSchemaBuilder({ extensions: [affects()] })
 - **`getVisibility(json)`** tells renderers what is hidden, for any input: see [Showing and hiding](#showing-and-hiding). `of(input)` gives the same state while nothing hidden changes, so a renderer updates only then, and `clear(input)` gives the input with the fields the conditions clear made blank. `getInitialInput` gives it so already. Without conditions, `conditional` is false, and nothing is hidden.
 - **Mistakes in the extensions** throw a `TypeError` from `createSchemaBuilder`: a key that is reserved, a field type's prop, or another extension's.
 
-To write one, make it with `defineExtension()`, which gives it the code that runs conditions, so a builder without extensions never bundles it:
+To write one, give an object that matches the `SchemaExtension` interface:
 
 ```ts
-const extension = defineExtension({
+const extension: SchemaExtension = {
   name: 'locked',
   fieldProps: v.object({ lockedWhen: v.optional(v.string()) }), // typed by defineForm, and in toJsonSchema
   check(ctx) {
@@ -861,7 +861,7 @@ const extension = defineExtension({
     }
     return found
   },
-})
+}
 ```
 
 `check` runs once the fields, form rules and layout are checked. It reports its issues, and gives the conditions of each target: the fields they read, and whether they hide and clear it for an input. The builder does the rest: groups, lists, sections and steps hide what is in them, a hidden field reads as empty, loops are `cycle`, and with several extensions, a field is hidden when any of them hides it.

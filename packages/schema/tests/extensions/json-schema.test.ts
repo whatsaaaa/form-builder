@@ -1,11 +1,7 @@
 import { Ajv } from 'ajv'
 import * as v from 'valibot'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
-import {
-  createSchemaBuilder,
-  defineExtension,
-  type SchemaExtension,
-} from '@whatsaaaa/form-builder-schema'
+import { createSchemaBuilder, type SchemaExtension } from '@whatsaaaa/form-builder-schema'
 import { toJsonSchema } from '@whatsaaaa/form-builder-schema/json-schema'
 import defaultSchema from '../../definition.schema.json'
 import { type HideWhen, hideWhen } from './hide-when'
@@ -80,12 +76,12 @@ describe('toJsonSchema with extensions', () => {
   it("warns about a definition it can't convert, and takes any value for it", () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const odd = v.custom<string>(() => true)
-    const extension: SchemaExtension = defineExtension({
+    const extension: SchemaExtension = {
       name: 'odd',
       fieldProps: v.object({ odd: v.optional(v.lazy(() => odd)) }),
       definitions: { odd },
       check: () => new Map(),
-    })
+    }
     const json = toJsonSchema(createSchemaBuilder({ extensions: [extension] }))
     expect(json.definitions?.['odd.odd']).toEqual({})
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('"odd.odd" can\'t be converted'))
