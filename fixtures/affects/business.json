@@ -21,7 +21,7 @@
         { "effect": "hideAndClear", "when": { "field": "accountType", "notEquals": "business" } }
       ],
       "fields": [
-        { "type": "heading", "text": "Company" },
+        { "type": "paragraph", "text": "We put these on your invoices." },
         { "name": "name", "type": "text", "label": "Company name", "required": true },
         {
           "name": "vatId",

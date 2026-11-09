@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@formisch/vue": "^1.1.1",
+    "@whatsaaaa/form-builder-affects": "workspace:*",
     "@whatsaaaa/form-builder-schema": "workspace:*",
     "@whatsaaaa/form-builder-vue": "workspace:*",
     "valibot": "catalog:",

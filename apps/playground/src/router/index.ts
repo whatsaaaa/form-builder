@@ -34,6 +34,16 @@ const router = createRouter({
       name: 'stepped-signup',
       component: () => import('../views/SteppedSignupView.vue'),
     },
+    {
+      path: '/conditions/:example?',
+      name: 'conditions',
+      component: () => import('../views/ConditionsView.vue'),
+    },
+    {
+      path: '/conditional-steps',
+      name: 'conditional-steps',
+      component: () => import('../views/ConditionalStepsView.vue'),
+    },
   ],
 })
 

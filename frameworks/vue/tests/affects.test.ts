@@ -63,7 +63,7 @@ describe('a field with affects', () => {
       'company.size',
     ])
     expect(root.querySelector('[data-path="company"] [data-role="display"]')?.textContent).toBe(
-      'Company',
+      'We put these on your invoices.',
     )
 
     await set('company.size', 'large')

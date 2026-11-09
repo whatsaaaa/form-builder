@@ -262,11 +262,12 @@ if (!result.success) {
 }
 ```
 
-`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params`, `kind_mismatch`, `unknown_field`, `duplicate_placement`, `unplaced_field` and `duplicate_id`. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
+`build(json)` runs the same checks and throws one `DefinitionError` with all of them. Issue codes are `invalid_shape`, `unsupported_version`, `unknown_key`, `unknown_type`, `missing_name`, `invalid_name`, `duplicate_name`, `invalid_props`, `invalid_default`, `unknown_rule`, `unknown_param`, `invalid_params`, `kind_mismatch`, `unknown_field`, `duplicate_placement`, `unplaced_field`, `duplicate_id`, and `invalid_value` and `cycle`, which [extensions](#extensions) report for the conditions they read. An issue in a nested field has its full path, such as `['fields', 2, 'fields', 0, 'rules', 1]`.
 
 - **Names** are one key of the value, so a name with `.`, `[` or `]` is `invalid_name`, and so are `*`, which paths use for the items of a list, and `__proto__`, which no object can hold as a key.
 - **Defaults** must pass the field's own schema, rules included, or they are `invalid_default`. An empty default, like `''`, counts as none.
 - **Form rules** report on `['formRules', 0]` and below. A `field` path that names no field with a value is `unknown_field` on `['formRules', 0, 'field']`, and a path the rule reads gets it on `['formRules', 0]`. When a field the rule reads has issues of its own, the rule adds none.
+- **Extensions**, like the affects package, check their own keys after the layout, with the codes above. Conditions that depend on each other in a loop are `cycle`, on the condition that reads the next field of the loop.
 - **The layout** reports on `['layout']` and below, after the fields and form rules, such as `['layout', 'steps', 1, 'items', 0]`. A path that names no field with a value, or reaches into an array's items, is `unknown_field`, a field placed twice is `duplicate_placement` on the second place, a field placed nowhere is `unplaced_field` on the list that misses it, and a second node with an `id` is `duplicate_id`. A span that is no whole number from 1 to 12, `span` outside a row, the spans of a row over 12 columns or that can't be shared evenly, and a type with a value in the layout are `invalid_shape`. The layout's paths are checked once the fields have no issues of their own.
 
 Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, an object that is never checked. A definition itself takes `version`, `fields`, `formRules`, `layout` and `$schema`, which is allowed and never read. Any other key, on a field, a layout node or the definition, is `unknown_key`.
@@ -303,7 +304,7 @@ A layout's fields are `FieldNode`s, as `getFieldTree` gives them. Render each on
 | `array`   | a container of kind `array`    | Formisch's field array at the node's path, and its `children` for each item |
 | `display` | a display element, kind `none` | `field.text`. It has no Formisch field                                      |
 
-A node has `field`, the field as the definition has it, with its `label`, `placeholder`, `options` and `ui`, and its `type`, `role`, `kind`, `itemKind`, `dataPath` and `children`.
+A node has `field`, the field as the definition has it, with its `label`, `placeholder`, `options` and `ui`, and its `type`, `role`, `kind`, `itemKind`, `dataPath`, `definitionPath` and `children`. `definitionPath` is where the field is in the definition, `['fields', 2, 'fields', 0]`, or in the layout for a display element written there: it names any field, display elements included.
 
 **Paths.** `dataPath` has `'*'` for each array index: `['lines', '*', 'qty']`. `toFieldPath(node.dataPath, indexes)` puts in the index of each item the field is in, outermost first, and gives the path Formisch takes: `['lines', 0, 'qty']`. Pass the indexes down as you render the items. The path comes from the definition at runtime, so Formisch's types can't check it: pass it `as never`.
 
@@ -587,7 +588,9 @@ The Vue and React adapters do more: a step shows the errors it had when the user
 
 ### Showing and hiding
 
-`shownNodes(nodes, indexes, isShown)` gives the nodes to render when some fields are hidden, by a function that says whether a field, in the array items at `indexes`, is shown. A hidden field drops out with the fields inside it. A group, a section or a row whose fields are all hidden drops out too, even with text in it, while one with no field with a value, only text, stays. A row's other cells keep their spans and line up from its first column: a row is one line, so no field moves to another. An array's items aren't looked into: call it for each item, with its indexes. The adapters use it for `except`. It is where conditions on fields, like those of the planned affects package, plug in.
+`shownNodes(nodes, indexes, isShown)` gives the nodes to render when some fields are hidden, by a function that says whether a field, in the array items at `indexes`, is shown. A hidden field drops out with the fields inside it. A group, a section or a row whose fields are all hidden drops out too, even with text in it, while one with no field with a value, only text, stays. A row's other cells keep their spans and line up from its first column: a row is one line, so no field moves to another. An array's items aren't looked into: call it for each item, with its indexes. The adapters use it for `except`.
+
+For the conditions of [extensions](#extensions), like those of [`@whatsaaaa/form-builder-affects`](https://github.com/whatsaaaa/form-builder/tree/main/packages/affects), render what `builder.getVisibility(json).of(getInput(form))` shows instead: its `shownNodes(nodes, indexes, isShown?)` leaves out the fields and sections the conditions hide too, its `isStepHidden(step)` tells which steps to skip, and its `toClear` lists the fields to set blank. Every renderer of [Formisch in each framework](docs/frameworks.md) does it.
 
 ### Other frameworks
 
@@ -699,6 +702,7 @@ getInput(form, { path: ['address', 'city'] }) // string | undefined
 - It is the same schema, typed as `TypedJsonFormSchema<TInput, TOutput>`. An interface works as the type, which Formisch's own constraint wouldn't take as it is. Your submit handler gets the output type.
 - The types are a promise you make: nothing checks them against the definition. Keep the two in step.
 - Paths from the field tree still need `as never`. Without your types, the schema is a `JsonFormSchema`.
+- With conditions, a field that can hide submits nothing while it is hidden, even a required one: make it optional in the output type.
 
 ## Writing definitions in TypeScript
 
@@ -752,6 +756,7 @@ writeFileSync('form.schema.json', JSON.stringify(toJsonSchema(builder), null, 2)
 
 - **It checks** type names, the keys and props of each type, the rules that fit a type's kind and their params, form rule names and params, and the layout's nodes and their keys, with `span` only in a row. `meta.label` and `meta.description` become each type's and rule's `title` and `description`.
 - **It can't check** what only `validate()` does: duplicate names, defaults, form rule paths, the layout's paths, placements and row totals, and checks with no JSON Schema keyword, such as options having different values. Run `validate()` on definitions you store.
+- **It takes the builder's extensions:** their `fieldProps` on every field type, their `layoutProps` on steps and sections, and their `definitions`, named after the extension, like `affects.condition`. The affects package ships its own `definition.schema.json`, made this way.
 - A props or params schema that has no JSON Schema form, such as `v.custom()` or `v.instance()`, lets that type or rule take any keys, and `toJsonSchema` logs a warning.
 
 ## Reference
@@ -816,6 +821,50 @@ const { build } = createSchemaBuilder({ fieldTypes: { tags }, rules: { even } })
 
 - A field type's `meta` (`label` and an optional `description`) describes it to people, like a rule's. The JSON Schema and the docs use it.
 - Mistakes in the registry, such as an unknown kind or a reserved props key, throw a `TypeError` from `createSchemaBuilder`.
+
+## Extensions
+
+An extension is a feature from another package that reads keys of its own on fields, and on the layout's steps and sections. The [affects package](https://github.com/whatsaaaa/form-builder/tree/main/packages/affects) is one: its `affects` hide and clear fields by conditions.
+
+```ts
+import { affects } from '@whatsaaaa/form-builder-affects'
+
+const builder = createSchemaBuilder({ extensions: [affects()] })
+```
+
+- **Without the extension, its keys are unknown keys**, so a definition that uses them fails `validate()`, rather than running without its conditions.
+- **The schema skips what the conditions hide.** Each field that conditions can hide gets a gate around its schema, and the form's schema works out what is hidden from the input on each parse, so a hidden field reports no issue, in every Formisch package and in a plain `v.parse`. A form rule is skipped where a field it reads is hidden. The gates keep the type and keys of each schema, so Formisch makes the same fields. A definition without conditions builds exactly the schema it builds without the extension.
+- **`getVisibility(json)`** tells renderers what is hidden, for any input: see [Showing and hiding](#showing-and-hiding). `of(input)` gives the same state while nothing hidden changes, so a renderer updates only then, and `clear(input)` gives the input with the fields the conditions clear made blank. `getInitialInput` gives it so already. Without conditions, `conditional` is false, and nothing is hidden.
+- **Mistakes in the extensions** throw a `TypeError` from `createSchemaBuilder`: a key that is reserved, a field type's prop, or another extension's.
+
+To write one, make it with `defineExtension()`, which gives it the code that runs conditions, so a builder without extensions never bundles it:
+
+```ts
+const extension = defineExtension({
+  name: 'locked',
+  fieldProps: v.object({ lockedWhen: v.optional(v.string()) }), // typed by defineForm, and in toJsonSchema
+  check(ctx) {
+    const found = new Map()
+    for (const target of ctx.targets) {
+      // A field, or a step, section or display element of the layout, with its JSON.
+      const path = target.json['lockedWhen']
+      if (typeof path !== 'string') continue
+      const field = ctx.resolve(path, target) // the field it reads, as form rules find it
+      if (typeof field === 'string')
+        ctx.issue('unknown_field', [...target.definitionPath, 'lockedWhen'], field)
+      if (typeof field === 'string' || field === null) continue
+      found.set(target, {
+        reads: [{ field, at: [...target.definitionPath, 'lockedWhen'] }],
+        // read(0) is that field's input, at the target's item, or undefined while it is hidden.
+        evaluate: (read) => ({ hidden: read(0) === true, clear: false }),
+      })
+    }
+    return found
+  },
+})
+```
+
+`check` runs once the fields, form rules and layout are checked. It reports its issues, and gives the conditions of each target: the fields they read, and whether they hide and clear it for an input. The builder does the rest: groups, lists, sections and steps hide what is in them, a hidden field reads as empty, loops are `cycle`, and with several extensions, a field is hidden when any of them hides it.
 
 ## Initial input and walking fields
 

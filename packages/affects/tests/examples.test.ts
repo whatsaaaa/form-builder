@@ -32,7 +32,7 @@ describe('a business account', () => {
     const personal = input('personal', { name: 'x', vatId: 'bad', size: 'large' }, 'abc')
     expect(hidden(json, personal)).toEqual([
       'company',
-      'heading',
+      'paragraph',
       'company.name',
       'company.vatId',
       'company.size',
