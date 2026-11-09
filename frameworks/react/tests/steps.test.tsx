@@ -323,6 +323,36 @@ describe('steps', () => {
     expect(submitted).toEqual([{ email: 'ana@example.com', name: 'Ana', city: 'Graz', code: 'X' }])
   })
 
+  it('moves on once the task that called Next is over', async () => {
+    const short = {
+      ...json({ fields: fields.filter((field) => field.name !== 'lines') }),
+      layout: {
+        steps: [
+          { label: 'First', items: ['name', 'email'] },
+          { label: 'Last', items: ['city', 'zip', 'code'] },
+        ],
+      },
+    }
+    const { root, current } = mountSteps(short)
+    type(root, 'email', 'ana@example.com')
+    type(root, 'name', 'Ana')
+
+    // A click runs its default action after its handlers and their microtasks. A Next button that
+    // turns into the submit button as the step changes in between would submit the form.
+    await act(async () => {
+      let moved = false
+      const moving = current()
+        .steps.next()
+        .then((result) => (moved = result))
+      for (let i = 0; i < 50; i++) await Promise.resolve()
+      expect(moved).toBe(false)
+      await moving
+      expect(moved).toBe(true)
+    })
+    expect(stepOf(root)).toBe('Last')
+    expect(errorAt(root, 'city')).toBeNull()
+  })
+
   it('goes back to a step before when the submit fails because of it', async () => {
     const definition: JsonForm = {
       version: '1',

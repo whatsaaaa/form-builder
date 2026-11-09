@@ -111,6 +111,10 @@ export function useJsonFormSteps(
         move(to)
         return true
       }
+      // Next goes on once the task that called it is over. A click runs its default action after its
+      // handlers, and React can render in between: a Next button that turns into the submit button on
+      // the last step would then submit the form as the user gets there.
+      await afterTask()
       const { issues } = await validate(form)
       for (const step of list.slice(position(list), target)) {
         const found = issuesOfStep(step, issues)
@@ -250,6 +254,9 @@ export function useJsonFormSteps(
     }
   }, [all, index, visibility, methods])
 }
+
+/** Resolves once the task that called it is over, and the browser is done with its event. */
+const afterTask = () => new Promise<void>((resolve) => setTimeout(resolve))
 
 /** The `<form>` Formisch's `<Form>` renders, which it keeps on the store for its `submit()`. */
 function formElementOf(form: FormStore): HTMLFormElement | undefined {
