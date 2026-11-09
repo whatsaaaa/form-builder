@@ -101,6 +101,25 @@ describe("the builder's walkFields", () => {
     expect(field).not.toHaveProperty('itemKind')
   })
 
+  it("gives a display element its parent's path, even with a name", () => {
+    const json = form(
+      { type: 'heading', name: 'email', text: 'Contact' },
+      { name: 'email', type: 'email' },
+      { name: 'address', type: 'group', fields: [{ type: 'divider', name: 'city' }] },
+    )
+    const paths = (walked: Iterable<WalkedField>) =>
+      [...walked].map(({ type, dataPath }) => [type, dataPath])
+    const expected = [
+      ['heading', []],
+      ['email', ['email']],
+      ['group', ['address']],
+      ['divider', ['address']],
+    ]
+
+    expect(paths(builder.walkFields(json))).toEqual(expected)
+    expect(paths(walkFields(json))).toEqual(expected)
+  })
+
   it('walks into your own container types', () => {
     const json = form(
       {

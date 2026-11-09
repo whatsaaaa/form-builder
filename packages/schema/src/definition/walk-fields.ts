@@ -1,5 +1,6 @@
 import type { DefinitionPath } from '../errors/definition-error'
 import type { ValueKind } from '../shared/value-kind'
+import { isDisplayType } from './built-in-types'
 import type { JsonField, JsonForm } from './json-form-schema'
 
 /** One field found by `walkFields`. */
@@ -9,8 +10,8 @@ export interface WalkedField {
   type: string
   /**
    * Where the field's value is, as a Formisch path: `['address', 'city']`. The items of an array
-   * have no fixed index, so they have `'*'` in its place. A field without a name, like a
-   * heading, has its parent's path.
+   * have no fixed index, so they have `'*'` in its place. A field without a name, and a display
+   * element like a heading even with one, has its parent's path.
    */
   dataPath: readonly (string | number)[]
   /** Where the field is in the definition: `['fields', 1, 'fields', 0]`. */
@@ -44,7 +45,9 @@ function* walkList(
   depth: number,
 ): Generator<WalkedField, void, undefined> {
   for (const [i, field] of fields.entries()) {
-    const path = field.name === undefined ? dataPath : [...dataPath, field.name]
+    // A display element's name, if it has one, is no key of the value.
+    const path =
+      field.name === undefined || isDisplayType(field.type) ? dataPath : [...dataPath, field.name]
     yield* walkField(field, [...at, i], path, depth)
   }
 }

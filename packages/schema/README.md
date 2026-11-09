@@ -493,9 +493,9 @@ const coupon = findField(fields, 'coupon', { placed: true })
 const rest = selectFields(fields, { except: ['coupon'] })
 ```
 
-- A dot path is the field's names joined with dots: `'address.city'`, or `'lines.*.qty'` for a field of an array's items. `dotPathOf(node)` gives a node's, and undefined for a display element or the field of a list of single values, which have no name.
+- A dot path is the field's names joined with dots: `'address.city'`, or `'lines.*.qty'` for a field of an array's items. `dotPathOf(node)` gives a node's, and undefined for a display element, even one with a name, or the field of a list of single values, which is the item itself.
 - A path that names no field throws a `TypeError`, so a typo shows up at once. With `placed: true`, so does a field of an array's items, which has no index outside its item: place the array instead.
-- `selectFields(fields, { only, except })` gives the tree without the fields `except` names, at any depth: `'lines.*.note'` leaves a field out of every item of an array. With `only`, it gives just the fields `only` names, in the order of the definition, each with the fields inside it. A display element has no name, so `only` leaves it out.
+- `selectFields(fields, { only, except })` gives the tree without the fields `except` names, at any depth: `'lines.*.note'` leaves a field out of every item of an array. With `only`, it gives just the fields `only` names, in the order of the definition, each with the fields inside it. A display element has no dot path, so `only` leaves it out.
 - `allFields(fields)` gives every node of the tree, in the order of the definition, a container before its fields.
 
 ### Typing the form
@@ -652,7 +652,7 @@ for (const { field, dataPath, definitionPath, depth } of walkFields(json)) {
 ```
 
 - `getInitialInput` gives each field's `default`, nested the way the value is. A group gives an object, and an array without a default gives `[]`. Other fields without a default are left out.
-- `walkFields` yields every field at every depth, in document order, with a group or array before its fields. The fields of an array's items come once, with `'*'` in place of the index. A field without a name, like a heading, has its parent's `dataPath`.
+- `walkFields` yields every field at every depth, in document order, with a group or array before its fields. The fields of an array's items come once, with `'*'` in place of the index. A field without a name, and a display element like a heading even with one, has its parent's `dataPath`.
 - Both know the built-in `group` and `array` types only, and neither checks the definition, so run `validate()` first.
 - To render the fields, the builder's `getFieldTree` gives more: each field's role, kinds and children. See [Using with Formisch](#using-with-formisch).
 

@@ -177,6 +177,22 @@ describe('placing fields', () => {
     })
   })
 
+  it('never takes a display element for the field of its name', () => {
+    const named = form(
+      { type: 'heading', name: 'email', text: 'Contact' },
+      { name: 'email', type: 'email' },
+    )
+    const { root } = mountLayout(named, (jsonForm) => [
+      h('main', h(JsonFields, { of: jsonForm, except: ['email'] })),
+      h('aside', h(JsonField, { of: jsonForm, path: 'email' })),
+    ])
+
+    expect(root.querySelector('main [data-role="display"]')?.textContent).toBe('Contact')
+    expect(pathsIn(root, 'main')).toEqual([])
+    expect(pathsIn(root, 'aside')).toEqual(['email'])
+    expect(root.querySelector('aside [data-role="display"]')).toBe(null)
+  })
+
   it('throws a TypeError for a path that names no field', () => {
     const placed = thrownBy((jsonForm) => h(JsonField, { of: jsonForm, path: 'emial' }))
     const excepted = thrownBy((jsonForm) => h(JsonFields, { of: jsonForm, except: ['emial'] }))
