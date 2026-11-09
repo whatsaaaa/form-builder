@@ -1,4 +1,5 @@
 import * as v from 'valibot'
+import { toLocalDate } from '../shared/local-date'
 import { defineFormRule } from './define-form-rule'
 import type { FormRuleDef } from './form-rule-def'
 
@@ -10,11 +11,13 @@ const meta = (label: string, description: string) =>
 /**
  * The values to compare. A date field with `output: 'date'` holds a Date by the time form rules
  * run, and one without it holds the ISO string. When either is a Date, both are compared by their
- * time, with the string read the way `v.toDate()` reads it, because `===` compares the objects.
+ * time, with the string read the way `output: 'date'` reads it, because `===` compares the objects.
  */
 const comparable = (values: readonly unknown[]): unknown[] =>
   values.some((value) => value instanceof Date)
-    ? values.map((value) => new Date(value as Date | string).getTime())
+    ? values.map((value) =>
+        (value instanceof Date ? value : toLocalDate(value as string)).getTime(),
+      )
     : [...values]
 
 const otherParams = v.object({ other: v.string() })

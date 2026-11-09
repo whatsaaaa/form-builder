@@ -56,7 +56,7 @@ There is a type for every native control, two types that hold other fields, and 
 
 - **Options** are `{ value, label }[]`: at least one, every value different and of the same type. A select with number options has kind `number`, so it rejects `'1'` and takes rules like `minValue`.
 - **A select without `options`**, because they load from an API, takes any value of its `valueType` (`'string'`, the default, or `'number'`). With `options`, `valueType` is ignored.
-- **Dates stay ISO strings** by default. `output: 'date'` turns the value into a `Date` after every rule, so comparison rules still compare ISO strings. A `datetime` has no time zone, so its `Date` is in local time.
+- **Dates stay ISO strings** by default. `output: 'date'` turns the value into a `Date` after every rule, so comparison rules still compare ISO strings. Neither has a time zone, so the `Date` is in local time: a `date` is local midnight of the picked day.
 - **A required radio** accepts any option, `false` included. **A required multiselect** needs at least one item; add `minLength: 2` for "pick at least two". Rules for the options' kind, like `maxValue`, run on each item.
 - **A checkbox group** is a `multiselect` with `ui: { widget: 'checkboxes' }`.
 - **Files.** `accept` takes MIME types separated by commas, such as `image/png,image/jpeg`. A `File` only carries its MIME type, so extensions (`.pdf`) and wildcards (`image/*`) are `invalid_props`. With `multiple`, file rules like `maxSize` check each file and `maxLength` limits the count. The schema reads the `File` global only while parsing, so the package loads in SSR.
@@ -178,6 +178,7 @@ A form rule checks a field against other fields, such as a repeated password or 
 - **A form rule runs last**, after every field's own rules, and only when the fields it reads have no issues. So a password that is too short never also shows "Passwords differ". It never runs on an empty value either: make the fields required when they must be filled.
 - **`message` is required**, unlike on a field's rules. Without it, the error would be Valibot's generic "Invalid input", which says nothing about the other field. It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
 - The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` holds a `Date`, which is compared by its time, also with a date that holds the ISO string.
+- **Form rules live in the schema's pipe.** With form rules, `build()` gives the object schema of the fields in a `v.pipe()` with one check per rule, and its type, `JsonFormSchema`, says so. A new object made from `schema.entries`, as with `v.pick()`, `v.omit()` or `v.object({ ...schema.entries })`, leaves the form rules out: pipe it with the checks from `schema.pipe` too.
 
 ## Checking definitions
 

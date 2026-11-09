@@ -67,14 +67,41 @@ export function buildFieldSchema(
         v.transform(() => undefined),
       )
 
-  const whenFilled = (schema: AnySchema): AnySchema =>
-    v.lazy((input) => (kind.isEmpty(input) ? empty : schema))
+  const whenFilled = (schema: AnySchema) => unlessEmpty(schema, kind.isEmpty, empty)
 
   // The value is checked for emptiness as it comes in, and again after the normalize rules, so
   // '   ' with trim counts as empty too.
   const schema = whenFilled(v.pipe(head, whenFilled(pipe(v.unknown(), rules.validate))))
 
-  return withMetadata(required ? schema : v.optional(schema), field, path, messages)
+  // Formisch starts a field inside optional without a value, but a required string field outside
+  // it with ''. So a required field is inside optional too, to start the same as one that isn't,
+  // and nonOptional reports a missing value with the required message.
+  return withMetadata(
+    required ? v.nonOptional(v.optional(schema), requiredMessage) : v.optional(schema),
+    field,
+    path,
+    messages,
+  )
+}
+
+/**
+ * Runs `schema` on a value that isn't empty, and `empty` on one that is. It works like
+ * `v.lazy((input) => (isEmpty(input) ? empty : schema))`, but it has the type and keys of `schema`,
+ * the way `v.pipe()` has those of its first schema. Formisch reads them to make a field's store:
+ * an array schema makes a multiselect an array of choices. Formisch for Qwik doesn't take
+ * `v.lazy` at all.
+ */
+function unlessEmpty(
+  schema: AnySchema,
+  isEmpty: (input: unknown) => boolean,
+  empty: AnySchema,
+): AnySchema {
+  const either: AnySchema = {
+    ...schema,
+    '~run': (dataset, config) => (isEmpty(dataset.value) ? empty : schema)['~run'](dataset, config),
+  }
+  // The pipe gives it the Standard Schema props of its own `~run`.
+  return v.pipe(either)
 }
 
 /**

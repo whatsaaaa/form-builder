@@ -5,7 +5,7 @@ import {
   defaultFieldTypes,
   type JsonField,
 } from '@whatsaaaa/form-builder-schema'
-import { file, form, messages } from '../helpers'
+import { file, form, messages, timeZones, useTimeZone } from '../helpers'
 
 const { build, validate } = createSchemaBuilder()
 
@@ -96,18 +96,43 @@ describe('value types', () => {
       expect(messages(schema, { d: fail })).toHaveLength(1)
     })
 
-    it("outputs a Date with output: 'date', after comparing ISO strings", () => {
-      const schema = build(
-        form({
-          name: 'd',
-          type: 'date',
-          output: 'date',
-          rules: [{ rule: 'minValue', value: '2026-01-01', message: 'Too early' }],
-        }),
-      )
+    it.each(timeZones)(
+      "outputs the day at local midnight with output: 'date', after comparing ISO strings, in %s",
+      (timeZone) => {
+        useTimeZone(timeZone)
+        const schema = build(
+          form({
+            name: 'd',
+            type: 'date',
+            output: 'date',
+            rules: [{ rule: 'minValue', value: '2026-01-01', message: 'Too early' }],
+          }),
+        )
+        const { d } = v.parse(schema, { d: '2026-03-01' }) as { d: Date }
 
-      expect(v.parse(schema, { d: '2026-03-01' })).toEqual({ d: new Date('2026-03-01') })
-      expect(messages(schema, { d: '2025-12-31' })).toEqual(['Too early'])
+        expect(d).toEqual(new Date(2026, 2, 1))
+        expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([2026, 2, 1, 0])
+        expect(messages(schema, { d: '2025-12-31' })).toEqual(['Too early'])
+      },
+    )
+
+    it.each(timeZones)(
+      "outputs a datetime in local time with output: 'date', in %s",
+      (timeZone) => {
+        useTimeZone(timeZone)
+        const schema = build(form({ name: 'd', type: 'datetime', output: 'date' }))
+
+        expect(v.parse(schema, { d: '2026-03-01T10:30' })).toEqual({
+          d: new Date(2026, 2, 1, 10, 30),
+        })
+      },
+    )
+
+    it('outputs a year before 100 as that year', () => {
+      const schema = build(form({ name: 'd', type: 'date', output: 'date' }))
+      const { d } = v.parse(schema, { d: '0050-01-15' }) as { d: Date }
+
+      expect([d.getFullYear(), d.getMonth(), d.getDate()]).toEqual([50, 0, 15])
     })
 
     it('rejects an unknown output', () => {

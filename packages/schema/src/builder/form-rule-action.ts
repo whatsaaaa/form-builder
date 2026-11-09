@@ -1,8 +1,10 @@
 import * as v from 'valibot'
-import type { AnyAction } from '../shared/valibot-types'
 import type { CheckedFormRule } from './check-form-rules'
 
 type Path = readonly (string | number)[]
+
+/** A form rule's check, on the value of the whole form. */
+export type FormRuleAction = v.RawCheckAction<Record<string, unknown>>
 
 /**
  * Runs a form rule on the form's value and puts its issue on `field`. A rule on the fields of a
@@ -11,7 +13,7 @@ type Path = readonly (string | number)[]
  * The rule only runs when none of the fields it reads has an issue. `v.partialCheck` can't do
  * this: it runs whenever the form has no schema issues, even when a field it reads failed a rule.
  */
-export function formRuleAction(rule: CheckedFormRule, message: string): AnyAction {
+export function formRuleAction(rule: CheckedFormRule, message: string): FormRuleAction {
   const { def, params, paths } = rule
   const fieldKeys = paths[0] as string[]
 

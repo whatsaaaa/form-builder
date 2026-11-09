@@ -13,7 +13,7 @@ import type { RuleDef } from '../rules/rule-def'
 import type { ValueKind } from '../shared/value-kind'
 import type { MessageContext, Messages } from './build-field-schema'
 import { checkRegistry } from './check-registry'
-import { compileDefinition, createCompiler } from './compile-definition'
+import { compileDefinition, createCompiler, type JsonFormSchema } from './compile-definition'
 import { lookup, mergeRegistry } from './registry'
 import type { TypedForm } from './typed-form'
 
@@ -47,9 +47,6 @@ export function createMessages(
   }
 }
 
-/** What `build()` returns: the definition's schema, ready for Formisch or `v.parse`. */
-export type JsonFormSchema = v.ObjectSchema<v.ObjectEntries, undefined>
-
 /**
  * The schema type of `build<TInput, TOutput>()`: your types, so Formisch's paths and values are
  * checked. An interface works too, which Formisch's own constraint wouldn't take as it is.
@@ -68,7 +65,10 @@ export interface SchemaBuilder<
   TRules extends Record<string, RuleDef> = Record<string, RuleDef>,
   TFormRules extends Record<string, FormRuleDef> = Record<string, FormRuleDef>,
 > {
-  /** The definition's schema. Throws one `DefinitionError` with every issue it has. */
+  /**
+   * The definition's schema: an object schema, in a pipe with the form rules when it has any.
+   * Throws one `DefinitionError` with every issue it has.
+   */
   build(json: JsonForm): JsonFormSchema
   /**
    * The same schema, typed by your input type, and output type when it differs, so Formisch's

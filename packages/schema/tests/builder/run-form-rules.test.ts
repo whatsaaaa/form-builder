@@ -1,12 +1,14 @@
 import * as v from 'valibot'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
 import {
   createSchemaBuilder,
   defineFormRule,
   type JsonField,
   type JsonForm,
   type JsonFormRule,
+  type JsonFormSchema,
 } from '@whatsaaaa/form-builder-schema'
+import { timeZones, useTimeZone } from '../helpers'
 
 const { build } = createSchemaBuilder()
 
@@ -112,33 +114,37 @@ describe('running form rules', () => {
     ])
   })
 
-  it('compares a date with output: date with one without it by their time', () => {
-    const dates: JsonField[] = [
-      { name: 'start', type: 'date', output: 'date' },
-      { name: 'end', type: 'date' },
-    ]
-    const after = build(
-      formWith(dates, {
-        rule: 'compare',
-        op: 'gt',
-        field: 'end',
-        other: 'start',
-        message: 'End after start',
-      }),
-    )
-    const same = build(
-      formWith(dates, { rule: 'sameAs', field: 'end', other: 'start', message: 'Same day' }),
-    )
+  it.each(timeZones)(
+    'compares a date with output: date with one without it by their day, in %s',
+    (timeZone) => {
+      useTimeZone(timeZone)
+      const dates: JsonField[] = [
+        { name: 'start', type: 'date', output: 'date' },
+        { name: 'end', type: 'date' },
+      ]
+      const after = build(
+        formWith(dates, {
+          rule: 'compare',
+          op: 'gt',
+          field: 'end',
+          other: 'start',
+          message: 'End after start',
+        }),
+      )
+      const same = build(
+        formWith(dates, { rule: 'sameAs', field: 'end', other: 'start', message: 'Same day' }),
+      )
 
-    expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-02' })).toEqual([])
-    expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-01' })).toEqual([
-      { path: ['end'], message: 'End after start' },
-    ])
-    expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-01' })).toEqual([])
-    expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-02' })).toEqual([
-      { path: ['end'], message: 'Same day' },
-    ])
-  })
+      expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-02' })).toEqual([])
+      expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-01' })).toEqual([
+        { path: ['end'], message: 'End after start' },
+      ])
+      expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-01' })).toEqual([])
+      expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-02' })).toEqual([
+        { path: ['end'], message: 'Same day' },
+      ])
+    },
+  )
 
   it('runs your own rule on a nested path', () => {
     const sameCountry = defineFormRule({
@@ -280,5 +286,29 @@ describe('running form rules', () => {
   it('keeps the object schema that Formisch reads', () => {
     expect(passwords.type).toBe('object')
     expect(Object.keys(passwords.entries)).toEqual(['password', 'password2'])
+  })
+
+  it('puts the form rules in a pipe after the object schema', () => {
+    expectTypeOf(passwords).toEqualTypeOf<JsonFormSchema>()
+    const { pipe } = passwords as Extract<JsonFormSchema, { pipe: unknown }>
+
+    expect(pipe.map((item) => item.type)).toEqual(['object', 'raw_check'])
+    // A new object from the entries leaves the form rules out, unless it takes the pipe's checks.
+    const [, ...checks] = pipe
+    const withoutRules = v.object({ ...passwords.entries })
+    const withRules = v.pipe(v.object({ ...passwords.entries }), ...checks)
+    const input = { password: 'longenough', password2: 'different' }
+
+    expect(issuesOf(withoutRules, input)).toEqual([])
+    expect(issuesOf(withRules, input)).toEqual([
+      { path: ['password2'], message: 'Passwords differ' },
+    ])
+  })
+
+  it('gives the object schema alone without form rules', () => {
+    const schema = build(formWith([{ name: 'a', type: 'text' }]))
+
+    expect(schema.type).toBe('object')
+    expect('pipe' in schema).toBe(false)
   })
 })

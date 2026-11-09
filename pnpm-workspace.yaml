@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - frameworks/*
+  - integration
   - packages/*
 
 # Install scripts that may run. The postinstalls of unrs-resolver and esbuild (used by
@@ -17,3 +18,9 @@ catalog:
   typescript: ~6.0.3
   valibot: ^1.5.0
   vue-tsc: ^3.3.11
+
+# @qwik.dev/core wants Vitest below 5 for its own test helpers, which the integration tests don't
+# use. They only make Formisch's form store in Node.
+peerDependencyRules:
+  allowedVersions:
+    '@qwik.dev/core>vitest': '5'
