@@ -54,6 +54,8 @@ export default defineConfigWithVueTs(
         // Files directly in src/ (index.ts) that are not inside a feature folder.
         { type: 'package-entry', pattern: 'packages/*/src', capture: ['pkg'] },
         { type: 'package-tests', pattern: 'packages/*/tests', capture: ['pkg'] },
+        // Tests that run the packages in Formisch's own bindings, the way an app uses them.
+        { type: 'integration', pattern: 'integration' },
         // Sample JSON forms that tests and apps share.
         { type: 'fixtures', pattern: 'fixtures' },
       ],
@@ -127,7 +129,13 @@ export default defineConfigWithVueTs(
               },
             },
             {
-              from: { element: { types: ['app', 'framework', 'package-tests'] } },
+              from: { element: { type: 'integration' } },
+              allow: {
+                to: { element: { types: ['integration', 'framework', 'package-entry'] } },
+              },
+            },
+            {
+              from: { element: { types: ['app', 'framework', 'package-tests', 'integration'] } },
               allow: { to: { element: { type: 'fixtures' } } },
             },
             {
@@ -147,7 +155,7 @@ export default defineConfigWithVueTs(
 
   {
     name: 'app/package-tests',
-    files: ['packages/*/tests/**', 'frameworks/*/tests/**'],
+    files: ['packages/*/tests/**', 'frameworks/*/tests/**', 'integration/**'],
     rules: {
       'no-restricted-imports': [
         'error',
