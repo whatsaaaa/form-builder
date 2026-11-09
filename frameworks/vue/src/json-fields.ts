@@ -1,7 +1,6 @@
+import { allFields, dotPathOf, type FieldNode, findField } from '@whatsaaaa/form-builder-schema'
 import { defineComponent, type PropType } from 'vue'
 import type { FieldComponents } from './field-components'
-import { allFields, findField, pathOf } from './field-paths'
-import type { FieldNode } from './field-tree'
 import {
   checkComponents,
   type RenderContext,
@@ -31,12 +30,12 @@ export const JsonFields = defineComponent({
     const fields = props.of.fields
     const except = new Set(props.except)
     // A path that names no field is a typo, so check them even though nothing uses the result.
-    for (const path of except) findField(fields, path, false)
+    for (const path of except) findField(fields, path)
 
     const ctx: RenderContext = {
       of: props.of,
       components: resolveComponents(props.components, props.of),
-      skip: (node) => except.has(pathOf(node) ?? ''),
+      skip: (node) => except.has(dotPathOf(node) ?? ''),
     }
     const nodes = props.only ? onlyFields(fields, props.only) : fields
     checkComponents(ctx, nodes)
@@ -47,6 +46,6 @@ export const JsonFields = defineComponent({
 
 /** The fields `only` names, in the order of the definition, each once. */
 function onlyFields(fields: readonly FieldNode[], only: readonly string[]): FieldNode[] {
-  const named = new Set(only.map((path) => findField(fields, path, true)))
+  const named = new Set(only.map((path) => findField(fields, path, { placed: true })))
   return [...allFields(fields)].filter((node) => named.has(node))
 }

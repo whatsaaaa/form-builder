@@ -2,9 +2,15 @@
 export { createBuildContext } from './builder/build-context'
 export { createSchemaBuilder } from './builder/create-schema-builder'
 export type { MessageContext } from './builder/build-field-schema'
-export type { SchemaBuilder, SchemaBuilderOptions } from './builder/create-schema-builder'
+export type {
+  JsonFormSchema,
+  SchemaBuilder,
+  SchemaBuilderOptions,
+  TypedJsonFormSchema,
+} from './builder/create-schema-builder'
 export type { TypedField, TypedForm, TypedFormRule, TypedRule } from './builder/typed-form'
 export { getInitialInput } from './definition/initial-input'
+export { isRequired } from './definition/is-required'
 export type { JsonField, JsonForm, JsonFormRule, JsonRule } from './definition/json-form-schema'
 export { walkFields } from './definition/walk-fields'
 export type { WalkedField } from './definition/walk-fields'
@@ -25,6 +31,12 @@ export type {
 } from './field-types/field-type-def'
 export { defaultKinds } from './kinds/default-kinds'
 export type { KindDef } from './kinds/kind-def'
+export { coerceInput } from './render/coerce-input'
+export type { FieldNode, FieldRole } from './render/field-tree'
+export { allFields, dotPathOf, findField } from './render/find-field'
+export type { FindFieldOptions } from './render/find-field'
+export { toFieldPath } from './render/to-field-path'
+export type { FieldPath } from './render/to-field-path'
 export { comparisonRules } from './rules/comparison-rules'
 export { contentRules } from './rules/content-rules'
 export { dateRules } from './rules/date-rules'

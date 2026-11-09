@@ -1,10 +1,11 @@
 import type * as v from 'valibot'
-import type { JsonForm } from '../definition/json-form-schema'
+import type { JsonField, JsonForm } from '../definition/json-form-schema'
 import type { WalkedField } from '../definition/walk-fields'
 import { DefinitionError, type ValidateResult } from '../errors/definition-error'
 import type { defaultFieldTypes } from '../field-types/default-field-types'
 import type { FieldTypeDef } from '../field-types/field-type-def'
 import type { KindDef } from '../kinds/kind-def'
+import { type FieldNode, fieldTree } from '../render/field-tree'
 import type { defaultRules } from '../rules/default-rules'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import type { defaultFormRules } from '../rules/form-rules'
@@ -12,8 +13,8 @@ import type { RuleDef } from '../rules/rule-def'
 import type { ValueKind } from '../shared/value-kind'
 import type { MessageContext, Messages } from './build-field-schema'
 import { checkRegistry } from './check-registry'
-import { compileDefinition } from './compile-definition'
-import { mergeRegistry } from './registry'
+import { compileDefinition, createCompiler } from './compile-definition'
+import { lookup, mergeRegistry } from './registry'
 import type { TypedForm } from './typed-form'
 
 export interface SchemaBuilderOptions {
@@ -46,6 +47,21 @@ export function createMessages(
   }
 }
 
+/** What `build()` returns: the definition's schema, ready for Formisch or `v.parse`. */
+export type JsonFormSchema = v.ObjectSchema<v.ObjectEntries, undefined>
+
+/**
+ * The schema type of `build<TInput, TOutput>()`: your types, so Formisch's paths and values are
+ * checked. An interface works too, which Formisch's own constraint wouldn't take as it is.
+ */
+export type TypedJsonFormSchema<
+  TInput extends object,
+  TOutput extends object = TInput,
+> = v.GenericSchema<Plain<TInput>, Plain<TOutput>>
+
+/** The same type as an object literal type, which has the index signature Formisch requires. */
+type Plain<T> = { [K in keyof T]: T[K] }
+
 /** What `createSchemaBuilder` returns. Its type parameters are the registries, by key. */
 export interface SchemaBuilder<
   TFieldTypes extends Record<string, FieldTypeDef> = Record<string, FieldTypeDef>,
@@ -53,7 +69,15 @@ export interface SchemaBuilder<
   TFormRules extends Record<string, FormRuleDef> = Record<string, FormRuleDef>,
 > {
   /** The definition's schema. Throws one `DefinitionError` with every issue it has. */
-  build(json: JsonForm): v.ObjectSchema<v.ObjectEntries, undefined>
+  build(json: JsonForm): JsonFormSchema
+  /**
+   * The same schema, typed by your input type, and output type when it differs, so Formisch's
+   * paths and values are checked. The types are a promise you make: nothing checks them against
+   * the definition.
+   */
+  build<TInput extends object, TOutput extends object = TInput>(
+    json: JsonForm,
+  ): TypedJsonFormSchema<TInput, TOutput>
   /** Every issue in the definition, in document order. Never throws on bad input. */
   validate(json: unknown): ValidateResult
   /**
@@ -77,6 +101,18 @@ export interface SchemaBuilder<
    * field whose only issue is its default still gets that default.
    */
   getInitialInput(json: JsonForm): Record<string, unknown>
+  /**
+   * The input of a new item of an array, for Formisch's `insert()`: an object of the defaults of
+   * its `fields`, or the default of its `of` field. It reads this builder's container types too,
+   * and never throws. Undefined for a field that isn't a container of kind `array`.
+   */
+  getItemInput(field: JsonField): unknown
+  /**
+   * The definition's fields as a tree, each with its role, for a renderer. It reads this builder's
+   * types, so your own containers are groups or arrays by their kind. Throws one `DefinitionError`
+   * with every issue the definition has, like `build()`.
+   */
+  getFieldTree(json: JsonForm): FieldNode[]
   /** The registered rules that can be used on a field of `kind`, e.g. for a rule picker. */
   rulesForKind(kind: ValueKind): [name: string, def: RuleDef][]
   readonly kinds: Readonly<Record<string, KindDef>>
@@ -129,7 +165,7 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     return issues.length ? { success: false, issues } : { success: true, issues: [] }
   }
 
-  function build(json: JsonForm) {
+  function build(json: JsonForm): JsonFormSchema {
     const { issues, schema } = compileDefinition(json, registry, messages)
     if (issues.length) throw new DefinitionError(issues)
     return schema
@@ -143,16 +179,29 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     return compileDefinition(json, registry, messages).initialInput
   }
 
+  function getItemInput(field: JsonField): unknown {
+    return createCompiler(registry, messages, []).itemInput(field, [])
+  }
+
+  function getFieldTree(json: JsonForm): FieldNode[] {
+    const { issues, walked } = compileDefinition(json, registry, messages)
+    if (issues.length) throw new DefinitionError(issues)
+    return fieldTree(walked, (type) => lookup(registry.fieldTypes, type)?.container === true)
+  }
+
   function rulesForKind(kind: ValueKind): [name: string, def: RuleDef][] {
     return Object.entries(registry.rules).filter(([, def]) => def.kinds.includes(kind))
   }
 
   return {
-    build,
+    // The types build<TInput, TOutput>() gives are yours: the schema is the same.
+    build: build as SchemaBuilder['build'],
     validate,
     defineForm: (definition) => definition,
     walkFields,
     getInitialInput,
+    getItemInput,
+    getFieldTree,
     rulesForKind,
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,

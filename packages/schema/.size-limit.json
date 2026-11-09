@@ -10,5 +10,11 @@
     "path": "dist/index.js",
     "import": "{ createSchemaBuilder, formatRules }",
     "limit": "12 kB"
+  },
+  {
+    "name": "createSchemaBuilder with the render helpers",
+    "path": "dist/index.js",
+    "import": "{ allFields, coerceInput, createSchemaBuilder, dotPathOf, findField, isRequired, toFieldPath }",
+    "limit": "12 kB"
   }
 ]

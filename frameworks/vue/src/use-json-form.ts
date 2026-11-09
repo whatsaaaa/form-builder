@@ -1,12 +1,13 @@
 import { type FormSchema, type FormStore, useForm, type ValidationMode } from '@formisch/vue'
 import {
   createSchemaBuilder,
+  type FieldNode,
   type JsonForm,
+  type JsonFormSchema,
   type SchemaBuilder,
+  type TypedJsonFormSchema,
 } from '@whatsaaaa/form-builder-schema'
-import type { GenericSchema } from 'valibot'
 import type { FieldComponents } from './field-components'
-import { type FieldNode, fieldTree } from './field-tree'
 
 export interface UseJsonFormOptions {
   /** Builds the schema and knows your own types and rules. Defaults to `createSchemaBuilder()`. */
@@ -18,21 +19,6 @@ export interface UseJsonFormOptions {
   /** When a field is validated again after that, as in Formisch. */
   revalidate?: Exclude<ValidationMode, 'initial'>
 }
-
-/** The schema of a definition, as the builder builds it. */
-export type JsonFormSchema = ReturnType<SchemaBuilder['build']>
-
-/**
- * The schema type of `useJsonForm<TInput, TOutput>`: your types, so Formisch's paths and values
- * are checked. An interface works too, which Formisch's own constraint wouldn't take as it is.
- */
-export type TypedJsonFormSchema<
-  TInput extends object,
-  TOutput extends object = TInput,
-> = GenericSchema<Plain<TInput>, Plain<TOutput>>
-
-/** The same type as an object literal type, which has the index signature Formisch requires. */
-type Plain<T> = { [K in keyof T]: T[K] }
 
 /** What `useJsonForm` returns. Pass it to `<JsonFields>`. */
 export interface JsonFormInstance<TSchema extends FormSchema = JsonFormSchema> {
@@ -76,5 +62,5 @@ export function useJsonForm(
     revalidate: options.revalidate,
   })
   const { components } = options
-  return { form, definition, builder, components, fields: fieldTree(builder, definition) }
+  return { form, definition, builder, components, fields: builder.getFieldTree(definition) }
 }

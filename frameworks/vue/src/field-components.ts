@@ -1,12 +1,9 @@
 import type { FieldElementProps } from '@formisch/vue'
-import type { JsonField, ValueKind } from '@whatsaaaa/form-builder-schema'
+import type { FieldPath, JsonField, ValueKind } from '@whatsaaaa/form-builder-schema'
 import type { Component, VNode } from 'vue'
 
 /** Your component for each field type, by type name: `{ text: TextInput, group: Fieldset }`. */
 export type FieldComponents = Record<string, Component>
-
-/** A field's Formisch path, with real indexes: `['lines', 0, 'quantity']`. */
-export type FieldPath = readonly (string | number)[]
 
 /** The props of a component for a display element, like a heading. */
 export interface DisplayFieldProps {
