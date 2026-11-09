@@ -8,7 +8,7 @@ Build [Valibot](https://valibot.dev) schemas from JSON form definitions, ready t
 pnpm add @whatsaaaa/form-builder-schema valibot
 ```
 
-Valibot 1.3 or later is required. To make a JSON Schema for your own registries, also add `@valibot/to-json-schema` 1.6 or later (see [JSON Schema](#json-schema)).
+Valibot 1.3 or later is required. To render forms, also add Formisch's package for your framework, which needs Valibot 1.4.1 or later (see [Using with Formisch](#using-with-formisch)). To make a JSON Schema for your own registries, also add `@valibot/to-json-schema` 1.6 or later (see [JSON Schema](#json-schema)).
 
 ## Usage
 
@@ -29,7 +29,7 @@ const json: JsonForm = {
 }
 
 const { build, validate } = createSchemaBuilder()
-const schema = build(json) // v.ObjectSchema, ready for Formisch or v.parse
+const schema = build(json) // a Valibot schema of the whole form, ready for Formisch or v.parse
 ```
 
 Empty optional fields output `undefined`. Rules never run on empty values, and a required empty field reports only the required message.
@@ -198,6 +198,313 @@ if (!result.success) {
 
 Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its type. Put renderer settings under `ui`, an object that is never checked. A definition itself takes `version`, `fields`, `formRules` and `$schema`, which is allowed and never read. Any other key, on a field or on the definition, is `unknown_key`.
 
+## Using with Formisch
+
+The schema works with Formisch's own package for any framework: Vue, React, Preact, Solid, Svelte, Qwik and Angular. You don't need an adapter from this repo. For Vue, [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue) does everything below for you, with a component of yours for each field type.
+
+```sh
+pnpm add @whatsaaaa/form-builder-schema @formisch/react valibot
+```
+
+Every Formisch package needs Valibot 1.4.1 or later, newer than the 1.3 this package needs on its own.
+
+One builder gives Formisch the schema and the initial input, and you the fields to render:
+
+```ts
+const builder = createSchemaBuilder()
+
+const form = useForm({ schema: builder.build(json), initialInput: builder.getInitialInput(json) })
+const fields = builder.getFieldTree(json)
+```
+
+Use the same builder for all of it, so your own types and rules count everywhere. `getFieldTree` throws a `DefinitionError` like `build`, so run `validate()` first when the definition comes from outside your code.
+
+### Rendering by role
+
+`getFieldTree` gives the definition's fields as a tree of `FieldNode`s, in the order of the definition. Render each one by its `role`, so your own types render too:
+
+| Role      | Which fields                   | Render                                                                      |
+| --------- | ------------------------------ | --------------------------------------------------------------------------- |
+| `value`   | every field with a value       | a control, connected to Formisch's field at the node's path                 |
+| `group`   | a container of kind `object`   | its `children`, e.g. in a `<fieldset>`                                      |
+| `array`   | a container of kind `array`    | Formisch's field array at the node's path, and its `children` for each item |
+| `display` | a display element, kind `none` | `field.text`. It has no Formisch field                                      |
+
+A node has `field`, the field as the definition has it, with its `label`, `placeholder`, `options` and `ui`, and its `type`, `role`, `kind`, `itemKind`, `dataPath` and `children`.
+
+**Paths.** `dataPath` has `'*'` for each array index: `['lines', '*', 'qty']`. `toFieldPath(node.dataPath, indexes)` puts in the index of each item the field is in, outermost first, and gives the path Formisch takes: `['lines', 0, 'qty']`. Pass the indexes down as you render the items. The path comes from the definition at runtime, so Formisch's types can't check it: pass it `as never`.
+
+A whole renderer for React looks like this. Other frameworks have the same shape:
+
+```tsx
+import {
+  Form,
+  type FormStore,
+  insert,
+  remove,
+  type SubmitHandler,
+  useField,
+  useFieldArray,
+  useForm,
+} from '@formisch/react'
+import {
+  coerceInput,
+  createSchemaBuilder,
+  type FieldNode,
+  isRequired,
+  type JsonForm,
+  type JsonFormSchema,
+  toFieldPath,
+} from '@whatsaaaa/form-builder-schema'
+import { useState } from 'react'
+
+const builder = createSchemaBuilder()
+
+export function JsonFormView(props: { json: JsonForm; onSubmit: SubmitHandler<JsonFormSchema> }) {
+  // Formisch reads its config once, so read the definition once too.
+  const [{ fields, ...config }] = useState(() => ({
+    schema: builder.build(props.json),
+    initialInput: builder.getInitialInput(props.json),
+    fields: builder.getFieldTree(props.json),
+  }))
+  const form = useForm(config)
+  return (
+    <Form of={form} onSubmit={props.onSubmit}>
+      <Fields form={form} nodes={fields} indexes={[]} />
+      <button type="submit">Save</button>
+    </Form>
+  )
+}
+
+interface FieldsProps {
+  form: FormStore
+  nodes: readonly FieldNode[]
+  /** The index of each array item the fields are in, outermost first. */
+  indexes: readonly number[]
+}
+
+function Fields({ form, nodes, indexes }: FieldsProps) {
+  return nodes.map((node, position) => {
+    const key = node.field.name ?? `#${position}`
+    switch (node.role) {
+      case 'display':
+        return <Display key={key} node={node} />
+      case 'group':
+        return (
+          <fieldset key={key}>
+            <legend>{node.field.label ?? node.field.name}</legend>
+            <Fields form={form} nodes={node.children} indexes={indexes} />
+          </fieldset>
+        )
+      case 'array':
+        return <ArrayField key={key} form={form} node={node} indexes={indexes} />
+      case 'value':
+        return <ValueField key={key} form={form} node={node} indexes={indexes} />
+    }
+  })
+}
+
+function Display({ node }: { node: FieldNode }) {
+  const text = String(node.field.text ?? '')
+  if (node.type === 'heading') {
+    const Heading = `h${Number(node.field.level ?? 2)}` as 'h2'
+    return <Heading>{text}</Heading>
+  }
+  return node.type === 'paragraph' ? <p>{text}</p> : <hr />
+}
+
+interface FieldProps {
+  form: FormStore
+  node: FieldNode
+  indexes: readonly number[]
+}
+
+function ArrayField({ form, node, indexes }: FieldProps) {
+  // The path comes from the definition at runtime, so Formisch's types can't check it.
+  const path = toFieldPath(node.dataPath, indexes) as never
+  const array = useFieldArray(form, { path })
+  const add = () => insert(form, { path, initialInput: builder.getItemInput(node.field) as never })
+  return (
+    <fieldset>
+      <legend>{node.field.label ?? node.field.name}</legend>
+      {array.items.map((item, index) => (
+        <div key={item}>
+          <Fields form={form} nodes={node.children} indexes={[...indexes, index]} />
+          <button type="button" onClick={() => remove(form, { path, at: index })}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <button type="button" onClick={add}>
+        Add
+      </button>
+      {array.errors && <small>{array.errors[0]}</small>}
+    </fieldset>
+  )
+}
+
+function ValueField({ form, node, indexes }: FieldProps) {
+  const store = useField(form, { path: toFieldPath(node.dataPath, indexes) as never })
+  // Turns what the element gives into the field's value, e.g. '5' into 5 for a number.
+  const set = (input: unknown) => store.onChange(coerceInput(input, node) as never)
+  return (
+    <label>
+      <span>
+        {node.field.label ?? node.field.name}
+        {isRequired(node.field) && ' *'}
+      </span>
+      {/* One control for every type here. See "Controls" for the right one for each. */}
+      <input
+        {...store.props}
+        type={node.kind === 'number' ? 'number' : 'text'}
+        value={(store.input as string | number | undefined) ?? ''}
+        placeholder={node.field.placeholder}
+        onChange={(e) => set(e.target.value)}
+      />
+      {store.errors && <small>{store.errors[0]}</small>}
+    </label>
+  )
+}
+```
+
+- **Arrays.** `builder.getItemInput(node.field)` is the input of a new item, with the defaults its fields have in the definition: an object for an array with `fields`, or the default of its `of` field. Key each item by its id from Formisch's `items`, so it keeps its inputs when another one is removed. `remove`, `move` and `swap` work as in any Formisch form.
+- **Errors.** Show each field's `errors`, and an array's own, like a required array's message, from its field array. Form rules need no wiring: their issues have the path of the field they name, so Formisch shows them on that field, and on that field of each array item.
+- **Required fields.** `isRequired(node.field)` is true when the definition makes a field required, with `required: true` or `{ message }`, e.g. to show an asterisk. The schema checks it: Formisch's `<Form>` turns the browser's own checks off.
+
+Vue has the same shape, but its components set up once. Pass the path as a getter, so a field follows its item when one before it is removed, and the same for `useFieldArray`:
+
+```vue
+<script setup lang="ts">
+import { type FormStore, useField } from '@formisch/vue'
+import {
+  coerceInput,
+  type FieldNode,
+  isRequired,
+  toFieldPath,
+} from '@whatsaaaa/form-builder-schema'
+
+const props = defineProps<{ form: FormStore; node: FieldNode; indexes: readonly number[] }>()
+
+const store = useField(props.form, () => ({
+  path: toFieldPath(props.node.dataPath, props.indexes) as never,
+}))
+const set = (input: unknown) => {
+  store.input = coerceInput(input, props.node) as never
+}
+</script>
+
+<template>
+  <label>
+    <span>{{ node.field.label ?? node.field.name }}{{ isRequired(node.field) ? ' *' : '' }}</span>
+    <input
+      v-bind="store.props"
+      :type="node.kind === 'number' ? 'number' : 'text'"
+      :value="(store.input as string | number | undefined) ?? ''"
+      @input="set(($event.target as HTMLInputElement).value)"
+    />
+    <small v-if="store.errors">{{ store.errors[0] }}</small>
+  </label>
+</template>
+```
+
+### Setting values
+
+An element doesn't always give what the schema expects: an `<input type="number">` gives `'5'`, and a file input gives a `FileList`. `coerceInput(input, node)` turns it into the value of the field's kind:
+
+| Kind                | Input                   | Value                          |
+| ------------------- | ----------------------- | ------------------------------ |
+| `number`            | `''` or only spaces     | `undefined`                    |
+| `number`            | a numeric string, `'5'` | `5`                            |
+| `file`              | a `FileList`            | its first file, or `undefined` |
+| `array` of `file`   | a `FileList`            | an array of its files          |
+| `array` of `number` | numeric strings         | numbers                        |
+
+Anything else is passed as it is, and the schema reports it. Spread Formisch's element props (`store.props`) for the field's name, focus and blur, and set the value yourself from your change handler: with the field store's setter, like `store.onChange(value)` in React or `store.input = value` in Vue, or with `setInput(form, { path, input })`, which every Formisch package has.
+
+### Controls
+
+Every type has a native control. Pick it by the field's `type`, and by `ui.widget` if your definitions use it:
+
+| Type                                                                | Control                                                                |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `text`, `email`, `password`, `url`, `tel`, `number`, `date`, `time` | `<input>` with the same `type`                                         |
+| `datetime`                                                          | `<input type="datetime-local">`                                        |
+| `textarea`                                                          | `<textarea>`                                                           |
+| `checkbox`                                                          | `<input type="checkbox">`: set `e.target.checked`                      |
+| `select`, `radio`                                                   | `<select>` or radios, from `field.options`                             |
+| `multiselect`                                                       | `<select multiple>`, or checkboxes with `ui: { widget: 'checkboxes' }` |
+| `file`                                                              | `<input type="file">`, with `multiple` when its kind is `array`        |
+
+**Choices.** An element's value is always a string, so set the option's own value from `field.options`: that keeps `2` a number and `false` a boolean. Make each option's index the element's value:
+
+```tsx
+const options = node.field.options as { value: string | number | boolean; label: string }[]
+
+<select
+  {...store.props}
+  value={options.findIndex((option) => option.value === store.input)}
+  onChange={(e) => set(options[Number(e.target.value)]?.value)}
+>
+  <option value={-1}>Choose…</option>
+  {options.map((option, i) => (
+    <option key={i} value={i}>
+      {option.label}
+    </option>
+  ))}
+</select>
+```
+
+- A radio sets its option's value: `onChange={() => set(option.value)}`, with `checked={store.input === option.value}`.
+- A multiselect's value is an array of option values. A checkbox adds its option's value or takes it out: `set(e.target.checked ? [...picked, option.value] : picked.filter((value) => value !== option.value))`. A `<select multiple>` sets the values of its `selectedOptions`, by their index.
+- A `select` without `options`, because they load from an API, is a text input. Its kind is `number` with `valueType: 'number'`, so `coerceInput` turns what is typed into a number.
+
+**Files.** Pass the element's `files`, and never set a file input's `value`:
+
+```tsx
+<input
+  {...store.props}
+  type="file"
+  multiple={node.kind === 'array'}
+  accept={node.field.accept as string | undefined}
+  onChange={(e) => set(e.target.files)}
+/>
+```
+
+### Placing fields
+
+To render a field away from the others, say in a sidebar, find it by its dot path, and leave it out where you render the rest:
+
+```ts
+const coupon = findField(fields, 'coupon', { placed: true })
+const rest = fields.filter((node) => dotPathOf(node) !== 'coupon')
+```
+
+- A dot path is the field's names joined with dots: `'address.city'`, or `'lines.*.qty'` for a field of an array's items. `dotPathOf(node)` gives a node's, and undefined for a display element or the field of a list of single values, which have no name.
+- A path that names no field throws a `TypeError`, so a typo shows up at once. With `placed: true`, so does a field of an array's items, which has no index outside its item: place the array instead.
+- `allFields(fields)` gives every node of the tree, in the order of the definition, a container before its fields.
+
+### Typing the form
+
+The definition is data, so TypeScript doesn't know its fields: the output is an object of `unknown` values, and Formisch's own functions take only top-level paths. Give `build` your input type, and your output type when it differs, and Formisch checks paths and values as in any form:
+
+```ts
+interface SignupInput {
+  email: string
+  address: { city?: string }
+}
+
+const form = useForm({
+  schema: builder.build<SignupInput>(json),
+  initialInput: builder.getInitialInput(json),
+})
+
+getInput(form, { path: ['address', 'city'] }) // string | undefined
+```
+
+- It is the same schema, typed as `TypedJsonFormSchema<TInput, TOutput>`. An interface works as the type, which Formisch's own constraint wouldn't take as it is. Your submit handler gets the output type.
+- The types are a promise you make: nothing checks them against the definition. Keep the two in step.
+- Paths from the field tree still need `as never`. Without your types, the schema is a `JsonFormSchema`.
+
 ## Writing definitions in TypeScript
 
 `defineForm` types a definition against the builder's registries, your own types and rules included. It returns the definition unchanged:
@@ -225,7 +532,7 @@ const schema = build(form)
 - **Compile errors:** an unknown `type`, `rule` or form rule, a key that is neither reserved nor a prop, and a prop or param of the wrong type, such as `value: '120'`. Child fields of groups and arrays are checked the same way.
 - **Not checked:** whether a rule fits the field's kind, names, defaults and form rule paths. Run `validate()` for those.
 - The builder knows your entries by key when you pass them in the options. Options typed as `SchemaBuilderOptions` have no known keys, so `defineForm` then takes any name.
-- **The output type isn't inferred.** A field type's `schema()` returns any Valibot schema, so the definition doesn't say what type its value has. `v.InferOutput<typeof schema>` stays an object of `unknown` values. Inferring it would need every field type to declare its output type, so it isn't part of 0.7.
+- **The output type isn't inferred.** A field type's `schema()` returns any Valibot schema, so the definition doesn't say what type its value has. `v.InferOutput<typeof schema>` stays an object of `unknown` values. Inferring it would need every field type to declare its output type, so for now, give `build` your types: see [Typing the form](#typing-the-form).
 
 ## JSON Schema
 
@@ -332,6 +639,7 @@ for (const { field, dataPath, definitionPath, depth } of walkFields(json)) {
 - `getInitialInput` gives each field's `default`, nested the way the value is. A group gives an object, and an array without a default gives `[]`. Other fields without a default are left out.
 - `walkFields` yields every field at every depth, in document order, with a group or array before its fields. The fields of an array's items come once, with `'*'` in place of the index. A field without a name, like a heading, has its parent's `dataPath`.
 - Both know the built-in `group` and `array` types only, and neither checks the definition, so run `validate()` first.
+- To render the fields, the builder's `getFieldTree` gives more: each field's role, kinds and children. See [Using with Formisch](#using-with-formisch).
 
 With your own container types, use the builder's methods of the same name instead. They read every container the builder knows, and give the same results for the built-in ones:
 

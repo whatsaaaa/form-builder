@@ -92,6 +92,12 @@ export interface Compiler {
   /** Checks and builds the field of a list's items, which needs no name. */
   field(field: unknown, path: DefinitionPath): AnySchema
   /**
+   * Checks and builds one field on its own, and gives the input a new item of it starts with when
+   * it is a container of kind `array`: the input of its list of fields, or of the field of its
+   * items. Undefined for any other field.
+   */
+  itemInput(field: unknown, path: DefinitionPath): unknown
+  /**
    * Every field with a value that the compiler has seen, by where its value is, as a dot path:
    * `'address.city'`, or `'lines.*.quantity'` for the fields of a list's items. A field with
    * issues is null.
@@ -126,6 +132,9 @@ export function createCompiler(
   // The initial input of the fields each running container builds. A container of kind
   // `object` gets the input of the first list it builds.
   const childInputs: (Record<string, unknown> | undefined)[] = []
+  // The input a new item starts with, for each running container: the input of the first list,
+  // or field of a list's items, that it builds. Only a container of kind `array` has items.
+  const itemInputs: ({ input: unknown } | undefined)[] = []
 
   function list(raws: readonly unknown[], path: DefinitionPath) {
     const entries: v.ObjectEntries = {}
@@ -144,9 +153,8 @@ export function createCompiler(
       entries[name] = built.schema
       if (built.input !== undefined) input[name] = built.input
     })
-    if (childInputs.length && childInputs.at(-1) === undefined) {
-      childInputs[childInputs.length - 1] = input
-    }
+    keepFirst(childInputs, input)
+    keepFirst(itemInputs, { input })
     return { schema: v.object(entries), input }
   }
 
@@ -161,23 +169,38 @@ export function createCompiler(
     walk(raw, path, dataPath, checked)
     remember(raw, checked, dataPath)
     // A field with issues gets no schema. build() throws before anything parses with it.
-    return checked ? build(checked, dataPath).schema : v.never()
+    if (!checked) return v.never()
+    const built = build(checked, dataPath)
+    keepFirst(itemInputs, { input: built.input })
+    return built.schema
+  }
+
+  function itemInput(raw: unknown, path: DefinitionPath): unknown {
+    const checked = checkField(raw, path, registry, undefined, issues)
+    if (!checked?.type.container || checked.valueKind !== 'array') return undefined
+    return build(checked, []).itemInput
   }
 
   function build(checked: CheckedField, dataPath: DataPath) {
     // The fields of a list's items have no fixed index, so their paths have '*' in its place.
     parents.push(checked.valueKind === 'array' ? [...dataPath, '*'] : dataPath)
     childInputs.push(undefined)
+    itemInputs.push(undefined)
     try {
       const issueCount = issues.length
       const schema = buildFieldSchema(checked, messages, context(checked.path))
       // A child field with issues is left out or built as v.never(), so the schema can't check
       // the default.
       if (issues.length === issueCount) checkDefault(checked, schema, issues)
-      return { schema, input: initialValue(checked, childInputs.at(-1)) }
+      return {
+        schema,
+        input: initialValue(checked, childInputs.at(-1)),
+        itemInput: itemInputs.at(-1)?.input,
+      }
     } finally {
       parents.pop()
       childInputs.pop()
+      itemInputs.pop()
     }
   }
 
@@ -207,10 +230,15 @@ export function createCompiler(
     fieldsByPath.set(key, checked ?? null)
   }
 
-  return { fields, list, field, fieldsByPath, walked }
+  return { fields, list, field, itemInput, fieldsByPath, walked }
 }
 
 type DataPath = readonly string[]
+
+/** Sets what the running container built first, unless it has built something already. */
+function keepFirst<T>(stack: (T | undefined)[], value: T): void {
+  if (stack.length && stack.at(-1) === undefined) stack[stack.length - 1] = value
+}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null

@@ -7,7 +7,7 @@ defineProps<ValueFieldProps>()
 
 <template>
   <!-- setInput turns the FileList into a file, or into an array of files with `multiple`. -->
-  <FieldShell :field="field" :errors="errors">
+  <FieldShell :field="field" :required="required" :errors="errors">
     <input
       v-bind="inputProps"
       type="file"

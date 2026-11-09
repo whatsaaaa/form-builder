@@ -23,7 +23,7 @@ const autocomplete: Record<string, string> = {
 
 <template>
   <!-- A number input gives a string; setInput turns it into a number. -->
-  <FieldShell :field="field" :errors="errors">
+  <FieldShell :field="field" :required="required" :errors="errors">
     <input
       v-bind="inputProps"
       :type="inputTypes[field.type] ?? (kind === 'number' ? 'number' : 'text')"

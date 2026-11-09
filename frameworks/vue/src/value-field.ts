@@ -1,9 +1,12 @@
 import { useField } from '@formisch/vue'
-import type { JsonField } from '@whatsaaaa/form-builder-schema'
+import {
+  coerceInput,
+  type FieldNode,
+  type FieldPath,
+  isRequired,
+} from '@whatsaaaa/form-builder-schema'
 import { type Component, defineComponent, h, type PropType } from 'vue'
-import { coerceInput } from './coerce-input'
-import type { FieldPath, ValueFieldProps } from './field-components'
-import type { FieldNode } from './field-tree'
+import type { ValueFieldProps } from './field-components'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 /** Connects a field with a value to Formisch, and renders your component for it. */
@@ -23,7 +26,7 @@ export const ValueField = defineComponent({
     )
 
     const setInput = (input: unknown) => {
-      field.input = coerceInput(input, props.node.kind, props.node.itemKind) as never
+      field.input = coerceInput(input, props.node) as never
     }
 
     return () => {
@@ -41,6 +44,3 @@ export const ValueField = defineComponent({
     }
   },
 })
-
-const isRequired = (field: JsonField) =>
-  field.required === true || (typeof field.required === 'object' && field.required !== null)

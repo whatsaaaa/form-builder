@@ -1,6 +1,6 @@
+import { findField } from '@whatsaaaa/form-builder-schema'
 import { defineComponent, type PropType } from 'vue'
 import type { FieldComponents } from './field-components'
-import { findField } from './field-paths'
 import {
   checkComponents,
   type RenderContext,
@@ -24,7 +24,7 @@ export const JsonField = defineComponent({
     components: { type: Object as PropType<FieldComponents> },
   },
   setup(props) {
-    const node = findField(props.of.fields, props.path, true)
+    const node = findField(props.of.fields, props.path, { placed: true })
     const ctx: RenderContext = {
       of: props.of,
       components: resolveComponents(props.components, props.of),

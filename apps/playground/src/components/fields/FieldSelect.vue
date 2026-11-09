@@ -15,7 +15,7 @@ const select = (event: Event) =>
 </script>
 
 <template>
-  <FieldShell :field="field" :errors="errors">
+  <FieldShell :field="field" :required="required" :errors="errors">
     <select v-if="options.length" v-bind="inputProps" :required="required" @change="select">
       <option :selected="input === undefined">Choose…</option>
       <option

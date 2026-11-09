@@ -1,8 +1,7 @@
 import { insert, move, remove, useFieldArray } from '@formisch/vue'
+import type { FieldNode, FieldPath } from '@whatsaaaa/form-builder-schema'
 import { type Component, defineComponent, h, type PropType, type VNode } from 'vue'
-import type { ArrayFieldProps, FieldPath } from './field-components'
-import type { FieldNode } from './field-tree'
-import { itemInput } from './item-input'
+import type { ArrayFieldProps } from './field-components'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 /** Connects a container of kind `array` to Formisch, and renders your component for it. */
@@ -29,7 +28,7 @@ export const ArrayField = defineComponent({
       add: () =>
         insert(props.of.form, {
           path: path(),
-          initialInput: itemInput(props.of.builder, props.node) as never,
+          initialInput: props.of.builder.getItemInput(props.node.field) as never,
         }),
       remove: (index: number) => remove(props.of.form, { path: path(), at: index }),
       move: (from: number, to: number) => move(props.of.form, { path: path(), from, to }),

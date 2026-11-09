@@ -1,7 +1,7 @@
+import { type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
 import { type Component, h, type VNode } from 'vue'
 import { ArrayField } from './array-field'
-import type { FieldComponents, FieldPath } from './field-components'
-import type { FieldNode } from './field-tree'
+import type { FieldComponents } from './field-components'
 import type { AnyJsonFormInstance } from './use-json-form'
 import { ValueField } from './value-field'
 
@@ -62,7 +62,7 @@ export function renderField(
   position: number,
 ): VNode {
   const component = ctx.components[node.type] as Component
-  const path = toPath(node.dataPath, indexes)
+  const path = toFieldPath(node.dataPath, indexes)
   const key = node.field.name ?? `#${position}`
   switch (node.role) {
     case 'display':
@@ -85,10 +85,4 @@ export function renderField(
     case 'value':
       return h(ValueField, { key, of: ctx.of, node, path, component })
   }
-}
-
-/** The field's data path, with each `'*'` replaced by the index of the item it is in. */
-function toPath(dataPath: FieldNode['dataPath'], indexes: readonly number[]): FieldPath {
-  let next = 0
-  return dataPath.map((key) => (key === '*' ? (indexes[next++] ?? key) : key))
 }

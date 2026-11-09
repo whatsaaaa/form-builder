@@ -1,13 +1,9 @@
-import type {
-  JsonField,
-  JsonForm,
-  SchemaBuilder,
-  ValueKind,
-  WalkedField,
-} from '@whatsaaaa/form-builder-schema'
+import type { JsonField } from '../definition/json-form-schema'
+import type { WalkedField } from '../definition/walk-fields'
+import type { ValueKind } from '../shared/value-kind'
 
 /**
- * How `<JsonFields>` renders a field: a `value` field has an input, a `group` or an `array` holds
+ * How a renderer shows a field: a `value` field has an input, a `group` or an `array` holds
  * fields, and a `display` element, like a heading, has no value.
  */
 export type FieldRole = 'value' | 'group' | 'array' | 'display'
@@ -29,30 +25,33 @@ export interface FieldNode {
 }
 
 /**
- * The fields of a definition that builds, as a tree. It comes from the builder's `walkFields`, so
- * your own container types are in it too.
+ * The walked fields of a definition without issues, as a tree. `isContainer` tells the types
+ * whose value holds other fields, your own ones included.
  */
-export function fieldTree(builder: SchemaBuilder, definition: JsonForm): FieldNode[] {
+export function fieldTree(
+  walked: Iterable<WalkedField>,
+  isContainer: (type: string) => boolean,
+): FieldNode[] {
   const roots: FieldNode[] = []
   // The list each depth adds its fields to. A container comes before its fields, so the list at a
   // field's depth is the one its parent opened.
   const lists: FieldNode[][] = [roots]
-  for (const walked of builder.walkFields(definition)) {
+  for (const field of walked) {
     const children: FieldNode[] = []
-    lists.length = walked.depth + 1
-    lists.at(-1)?.push(toNode(walked, builder, children))
+    lists.length = field.depth + 1
+    lists.at(-1)?.push(toNode(field, isContainer(field.type), children))
     lists.push(children)
   }
   return roots
 }
 
-function toNode(walked: WalkedField, builder: SchemaBuilder, children: FieldNode[]): FieldNode {
-  // The definition builds, so the builder gave every field its kind.
+function toNode(walked: WalkedField, container: boolean, children: FieldNode[]): FieldNode {
+  // The definition has no issues, so the builder gave every field its kind.
   const kind = walked.kind as ValueKind
   return {
     field: walked.field,
     type: walked.type,
-    role: roleOf(kind, builder.fieldTypes[walked.type]?.container === true),
+    role: roleOf(kind, container),
     kind,
     itemKind: walked.itemKind,
     dataPath: walked.dataPath,

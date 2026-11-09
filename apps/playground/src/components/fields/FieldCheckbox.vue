@@ -14,7 +14,9 @@ defineProps<ValueFieldProps>()
       :required="required"
       @change="setInput(($event.target as HTMLInputElement).checked)"
     />
-    <span>{{ labelOf(field) }}</span>
+    <span
+      >{{ labelOf(field) }} <span v-if="required" class="required" aria-hidden="true">*</span></span
+    >
     <small v-if="errors" class="error">{{ errors[0] }}</small>
   </label>
 </template>

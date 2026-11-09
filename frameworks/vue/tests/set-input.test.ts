@@ -18,19 +18,12 @@ async function setInput(json: ReturnType<typeof form>, path: string, input: unkn
   return (getInput(jsonForm.form) as Record<string, unknown>)[path]
 }
 
+// setInput turns the input with the schema package's coerceInput, which has its own tests. These
+// check that the field's kinds reach it.
 describe('setInput', () => {
   it('turns a numeric string into a number for a number field', async () => {
     expect(await setInput(form({ name: 'n', type: 'number' }), 'n', '5')).toBe(5)
-    expect(await setInput(form({ name: 'n', type: 'number' }), 'n', '-2.5')).toBe(-2.5)
-  })
-
-  it('turns an empty string into no value for a number field', async () => {
     expect(await setInput(form({ name: 'n', type: 'number' }), 'n', '')).toBe(undefined)
-    expect(await setInput(form({ name: 'n', type: 'number' }), 'n', '  ')).toBe(undefined)
-  })
-
-  it('keeps a string that is not a number, for the schema to report', async () => {
-    expect(await setInput(form({ name: 'n', type: 'number' }), 'n', 'abc')).toBe('abc')
   })
 
   it('keeps strings for a text field', async () => {

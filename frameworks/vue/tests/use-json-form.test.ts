@@ -3,25 +3,27 @@ import {
   createSchemaBuilder,
   DefinitionError,
   defineFieldType,
+  type FieldNode,
   type JsonField,
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
-import { type FieldNode, useJsonForm } from '@whatsaaaa/form-builder-vue'
+import { useJsonForm } from '@whatsaaaa/form-builder-vue'
 import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import { fixtures } from './fixtures'
 import { form, settle, silenceVueWarnings, withSetup } from './helpers'
 
-/** The tree without the field objects, to compare in one go. */
-const shape = (nodes: readonly FieldNode[]): unknown[] =>
-  nodes.map(({ type, role, kind, itemKind, dataPath, children }) => ({
-    type,
-    role,
-    kind,
-    itemKind,
-    dataPath,
-    children: shape(children),
-  }))
+// The field tree itself is tested in the schema package, which makes it with getFieldTree().
+
+interface Shape {
+  role: FieldNode['role']
+  dataPath: FieldNode['dataPath']
+  children: Shape[]
+}
+
+function shape({ role, dataPath, children }: FieldNode): Shape {
+  return { role, dataPath, children: children.map(shape) }
+}
 
 describe('useJsonForm', () => {
   it('starts the form with the initial input of the definition', () => {
@@ -45,78 +47,30 @@ describe('useJsonForm', () => {
     expect(getErrors(store, { path: ['email'] })).toEqual(['Email please'])
   })
 
-  it('gives every field of a fixture a role', () => {
-    for (const json of Object.values(fixtures)) {
-      const { fields } = withSetup(() => useJsonForm(json as JsonForm))
-      for (const node of fields) expect(['value', 'group', 'array', 'display']).toContain(node.role)
-    }
-  })
+  it("gives the definition's fields as a tree of roles and data paths", () => {
+    const { fields: group } = withSetup(() => useJsonForm(fixtures.group as JsonForm))
+    const { fields: array } = withSetup(() => useJsonForm(fixtures.array as JsonForm))
 
-  it('makes a tree of the fields, with their roles and kinds', () => {
-    const json = form(
-      { type: 'heading', text: 'Order' },
+    expect(group.map(shape)).toEqual([
       {
-        name: 'address',
-        type: 'group',
-        fields: [{ type: 'divider' }, { name: 'city', type: 'text' }],
-      },
-      { name: 'tags', type: 'array', of: { type: 'number' } },
-      { name: 'lines', type: 'array', fields: [{ name: 'qty', type: 'number' }] },
-      { name: 'photos', type: 'file', multiple: true },
-    )
-    const { fields } = withSetup(() => useJsonForm(json))
-
-    expect(shape(fields)).toEqual([
-      { type: 'heading', role: 'display', kind: 'none', dataPath: [], children: [] },
-      {
-        type: 'group',
         role: 'group',
-        kind: 'object',
         dataPath: ['address'],
         children: [
-          { type: 'divider', role: 'display', kind: 'none', dataPath: ['address'], children: [] },
-          {
-            type: 'text',
-            role: 'value',
-            kind: 'string',
-            dataPath: ['address', 'city'],
-            children: [],
-          },
+          { role: 'value', dataPath: ['address', 'street'], children: [] },
+          { role: 'value', dataPath: ['address', 'city'], children: [] },
+          { role: 'value', dataPath: ['address', 'zip'], children: [] },
+          { role: 'value', dataPath: ['address', 'country'], children: [] },
         ],
-      },
-      {
-        type: 'array',
-        role: 'array',
-        kind: 'array',
-        dataPath: ['tags'],
-        children: [
-          { type: 'number', role: 'value', kind: 'number', dataPath: ['tags', '*'], children: [] },
-        ],
-      },
-      {
-        type: 'array',
-        role: 'array',
-        kind: 'array',
-        dataPath: ['lines'],
-        children: [
-          {
-            type: 'number',
-            role: 'value',
-            kind: 'number',
-            dataPath: ['lines', '*', 'qty'],
-            children: [],
-          },
-        ],
-      },
-      {
-        type: 'file',
-        role: 'value',
-        kind: 'array',
-        itemKind: 'file',
-        dataPath: ['photos'],
-        children: [],
       },
     ])
+    expect(shape(array[1]!)).toEqual({
+      role: 'array',
+      dataPath: ['lines'],
+      children: [
+        { role: 'value', dataPath: ['lines', '*', 'product'], children: [] },
+        { role: 'value', dataPath: ['lines', '*', 'quantity'], children: [] },
+      ],
+    })
   })
 
   it('reads your own types through the builder you pass', () => {
@@ -131,21 +85,11 @@ describe('useJsonForm', () => {
     const json = form({ name: 'person', type: 'section', fields: [{ name: 'name', type: 'text' }] })
     const { fields, form: store } = withSetup(() => useJsonForm(json, { builder }))
 
-    expect(shape(fields)).toEqual([
+    expect(fields.map(shape)).toEqual([
       {
-        type: 'section',
         role: 'group',
-        kind: 'object',
         dataPath: ['person'],
-        children: [
-          {
-            type: 'text',
-            role: 'value',
-            kind: 'string',
-            dataPath: ['person', 'name'],
-            children: [],
-          },
-        ],
+        children: [{ role: 'value', dataPath: ['person', 'name'], children: [] }],
       },
     ])
     expect(getInput(store)).toEqual({ person: {} })
