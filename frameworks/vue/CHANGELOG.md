@@ -1,5 +1,13 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.1.3
+
+### Patch Changes
+
+- [#25](https://github.com/whatsaaaa/form-builder/pull/25) [`2975556`](https://github.com/whatsaaaa/form-builder/commit/29755564f3acf08594f69e2057b746d3fd60cdcb) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - The adapter now uses the render helpers of `@whatsaaaa/form-builder-schema`, so it behaves as before, and renderers for other frameworks share its code. `FieldNode`, `FieldRole`, `FieldPath`, `JsonFormSchema` and `TypedJsonFormSchema` are the schema package's types, exported from here as before.
+- Updated dependencies [[`2975556`](https://github.com/whatsaaaa/form-builder/commit/29755564f3acf08594f69e2057b746d3fd60cdcb)]:
+  - @whatsaaaa/form-builder-schema@0.11.0
+
 ## 0.1.2
 
 ### Patch Changes
