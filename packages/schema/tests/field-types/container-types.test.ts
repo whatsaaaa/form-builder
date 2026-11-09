@@ -71,6 +71,12 @@ describe('container types', () => {
       expect(paths(schema, { tags: ['a', ''] })).toEqual(['tags.1'])
     })
 
+    it.each([null, false, 0, ''])('reports of: %j as invalid_shape', (of) => {
+      expect(issues({ name: 'tags', type: 'array', of })).toEqual([
+        { code: 'invalid_shape', path: ['fields', 0, 'of'] },
+      ])
+    })
+
     it('ignores the name of the field in of', () => {
       const schema = build(form({ name: 'tags', type: 'array', of: { name: 'tag', type: 'text' } }))
 

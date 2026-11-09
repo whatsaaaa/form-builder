@@ -31,6 +31,12 @@ describe('display types', () => {
     ])
   })
 
+  it('reports a default on a display element as invalid_shape', () => {
+    expect(issues(form({ name: 'intro', type: 'heading', text: 'Hi', default: 'x' }))).toEqual([
+      { code: 'invalid_shape', path: ['fields', 0, 'default'] },
+    ])
+  })
+
   it('checks their props', () => {
     expect(
       issues(

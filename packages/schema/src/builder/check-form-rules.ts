@@ -67,7 +67,15 @@ function checkFormRule(
     return undefined
   }
 
-  const params = checkParams(rule, def.params, isReservedFormRuleKey, at, path, issues)
+  // The input itself, so keys Valibot leaves out of its output, like constructor, are checked.
+  const params = checkParams(
+    raw as JsonFormRule,
+    def.params,
+    isReservedFormRuleKey,
+    at,
+    path,
+    issues,
+  )
   if (!params) return undefined
 
   const paths = [rule.field, ...def.reads(params)].map((dotPath) => dotPath.split('.'))

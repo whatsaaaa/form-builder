@@ -59,6 +59,13 @@ export function compileDefinition(
     return { ...empty, issues }
   }
 
+  // Like a field's, so a misspelled `formRules` isn't silently ignored.
+  for (const key of Object.keys(json as object)) {
+    if (!Object.hasOwn(formShape.entries, key)) {
+      issues.push(issue('unknown_key', [key], `Unknown key "${key}" on the form`))
+    }
+  }
+
   const compiler = createCompiler(registry, messages, issues)
   const { schema, input } = compiler.list(form.output.fields, ['fields'])
   const walked = [...compiler.walked]
@@ -162,8 +169,11 @@ export function createCompiler(
     parents.push(checked.valueKind === 'array' ? [...dataPath, '*'] : dataPath)
     childInputs.push(undefined)
     try {
+      const issueCount = issues.length
       const schema = buildFieldSchema(checked, messages, context(checked.path))
-      checkDefault(checked, schema, issues)
+      // A child field with issues is left out or built as v.never(), so the schema can't check
+      // the default.
+      if (issues.length === issueCount) checkDefault(checked, schema, issues)
       return { schema, input: initialValue(checked, childInputs.at(-1)) }
     } finally {
       parents.pop()

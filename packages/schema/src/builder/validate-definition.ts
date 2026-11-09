@@ -11,7 +11,7 @@ import type { FieldTypeDef, KindOf } from '../field-types/field-type-def'
 import type { KindDef } from '../kinds/kind-def'
 import type { RuleDef } from '../rules/rule-def'
 import { paramsFor } from '../rules/rule-params'
-import { isReservedFieldKey, isReservedRuleKey } from '../shared/reserved-keys'
+import { isReservedFieldKey, isReservedName, isReservedRuleKey } from '../shared/reserved-keys'
 import type { AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 import { lookup, type Registry } from './registry'
@@ -54,7 +54,14 @@ const fieldShape = v.looseObject({
   default: v.optional(v.unknown()),
   required: v.optional(v.union([v.boolean(), v.strictObject({ message: v.optional(v.string()) })])),
   rules: v.optional(v.array(v.unknown())),
-  ui: v.optional(v.record(v.string(), v.unknown())),
+  // v.record() takes an array too, and outputs it as an object.
+  ui: v.optional(
+    v.pipe(
+      v.unknown(),
+      v.check((ui) => !Array.isArray(ui), 'Use an object, not an array'),
+      v.record(v.string(), v.unknown()),
+    ),
+  ),
 })
 const ruleShape = v.looseObject({ rule: v.string(), message: v.optional(v.string()) })
 const noKeys = v.object({})
@@ -90,12 +97,12 @@ export function checkField(
     return undefined
   }
 
-  const props = checkProps(field, type, path, issues)
+  const props = checkProps(raw as JsonField, type, path, issues)
 
   // Only a fixed kind can be 'none'. A kind() function that returns it throws in kindDef.
   if (type.kind === 'none') {
     const noValue = `A "${field.type}" field has no value`
-    rejectKeys(field, ['required', 'rules'], noValue, path, issues)
+    rejectKeys(field, ['default', 'required', 'rules'], noValue, path, issues)
     if (!names) {
       const message = `A list's items need a value, and a "${field.type}" field has none`
       issues.push(issue('invalid_shape', [...path, 'type'], message))
@@ -103,15 +110,10 @@ export function checkField(
     return undefined
   }
 
-  // A kind that comes from a function needs the parsed props. Without them, the rules can't be
-  // checked either; the props issues are reported already.
   const withProps = props && { ...field, ...props }
-  const kind = resolveKind(type.kind, withProps)
-  if (kind === undefined) return undefined
-  const kinds: FieldKinds = {
-    kind,
-    itemKind: kind === 'array' ? resolveKind(type.itemKind, withProps) : undefined,
-  }
+  const kinds = resolveKinds(type, withProps)
+  if (!kinds) return undefined
+  const { kind } = kinds
 
   // A group is always there, and its fields decide what is required.
   if (type.container && kind === 'object') {
@@ -163,16 +165,22 @@ function checkName(
     if (type) issues.push(issue('missing_name', [...path, 'name'], 'A field needs a name'))
     return
   }
-  // A name is one key of the value. Paths like 'address.city' and 'lines[0]' use these as
-  // separators.
-  if (/[.[\]]/.test(field.name)) {
-    const message = `Name "${field.name}" can't contain ".", "[" or "]"`
-    issues.push(issue('invalid_name', [...path, 'name'], message))
-  }
+  const invalid = invalidName(field.name)
+  if (invalid) issues.push(issue('invalid_name', [...path, 'name'], invalid))
   if (names.has(field.name)) {
     issues.push(issue('duplicate_name', [...path, 'name'], `Duplicate name "${field.name}"`))
   }
   names.add(field.name)
+}
+
+/**
+ * Why a name can't be one key of the value, or undefined when it can. Paths like 'address.city'
+ * and 'lines[0]' use '.', '[' and ']' as separators.
+ */
+function invalidName(name: string): string | undefined {
+  if (/[.[\]]/.test(name)) return `Name "${name}" can't contain ".", "[" or "]"`
+  if (isReservedName(name)) return `Name "${name}" is reserved`
+  return undefined
 }
 
 /** Reports each of `keys` the field has. `reason` says why it can't have them. */
@@ -188,6 +196,18 @@ function rejectKeys(
       issues.push(issue('invalid_shape', [...path, key], `${reason}, so it can't have "${key}"`))
     }
   }
+}
+
+/**
+ * The kinds of a field. A kind that comes from a function needs the parsed props, so without
+ * them, the kinds are undefined. The rules can't be checked then either, and the props issues are
+ * reported already.
+ */
+function resolveKinds(type: FieldTypeDef, field: JsonField | undefined): FieldKinds | undefined {
+  const kind = resolveKind(type.kind, field)
+  if (kind !== 'array') return kind === undefined ? undefined : { kind }
+  if (typeof type.itemKind === 'function' && !field) return undefined
+  return { kind, itemKind: resolveKind(type.itemKind, field) }
 }
 
 function resolveKind(
@@ -228,6 +248,7 @@ export function checkDefaultRules(
 /**
  * Checks the props of a field: every key that isn't reserved must be one of its type's props,
  * and together they must pass them. Returns the parsed props, or undefined when they fail.
+ * `field` is the input itself: see `pickKeys`.
  */
 function checkProps(
   field: JsonField,
@@ -276,7 +297,7 @@ export function checkRule(
   }
 
   const params = checkParams(
-    rule,
+    raw as JsonRule,
     paramsFor(def, each ? (itemKind as ValueKind) : kind),
     isReservedRuleKey,
     `Rule "${rule.rule}"`,
@@ -313,7 +334,8 @@ export function checkParams(
 
 /**
  * The keys of `raw` that are entries of `schema`, to parse with it. Reserved keys are skipped,
- * and every other key adds the issue `unknown` gives for it.
+ * and every other key adds the issue `unknown` gives for it. `raw` is the input itself, not
+ * Valibot's output of it, which leaves out keys like `constructor` that must be reported too.
  */
 function pickKeys(
   raw: Record<string, unknown>,

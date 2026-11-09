@@ -40,6 +40,9 @@ describe('definition.schema.json', () => {
     ['a missing prop', form({ name: 'a', type: 'radio' })],
     ['a value field without a name', form({ type: 'text' })],
     ['a name with a dot', form({ name: 'a.b', type: 'text' })],
+    ['the name *', form({ name: '*', type: 'text' })],
+    ['the name __proto__', form({ name: '__proto__', type: 'text' })],
+    ['a default on a heading', form({ type: 'heading', text: 'Hi', default: 'x' })],
     ['a required group', form({ name: 'a', type: 'group', required: true, fields: [] })],
     ['rules on a heading', form({ type: 'heading', text: 'Hi', rules: [] })],
     [

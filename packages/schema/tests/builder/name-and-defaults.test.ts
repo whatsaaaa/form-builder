@@ -14,6 +14,13 @@ describe('names', () => {
     ])
   })
 
+  // Form rule paths read the items of a list with '*', and no object can hold a '__proto__' key.
+  it.each(['*', '__proto__'])('reports the name %j as invalid_name', (name) => {
+    expect(issues({ name, type: 'text' })).toEqual([
+      { code: 'invalid_name', path: ['fields', 0, 'name'] },
+    ])
+  })
+
   it('checks duplicates per level', () => {
     expect(
       issues(
@@ -98,6 +105,14 @@ describe('defaults', () => {
       ).toEqual([
         { code: 'invalid_default', path: ['fields', 0, 'default', 1] },
         { code: 'invalid_default', path: ['fields', 1, 'default', 1, 'product'] },
+      ])
+    })
+
+    it('is not checked while the item field has issues of its own', () => {
+      const of = { type: 'text', rules: [{ rule: 'nope' }] }
+
+      expect(issues({ name: 'tags', type: 'array', of, default: ['a'] })).toEqual([
+        { code: 'unknown_rule', path: ['fields', 0, 'of', 'rules', 0, 'rule'] },
       ])
     })
 

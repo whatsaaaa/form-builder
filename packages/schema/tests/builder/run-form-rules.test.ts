@@ -112,6 +112,34 @@ describe('running form rules', () => {
     ])
   })
 
+  it('compares a date with output: date with one without it by their time', () => {
+    const dates: JsonField[] = [
+      { name: 'start', type: 'date', output: 'date' },
+      { name: 'end', type: 'date' },
+    ]
+    const after = build(
+      formWith(dates, {
+        rule: 'compare',
+        op: 'gt',
+        field: 'end',
+        other: 'start',
+        message: 'End after start',
+      }),
+    )
+    const same = build(
+      formWith(dates, { rule: 'sameAs', field: 'end', other: 'start', message: 'Same day' }),
+    )
+
+    expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-02' })).toEqual([])
+    expect(issuesOf(after, { start: '2026-03-01', end: '2026-03-01' })).toEqual([
+      { path: ['end'], message: 'End after start' },
+    ])
+    expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-01' })).toEqual([])
+    expect(issuesOf(same, { start: '2026-03-01', end: '2026-03-02' })).toEqual([
+      { path: ['end'], message: 'Same day' },
+    ])
+  })
+
   it('runs your own rule on a nested path', () => {
     const sameCountry = defineFormRule({
       params: v.object({ others: v.array(v.string()) }),

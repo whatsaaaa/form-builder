@@ -77,6 +77,36 @@ describe('validate', () => {
     expect(validate(form({ name: 'a', type: 'text', ui: { requird: true } })).success).toBe(true)
   })
 
+  it('reports ui that is no object', () => {
+    const json = { version: '1', fields: [{ name: 'a', type: 'text', ui: [] }] }
+
+    expect(codesAndPaths(json)).toEqual([{ code: 'invalid_shape', path: ['fields', 0, 'ui'] }])
+  })
+
+  it('reports unknown keys on the definition itself', () => {
+    const json = { $schema: './definition.schema.json', version: '1', fields: [], formrules: [] }
+
+    expect(codesAndPaths(json)).toEqual([{ code: 'unknown_key', path: ['formrules'] }])
+  })
+
+  it('reports unknown keys that every object has, like constructor', () => {
+    const json: unknown = JSON.parse(`{
+      "version": "1",
+      "constructor": 1,
+      "fields": [
+        { "name": "a", "type": "text", "__proto__": 1, "rules": [{ "rule": "trim", "constructor": 1 }] }
+      ],
+      "formRules": [{ "rule": "sameAs", "field": "a", "other": "a", "message": "m", "prototype": 1 }]
+    }`)
+
+    expect(codesAndPaths(json)).toEqual([
+      { code: 'unknown_key', path: ['constructor'] },
+      { code: 'unknown_key', path: ['fields', 0, '__proto__'] },
+      { code: 'unknown_param', path: ['fields', 0, 'rules', 0, 'constructor'] },
+      { code: 'unknown_param', path: ['formRules', 0, 'prototype'] },
+    ])
+  })
+
   it('reports a missing name on value fields only', () => {
     expect(codesAndPaths(form({ type: 'text' }, { type: 'heading' }))).toEqual([
       { code: 'missing_name', path: ['fields', 0, 'name'] },

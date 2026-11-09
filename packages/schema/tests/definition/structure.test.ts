@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { getInitialInput, walkFields, type JsonForm } from '@whatsaaaa/form-builder-schema'
+import {
+  createSchemaBuilder,
+  getInitialInput,
+  type JsonForm,
+  walkFields,
+} from '@whatsaaaa/form-builder-schema'
 import array from '../../../../fixtures/field-types/array.json'
 import group from '../../../../fixtures/field-types/group.json'
 import { form } from '../helpers'
@@ -94,6 +99,13 @@ describe('walkFields', () => {
     const json = form({ name: 's', type: 'section', fields: [{ name: 'a', type: 'text' }] })
 
     expect(walk(json).map((field) => field.type)).toEqual(['section'])
+  })
+
+  it('leaves out display elements, like the builder', () => {
+    const json = form({ name: 'intro', type: 'heading', text: 'Hi', default: 'x' })
+
+    expect(getInitialInput(json)).toEqual({})
+    expect(createSchemaBuilder().getInitialInput(json)).toEqual({})
   })
 
   it('reads a group or array without child fields as empty', () => {

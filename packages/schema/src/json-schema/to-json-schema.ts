@@ -8,6 +8,7 @@ import type { FieldTypeDef, FieldTypeMeta } from '../field-types/field-type-def'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import type { RuleDef, RuleMeta } from '../rules/rule-def'
 import { paramsFor } from '../rules/rule-params'
+import { RESERVED_NAMES } from '../shared/reserved-keys'
 import type { AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 
@@ -138,13 +139,18 @@ function fieldTypeSchema(
       properties: {
         // A name is one key of the value, so it can't hold the separators of paths.
         name: hasValue
-          ? { type: 'string', minLength: 1, pattern: '^[^.[\\]]*$' }
+          ? {
+              type: 'string',
+              minLength: 1,
+              pattern: '^[^.[\\]]*$',
+              not: { enum: [...RESERVED_NAMES] },
+            }
           : { type: 'string' },
         type: { const: name },
         label: { type: 'string' },
         description: { type: 'string' },
         placeholder: { type: 'string' },
-        ...(!alwaysThere && { default: {} }),
+        ...(hasValue && !alwaysThere && { default: {} }),
         ...(hasValue &&
           !alwaysThere && {
             required: {

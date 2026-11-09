@@ -26,8 +26,8 @@ export interface SchemaBuilderOptions {
   messages?: { required?: string }
   /**
    * Called with every message from the definition, each field's label and description, and
-   * `messages.required`, e.g. to treat them as i18n keys. Return undefined to use the text as
-   * written.
+   * `messages.required` for each required field without a message of its own, e.g. to treat them
+   * as i18n keys. Return undefined to use the text as written.
    */
   resolveMessage?(key: string, ctx: MessageContext): string | undefined
 }
@@ -73,7 +73,8 @@ export interface SchemaBuilder<
   /**
    * Formisch's `initialInput`, like the `getInitialInput` function, but it reads this builder's
    * container types too. A container of kind `object` gives an object, and one of kind `array`
-   * without a default gives `[]`. It never throws, and leaves out a field with issues.
+   * without a default gives `[]`. It never throws, and leaves out a field with issues, but a
+   * field whose only issue is its default still gets that default.
    */
   getInitialInput(json: JsonForm): Record<string, unknown>
   /** The registered rules that can be used on a field of `kind`, e.g. for a rule picker. */

@@ -2,7 +2,7 @@
 
 # Field types
 
-Every built-in field type. Every field also takes `name`, `label`, `description`, `placeholder`, `default`, `required`, `rules` and `ui`. A type of kind `none` takes no `rules` or `required`, and a `group` takes no `required` or `default`.
+Every built-in field type. Every field also takes `name`, `label`, `description`, `placeholder`, `default`, `required`, `rules` and `ui`. A type of kind `none` takes no `default`, `required` or `rules`, and a `group` takes no `required` or `default`.
 
 | Type | Label | Kind | Props | Default rules | Description |
 | --- | --- | --- | --- | --- | --- |

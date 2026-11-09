@@ -33,11 +33,14 @@ export function buildFieldSchema(
   ctx: BuildContext,
 ): AnySchema {
   const { field, path, type, kind, valueKind } = checked
-  const required = !!field.required
-  const requiredMessage = messages.resolve(
-    (typeof field.required === 'object' && field.required.message) || messages.required,
-    { field, path },
-  )
+  // Undefined for a field that isn't required, so resolveMessage only sees messages in use.
+  const requiredMessage = field.required
+    ? messages.resolve(
+        (typeof field.required === 'object' && field.required.message) || messages.required,
+        { field, path },
+      )
+    : undefined
+  const required = requiredMessage !== undefined
 
   const rules = ruleActions(checked, messages)
   const finalize = type.finalize?.(field)
