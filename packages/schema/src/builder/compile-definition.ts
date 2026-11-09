@@ -150,7 +150,8 @@ export function createCompiler(
     const names = new Set<string>()
     raws.forEach((raw, i) => {
       const checked = checkField(raw, [...path, i], registry, names, issues)
-      const name = checked ? checked.name : nameOf(raw)
+      // A display element's name, if it has one, is no key of the value.
+      const name = checked ? checked.name : hasValue(raw, registry) ? nameOf(raw) : undefined
       // A field without a name, like a heading, has its parent's path.
       const dataPath = name === undefined ? parentPath() : [...parentPath(), name]
       walk(raw, [...path, i], dataPath, checked)

@@ -215,7 +215,7 @@ Declare the props even when a component doesn't use them, like a divider, or Vue
 
 - A path is the field's names joined with dots: `'email'`, or `'address.city'` for a field of a group. A placed field validates, focuses and submits like any other, because it is still part of the one Formisch form.
 - A group or an array comes with all its fields. A field of an array's items can't be placed on its own, because it has no index outside its item, so place the array. To leave such a field out of every item, use `'*'` for the index: `except: ['lines.*.note']`.
-- `only` renders just the fields it names, in the order of the definition: `<JsonFields :of="jsonForm" :only="['name', 'email']" />`. Display elements have no name, so `only` leaves them out.
+- `only` renders just the fields it names, in the order of the definition: `<JsonFields :of="jsonForm" :only="['name', 'email']" />`. Display elements have no dot path, even with a name, so `only` leaves them out.
 - A path that names no field throws a `TypeError`, so a typo shows up at once. `only` and `except` are read when the component sets up.
 
 ## Typing the form

@@ -4,10 +4,13 @@ import {
   createSchemaBuilder,
   dotPathOf,
   findField,
+  selectFields,
 } from '@whatsaaaa/form-builder-schema'
 import { form } from '../helpers'
 
-const fields = createSchemaBuilder().getFieldTree(
+const builder = createSchemaBuilder()
+
+const fields = builder.getFieldTree(
   form(
     { type: 'heading', text: 'Sign up' },
     { name: 'email', type: 'email' },
@@ -54,6 +57,50 @@ describe('dotPathOf', () => {
       // The field of a list of single values has no name, like the heading: it is the item.
       undefined,
     ])
+  })
+})
+
+// A display element needs no name, but may have one. Its name is no key of the value.
+describe('a display element with a name', () => {
+  const json = form(
+    { type: 'heading', name: 'email', text: 'Contact' },
+    { name: 'email', type: 'email' },
+    {
+      name: 'address',
+      type: 'group',
+      fields: [
+        { type: 'paragraph', name: 'city', text: 'Where to' },
+        { name: 'city', type: 'text' },
+      ],
+    },
+  )
+  const named = builder.getFieldTree(json)
+
+  it('is valid, as it was before', () => {
+    expect(builder.validate(json)).toEqual({ success: true, issues: [] })
+  })
+
+  it("has its parent's data path and no dot path", () => {
+    expect(
+      [...allFields(named)].map((node) => [node.type, node.dataPath, dotPathOf(node)]),
+    ).toEqual([
+      ['heading', [], undefined],
+      ['email', ['email'], 'email'],
+      ['group', ['address'], 'address'],
+      ['paragraph', ['address'], undefined],
+      ['text', ['address', 'city'], 'address.city'],
+    ])
+  })
+
+  it('is never the field at the dot path of its name', () => {
+    expect(findField(named, 'email').type).toBe('email')
+    expect(findField(named, 'address.city').type).toBe('text')
+  })
+
+  it('stays when `except` leaves out the field of its name', () => {
+    const rest = selectFields(named, { except: ['email', 'address.city'] })
+
+    expect([...allFields(rest)].map((node) => node.type)).toEqual(['heading', 'group', 'paragraph'])
   })
 })
 

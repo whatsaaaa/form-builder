@@ -236,6 +236,38 @@ describe('placing fields', () => {
     )
   })
 
+  it('never takes a display element for the field of its name', async () => {
+    const error = vi.spyOn(console, 'error')
+    onTestFinished(() => error.mockRestore())
+    const named = form(
+      { type: 'heading', name: 'email', text: 'Contact' },
+      { name: 'email', type: 'email' },
+    )
+    let setExcept: (except: string[]) => void = () => {}
+    function Layout({ of }: { of: JsonFormInstance }) {
+      const [except, set] = useState<string[]>([])
+      setExcept = set
+      return (
+        <>
+          <main>
+            <JsonFields of={of} except={except} />
+          </main>
+          <aside>
+            <JsonField of={of} path="email" />
+          </aside>
+        </>
+      )
+    }
+    const { root } = mountLayout(named, (form) => <Layout of={form} />, options)
+    expect(pathsIn(root, 'aside')).toEqual(['email'])
+    expect(root.querySelector('aside [data-role="display"]')).toBe(null)
+
+    await update(() => setExcept(['email']))
+    expect(root.querySelector('main [data-role="display"]')?.textContent).toBe('Contact')
+    expect(pathsIn(root, 'main')).toEqual([])
+    expect(error).not.toHaveBeenCalled()
+  })
+
   it('throws a TypeError for a path that names no field', () => {
     const placed = placedThrows('emial')
     const excepted = fieldsThrow({ except: ['emial'] })

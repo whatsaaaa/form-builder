@@ -1,7 +1,5 @@
-import { DISPLAY_TYPES } from './built-in-types'
+import { isDisplayType } from './built-in-types'
 import type { JsonField, JsonForm } from './json-form-schema'
-
-const displayTypes: ReadonlySet<string> = new Set(DISPLAY_TYPES)
 
 /**
  * Formisch's `initialInput` for a definition: each field's `default`, nested the way the value
@@ -16,7 +14,7 @@ export function getInitialInput(definition: JsonForm): Record<string, unknown> {
 function inputOf(fields: readonly JsonField[]): Record<string, unknown> {
   const input: Record<string, unknown> = {}
   for (const field of fields) {
-    if (field.name === undefined || displayTypes.has(field.type)) continue
+    if (field.name === undefined || isDisplayType(field.type)) continue
     const value = initialValue(field)
     if (value !== undefined) input[field.name] = value
   }

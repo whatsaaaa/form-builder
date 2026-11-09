@@ -2,11 +2,11 @@ import type { FieldNode } from './field-tree'
 
 /**
  * A field's dot path, the way code names a field to place it: `'address.city'`, or
- * `'lines.*.quantity'` for a field of an array's items. Undefined for a field without a name: a
- * display element, or the field of a list of single values, whose value is the item itself.
+ * `'lines.*.quantity'` for a field of an array's items. Undefined for a display element, even one
+ * with a name, and for the field of a list of single values, whose value is the item itself.
  */
 export const dotPathOf = (node: FieldNode): string | undefined =>
-  node.field.name === undefined ? undefined : node.dataPath.join('.')
+  node.role === 'display' || node.field.name === undefined ? undefined : node.dataPath.join('.')
 
 /** Every field of the tree, in document order, a container before its fields. */
 export function* allFields(nodes: readonly FieldNode[]): Generator<FieldNode, void, undefined> {
