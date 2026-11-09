@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["."],
+  "compilerOptions": {
+    // The Angular compiler builds an empty program from a config that doesn't emit.
+    "noEmit": false,
+    "rootDir": "../..",
+    "outDir": "../../node_modules/.cache/angular-examples",
+    // As in a new Angular CLI app. They check the schema package's source too, as it's imported.
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}

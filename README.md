@@ -30,7 +30,7 @@ edit them. Some come from an API. Some get dragged together in a visual editor.
 **form-builder** lets you write a form down as plain JSON and hands you back a working Formisch form, with fields and
 validation already wired up. The core doesn't care which framework you use: it works with Formisch's own package for
 Vue, React, Preact, Solid, Svelte, Qwik or Angular. Small adapters for Vue and React render the fields with your
-components.
+components, and the docs have a tested renderer for each of the others.
 
 ```json
 {
@@ -65,8 +65,9 @@ This repo is a **pnpm workspace**. Everything lives together so the packages can
 
 🚧 in progress · 💭 planned
 
-For Preact, Solid, Svelte, Qwik and Angular, the schema package works with Formisch's own package: see
-[Using with Formisch](./packages/schema/README.md#using-with-formisch).
+Preact, Solid, Svelte, Qwik and Angular need no adapter: the schema package works with Formisch's own package for each,
+and [Formisch in each framework](./packages/schema/docs/frameworks.md) has a tested renderer to start from. An adapter
+for one of them can come later, if people ask for it.
 
 ### Apps (private, never published)
 
@@ -113,7 +114,7 @@ pnpm --filter @whatsaaaa/form-builder-schema test
 📁 frameworks/   thin adapters for Vue and React
 📁 apps/         the playground (a builder and docs are planned)
 📁 fixtures/     sample JSON forms every test suite shares
-📁 integration/  tests that run the fixtures through Formisch's own bindings
+📁 integration/  tests that run the fixtures through Formisch's own bindings, and the renderers the docs show
 ```
 
 The JSON Schema for the definition format (editor autocomplete!) ships with the schema package as

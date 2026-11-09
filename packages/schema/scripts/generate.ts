@@ -1,7 +1,8 @@
 // Writes the files made from the default registry: definition.schema.json, docs/rules.md and
-// docs/field-types.md. Run it with `pnpm docs:gen`. CI runs it too, and fails when the committed
-// files differ, so commit what it writes.
-import { mkdirSync, writeFileSync } from 'node:fs'
+// docs/field-types.md, and copies the tested renderers from integration/examples into the code
+// blocks of docs/frameworks.md. Run it with `pnpm docs:gen`. CI runs it too, and fails when the
+// committed files differ, so commit what it writes.
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createSchemaBuilder, type FieldTypeDef } from '@whatsaaaa/form-builder-schema'
 import { toJsonSchema, type JsonSchema } from '@whatsaaaa/form-builder-schema/json-schema'
 
@@ -19,6 +20,7 @@ const header = (title: string, intro: string) =>
 write('definition.schema.json', `${JSON.stringify(schema, null, 2)}\n`)
 write('docs/rules.md', rulesDoc())
 write('docs/field-types.md', fieldTypesDoc())
+write('docs/frameworks.md', frameworksDoc())
 
 function write(path: string, content: string): void {
   const url = new URL(`../${path}`, import.meta.url)
@@ -84,6 +86,30 @@ function fieldTypesDoc(): string {
     ),
     table(['Type', 'Label', 'Kind', 'Props', 'Default rules', 'Description'], rows),
   ].join('\n')
+}
+
+/**
+ * docs/frameworks.md, with the code block after each `<!-- example: solid/json-form-view.tsx -->`
+ * copied from that file in integration/examples. Every file of an example needs a block.
+ */
+function frameworksDoc(): string {
+  const examples = new URL('../../../integration/examples/', import.meta.url)
+  const files = readdirSync(examples).flatMap((framework) =>
+    readdirSync(new URL(`${framework}/`, examples)).map((file) => `${framework}/${file}`),
+  )
+  const shown = new Set<string>()
+  const doc = readFileSync(new URL('../docs/frameworks.md', import.meta.url), 'utf8').replace(
+    /(<!-- example: (\S+) -->\n\n```\w+\n)[\s\S]*?(```)/g,
+    (_, open: string, file: string, close: string) => {
+      shown.add(file)
+      return open + readFileSync(new URL(file, examples), 'utf8') + close
+    },
+  )
+  const missing = files.filter(
+    (file) => !file.includes('.test.') && !file.endsWith('tsconfig.json') && !shown.has(file),
+  )
+  if (missing.length) throw new Error(`docs/frameworks.md has no block for ${missing.join(', ')}`)
+  return doc
 }
 
 function kindOf(type: FieldTypeDef): string {

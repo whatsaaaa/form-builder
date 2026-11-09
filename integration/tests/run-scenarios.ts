@@ -21,10 +21,10 @@ export interface RenderedForm {
   update(change: () => void): Promise<void>
 }
 
-/** Runs every scenario on forms from `render`. */
-export function runScenarios(render: (json: JsonForm) => RenderedForm) {
+/** Runs every scenario on forms from `render`, which may wait for the form to render. */
+export function runScenarios(render: (json: JsonForm) => RenderedForm | Promise<RenderedForm>) {
   it.each(scenarios)('$fixture: $name', async (scenario) => {
-    const form = render(fixtures[scenario.fixture])
+    const form = await render(fixtures[scenario.fixture])
     for (const step of scenario.steps) await form.update(() => perform(form.root, step))
 
     expect(errorsIn(form.root)).toEqual(scenario.errors ?? {})
@@ -118,7 +118,7 @@ function upload(input: HTMLInputElement, files: readonly FileSpec[]): void {
 const errorsIn = (root: HTMLElement) =>
   Object.fromEntries(
     [...root.querySelectorAll<HTMLElement>('[data-error]')].map((element) => [
-      element.dataset.error,
+      element.dataset['error'],
       element.textContent,
     ]),
   )

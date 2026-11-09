@@ -5,10 +5,14 @@ packages:
   - packages/*
 
 # Install scripts that may run. The postinstalls of unrs-resolver and esbuild (used by
-# size-limit) only re-download or check the native binding, which pnpm already installs
-# through their optional platform packages.
+# size-limit), and of @parcel/watcher, lmdb and msgpackr-extract (used by @angular/build in the
+# integration tests), only re-download, check or build the native binding, which pnpm already
+# installs through their optional platform packages.
 allowBuilds:
+  '@parcel/watcher': false
   esbuild: false
+  lmdb: false
+  msgpackr-extract: false
   unrs-resolver: false
 
 # Versions shared by more than one workspace package. Reference them with `catalog:`.
@@ -20,7 +24,11 @@ catalog:
   vue-tsc: ^3.3.11
 
 # @qwik.dev/core wants Vitest below 5 for its own test helpers, which the integration tests don't
-# use. They only make Formisch's form store in Node.
+# use. They render with Qwik's render() in jsdom.
 peerDependencyRules:
   allowedVersions:
     '@qwik.dev/core>vitest': '5'
+    # @angular/build's WebAssembly build of oxc-parser, which only loads where there's no native
+    # one, brings an @emnapi prerelease that @napi-rs/wasm-runtime's range leaves out.
+    '@napi-rs/wasm-runtime>@emnapi/core': '2.0.0-alpha.6'
+    '@napi-rs/wasm-runtime>@emnapi/runtime': '2.0.0-alpha.6'
