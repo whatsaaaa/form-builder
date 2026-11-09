@@ -1,5 +1,12 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [[`ee8019d`](https://github.com/whatsaaaa/form-builder/commit/ee8019dd1a07fc0236629289a76fd4db8f0b9e95)]:
+  - @whatsaaaa/form-builder-schema@0.12.0
+
 ## 0.1.3
 
 ### Patch Changes
