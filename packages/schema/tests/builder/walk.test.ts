@@ -146,6 +146,12 @@ describe("the builder's walkFields", () => {
   it('yields nothing for a definition it cannot read', () => {
     expect([...builder.walkFields({ version: '1', fields: null } as never)]).toEqual([])
   })
+
+  it('skips what is not shaped like a field', () => {
+    const json = { version: '1', fields: ['text', { name: 'a' }, { name: 'b', type: 'text' }] }
+
+    expect(walk(json as never).map((field) => field.dataPath)).toEqual([['b']])
+  })
 })
 
 describe("the builder's getInitialInput", () => {
@@ -186,5 +192,19 @@ describe("the builder's getInitialInput", () => {
     )
 
     expect(builder.getInitialInput(json)).toEqual({ b: 'y' })
+  })
+
+  it('gives {} for a container of kind object that builds no list of fields', () => {
+    const card = defineFieldType({
+      kind: 'object',
+      container: true,
+      props: v.object({ of: childField }),
+      schema: (field, ctx) => v.object({ value: ctx.buildField(field.of, [...ctx.path, 'of']) }),
+    })
+    const { getInitialInput } = createSchemaBuilder({ fieldTypes: { card } })
+
+    expect(getInitialInput(form({ name: 'c', type: 'card', of: { type: 'text' } }))).toEqual({
+      c: {},
+    })
   })
 })

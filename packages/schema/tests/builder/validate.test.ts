@@ -24,6 +24,19 @@ describe('validate', () => {
     },
   )
 
+  it('reports a field or a rule that is no object as invalid_shape', () => {
+    const json = { version: '1', fields: ['text', { name: 'a', type: 'text', rules: ['trim'] }] }
+
+    expect(codesAndPaths(json)).toEqual([
+      { code: 'invalid_shape', path: ['fields', 0] },
+      { code: 'invalid_shape', path: ['fields', 1, 'rules', 0] },
+    ])
+  })
+
+  it('names the root in the message of an issue with the whole definition', () => {
+    expect(() => build(null as never)).toThrow('Invalid form definition:\n   (root): ')
+  })
+
   it('reports an unsupported version', () => {
     expect(codesAndPaths({ version: '2', fields: [] })).toEqual([
       { code: 'unsupported_version', path: ['version'] },
@@ -67,6 +80,12 @@ describe('validate', () => {
   it('reports a missing name on value fields only', () => {
     expect(codesAndPaths(form({ type: 'text' }, { type: 'heading' }))).toEqual([
       { code: 'missing_name', path: ['fields', 0, 'name'] },
+    ])
+  })
+
+  it('reports only the unknown type of a field without a name', () => {
+    expect(codesAndPaths(form({ type: 'nope' }))).toEqual([
+      { code: 'unknown_type', path: ['fields', 0, 'type'] },
     ])
   })
 

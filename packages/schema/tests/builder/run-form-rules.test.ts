@@ -58,6 +58,10 @@ describe('running form rules', () => {
     ])
   })
 
+  it('never runs on a value that is no object', () => {
+    expect(issuesOf(passwords, null)).toEqual([{ path: [], message: expect.any(String) }])
+  })
+
   it('never runs on an empty value', () => {
     const schema = build(
       formWith(
@@ -166,6 +170,15 @@ describe('running form rules', () => {
         ],
       )
       expect(issuesOf(schema, { lines: [] })).toEqual([])
+    })
+
+    it('never runs on a list that is no array', () => {
+      const schema = build(formWith([lines], atMost('lines.*.stock')))
+
+      expect(issuesOf(schema, null)).toEqual([{ path: [], message: expect.any(String) }])
+      expect(issuesOf(schema, { lines: 'x' })).toEqual([
+        { path: ['lines'], message: expect.any(String) },
+      ])
     })
 
     it('skips an item whose fields have issues', () => {

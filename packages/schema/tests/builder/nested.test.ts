@@ -181,6 +181,13 @@ describe('nested fields', () => {
       expect(v.parse(schema, { first: 'Ana' })).toEqual({ first: 'Ana' })
     })
 
+    it("builds the field of a list's items, which needs no name", () => {
+      const schema = createBuildContext().buildField({ type: 'number', required: true }, ['of'])
+
+      expect(messages(schema, '')).toEqual(['Required'])
+      expect(v.parse(schema, 5)).toBe(5)
+    })
+
     it('throws for child fields with issues', () => {
       const bad = { ...field, fields: [{ name: 'first', type: 'nope' }] }
 

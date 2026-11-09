@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
+import { createSchemaBuilder, defaultKinds } from '@whatsaaaa/form-builder-schema'
 import { form } from '../helpers'
 
 const { build, validate } = createSchemaBuilder()
@@ -18,6 +18,10 @@ describe('display types', () => {
     )
 
     expect(Object.keys(schema.entries)).toEqual(['a'])
+  })
+
+  it("have the kind 'none', which is always empty", () => {
+    expect(defaultKinds.none.isEmpty()).toBe(true)
   })
 
   it('reports rules and required on a heading as invalid_shape', () => {

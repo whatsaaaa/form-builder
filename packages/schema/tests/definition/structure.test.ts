@@ -95,6 +95,13 @@ describe('walkFields', () => {
 
     expect(walk(json).map((field) => field.type)).toEqual(['section'])
   })
+
+  it('reads a group or array without child fields as empty', () => {
+    const json = form({ name: 'g', type: 'group' }, { name: 'l', type: 'array' })
+
+    expect(walk(json).map((field) => field.type)).toEqual(['group', 'array'])
+    expect(getInitialInput(json)).toEqual({ g: {}, l: [] })
+  })
 })
 
 describe('getInitialInput', () => {
