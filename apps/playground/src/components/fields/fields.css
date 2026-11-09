@@ -80,6 +80,11 @@
   opacity: 0.7;
 }
 
+/* Required fields get a mark; the schema checks them, so the browser's own checks are off. */
+.form .required {
+  color: #d03050;
+}
+
 .form .error {
   flex-basis: 100%;
   color: #d03050;

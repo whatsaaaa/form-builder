@@ -8,7 +8,9 @@ defineProps<ValueFieldProps>()
 
 <template>
   <fieldset class="field">
-    <legend>{{ labelOf(field) }}</legend>
+    <legend>
+      {{ labelOf(field) }} <span v-if="required" class="required" aria-hidden="true">*</span>
+    </legend>
     <label v-for="option in optionsOf(field)" :key="String(option.value)" class="check">
       <!-- The value comes from the definition, so true stays true, not 'true'. -->
       <input

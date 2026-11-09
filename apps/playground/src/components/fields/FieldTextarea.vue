@@ -6,7 +6,7 @@ defineProps<ValueFieldProps>()
 </script>
 
 <template>
-  <FieldShell :field="field" :errors="errors">
+  <FieldShell :field="field" :required="required" :errors="errors">
     <textarea
       v-bind="inputProps"
       :value="typeof input === 'string' ? input : ''"

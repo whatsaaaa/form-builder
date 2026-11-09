@@ -26,7 +26,9 @@ const select = (event: Event) => {
 
 <template>
   <fieldset v-if="field.ui?.widget === 'checkboxes'" class="field">
-    <legend>{{ labelOf(field) }}</legend>
+    <legend>
+      {{ labelOf(field) }} <span v-if="required" class="required" aria-hidden="true">*</span>
+    </legend>
     <label v-for="option in options" :key="String(option.value)" class="check">
       <input
         v-bind="inputProps"
@@ -39,7 +41,7 @@ const select = (event: Event) => {
     <small v-if="errors" class="error">{{ errors[0] }}</small>
   </fieldset>
 
-  <FieldShell v-else :field="field" :errors="errors">
+  <FieldShell v-else :field="field" :required="required" :errors="errors">
     <select v-bind="inputProps" multiple @change="select">
       <option
         v-for="option in options"

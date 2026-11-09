@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isRequired } from '@whatsaaaa/form-builder-schema'
 import type { ArrayFieldProps, ArrayFieldSlots } from '@whatsaaaa/form-builder-vue'
 import { labelOf } from './labels'
 
@@ -8,7 +9,10 @@ defineSlots<ArrayFieldSlots>()
 
 <template>
   <fieldset class="container">
-    <legend>{{ labelOf(field) }}</legend>
+    <legend>
+      {{ labelOf(field) }}
+      <span v-if="isRequired(field)" class="required" aria-hidden="true">*</span>
+    </legend>
     <div v-for="(item, index) in items" :key="item" class="item">
       <slot :index="index" />
       <button type="button" @click="remove(index)">Remove</button>
