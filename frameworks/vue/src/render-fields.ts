@@ -9,8 +9,6 @@ import { ValueField } from './value-field'
 export interface RenderContext {
   of: AnyJsonFormInstance
   components: FieldComponents
-  /** True for a field that isn't rendered, and so neither are the fields inside it. */
-  skip: (node: FieldNode) => boolean
 }
 
 /** The components from the props, or else the ones `useJsonForm` got. */
@@ -25,34 +23,13 @@ export function resolveComponents(
   return resolved
 }
 
-/** Throws for the field types that would render without a component, naming each once. */
-export function checkComponents(ctx: RenderContext, nodes: readonly FieldNode[]): void {
-  const missing = new Set<string>()
-  const visit = (node: FieldNode) => {
-    if (ctx.skip(node)) return
-    if (!Object.hasOwn(ctx.components, node.type)) missing.add(node.type)
-    node.children.forEach(visit)
-  }
-  nodes.forEach(visit)
-  if (!missing.size) return
-
-  // A missing component is a mistake in the code, not in the definition, so it throws early.
-  const names = [...missing].map((type) => `"${type}"`).join(', ')
-  const [noun, pronoun] = missing.size > 1 ? ['types', 'them'] : ['type', 'it']
-  throw new TypeError(
-    `No component for the field ${noun} ${names}. Add ${pronoun} to the components.`,
-  )
-}
-
 /** `indexes` are the indexes of the array items the fields are in, outermost first. */
 export function renderFields(
   ctx: RenderContext,
   nodes: readonly FieldNode[],
   indexes: readonly number[],
 ): VNode[] {
-  return nodes
-    .filter((node) => !ctx.skip(node))
-    .map((node, position) => renderField(ctx, node, indexes, position))
+  return nodes.map((node, position) => renderField(ctx, node, indexes, position))
 }
 
 export function renderField(

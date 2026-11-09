@@ -14,7 +14,7 @@
   {
     "name": "createSchemaBuilder with the render helpers",
     "path": "dist/index.js",
-    "import": "{ allFields, coerceInput, createSchemaBuilder, dotPathOf, findField, isRequired, toFieldPath }",
+    "import": "{ allFields, checkComponents, coerceInput, createSchemaBuilder, dotPathOf, findField, isRequired, selectFields, toFieldPath }",
     "limit": "12 kB"
   }
 ]

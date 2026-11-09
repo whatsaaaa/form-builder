@@ -201,7 +201,7 @@ Keys on a field must be reserved keys (`RESERVED_FIELD_KEYS`) or props of its ty
 
 ## Using with Formisch
 
-The schema works with Formisch's own package for any framework: Vue, React, Preact, Solid, Svelte, Qwik and Angular. You don't need an adapter from this repo. For Vue, [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue) does everything below for you, with a component of yours for each field type.
+The schema works with Formisch's own package for any framework: Vue, React, Preact, Solid, Svelte, Qwik and Angular. You don't need an adapter from this repo. For Vue and React, [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue) and [`@whatsaaaa/form-builder-react`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/react) do everything below for you, with a component of yours for each field type.
 
 ```sh
 pnpm add @whatsaaaa/form-builder-schema @formisch/react valibot
@@ -371,6 +371,7 @@ function ValueField({ form, node, indexes }: FieldProps) {
 - **Arrays.** `builder.getItemInput(node.field)` is the input of a new item, with the defaults its fields have in the definition: an object for an array with `fields`, or the default of its `of` field. Key each item by its id from Formisch's `items`, so it keeps its inputs when another one is removed. `remove`, `move` and `swap` work as in any Formisch form.
 - **Errors.** Show each field's `errors`, and an array's own, like a required array's message, from its field array. Form rules need no wiring: their issues have the path of the field they name, so Formisch shows them on that field, and on that field of each array item.
 - **Required fields.** `isRequired(node.field)` is true when the definition makes a field required, with `required: true` or `{ message }`, e.g. to show an asterisk. The schema checks it: Formisch's `<Form>` turns the browser's own checks off.
+- **A component per type.** When your renderer looks up a component by `node.type`, `checkComponents(nodes, components)` throws a `TypeError` that names every type in the tree without one, so a missing component shows up before the first render rather than when its field first appears, like in a new array item.
 
 Vue has the same shape, but its components set up once. Pass the path as a getter, so a field follows its item when one before it is removed, and the same for `useFieldArray`:
 
@@ -477,11 +478,12 @@ To render a field away from the others, say in a sidebar, find it by its dot pat
 
 ```ts
 const coupon = findField(fields, 'coupon', { placed: true })
-const rest = fields.filter((node) => dotPathOf(node) !== 'coupon')
+const rest = selectFields(fields, { except: ['coupon'] })
 ```
 
 - A dot path is the field's names joined with dots: `'address.city'`, or `'lines.*.qty'` for a field of an array's items. `dotPathOf(node)` gives a node's, and undefined for a display element or the field of a list of single values, which have no name.
 - A path that names no field throws a `TypeError`, so a typo shows up at once. With `placed: true`, so does a field of an array's items, which has no index outside its item: place the array instead.
+- `selectFields(fields, { only, except })` gives the tree without the fields `except` names, at any depth: `'lines.*.note'` leaves a field out of every item of an array. With `only`, it gives just the fields `only` names, in the order of the definition, each with the fields inside it. A display element has no name, so `only` leaves it out.
 - `allFields(fields)` gives every node of the tree, in the order of the definition, a container before its fields.
 
 ### Typing the form

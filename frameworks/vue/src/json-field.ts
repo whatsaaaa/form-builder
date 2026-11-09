@@ -1,12 +1,7 @@
-import { findField } from '@whatsaaaa/form-builder-schema'
+import { checkComponents, findField } from '@whatsaaaa/form-builder-schema'
 import { defineComponent, type PropType } from 'vue'
 import type { FieldComponents } from './field-components'
-import {
-  checkComponents,
-  type RenderContext,
-  renderField,
-  resolveComponents,
-} from './render-fields'
+import { type RenderContext, renderField, resolveComponents } from './render-fields'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 /**
@@ -28,9 +23,8 @@ export const JsonField = defineComponent({
     const ctx: RenderContext = {
       of: props.of,
       components: resolveComponents(props.components, props.of),
-      skip: () => false,
     }
-    checkComponents(ctx, [node])
+    checkComponents([node], ctx.components)
 
     return () => renderField(ctx, node, [], 0)
   },

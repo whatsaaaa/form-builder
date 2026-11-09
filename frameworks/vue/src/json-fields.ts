@@ -1,12 +1,7 @@
-import { allFields, dotPathOf, type FieldNode, findField } from '@whatsaaaa/form-builder-schema'
+import { checkComponents, selectFields } from '@whatsaaaa/form-builder-schema'
 import { defineComponent, type PropType } from 'vue'
 import type { FieldComponents } from './field-components'
-import {
-  checkComponents,
-  type RenderContext,
-  renderFields,
-  resolveComponents,
-} from './render-fields'
+import { type RenderContext, renderFields, resolveComponents } from './render-fields'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 /**
@@ -27,25 +22,13 @@ export const JsonFields = defineComponent({
     except: { type: Array as PropType<readonly string[]> },
   },
   setup(props) {
-    const fields = props.of.fields
-    const except = new Set(props.except)
-    // A path that names no field is a typo, so check them even though nothing uses the result.
-    for (const path of except) findField(fields, path)
-
     const ctx: RenderContext = {
       of: props.of,
       components: resolveComponents(props.components, props.of),
-      skip: (node) => except.has(dotPathOf(node) ?? ''),
     }
-    const nodes = props.only ? onlyFields(fields, props.only) : fields
-    checkComponents(ctx, nodes)
+    const nodes = selectFields(props.of.fields, { only: props.only, except: props.except })
+    checkComponents(nodes, ctx.components)
 
     return () => renderFields(ctx, nodes, [])
   },
 })
-
-/** The fields `only` names, in the order of the definition, each once. */
-function onlyFields(fields: readonly FieldNode[], only: readonly string[]): FieldNode[] {
-  const named = new Set(only.map((path) => findField(fields, path, { placed: true })))
-  return [...allFields(fields)].filter((node) => named.has(node))
-}
