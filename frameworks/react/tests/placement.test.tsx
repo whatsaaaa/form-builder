@@ -6,7 +6,7 @@ import {
   useJsonForm,
 } from '@whatsaaaa/form-builder-react'
 import { useState } from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import { arrays, builtInComponents, TestInput } from './components'
 import {
   errorAt,
@@ -186,6 +186,34 @@ describe('placing fields', () => {
 
     expect(pathsIn(root, 'form')).toEqual(['name', 'address.city', 'newsletter'])
     expect(root.querySelector('[data-role="display"]')).toBe(null)
+  })
+
+  it('keeps two fields of the same name at different depths apart in `only`', async () => {
+    const billing = form(
+      { name: 'email', type: 'email' },
+      { name: 'billing', type: 'group', fields: [{ name: 'email', type: 'email' }] },
+    )
+    const error = vi.spyOn(console, 'error')
+    onTestFinished(() => error.mockRestore())
+    let setOnly: (only: string[]) => void = () => {}
+    function Layout({ of }: { of: JsonFormInstance }) {
+      const [only, set] = useState(['email', 'billing.email'])
+      setOnly = set
+      return <JsonFields of={of} only={only} />
+    }
+    const { root, jsonForm } = mountLayout(billing, (form) => <Layout of={form} />, options)
+
+    expect(pathsIn(root, 'form')).toEqual(['email', 'billing.email'])
+    type(root, 'billing.email', 'ana@example.com')
+
+    await update(() => setOnly(['billing.email']))
+    expect(pathsIn(root, 'form')).toEqual(['billing.email'])
+    expect(root.querySelector<HTMLInputElement>('[data-path="billing.email"] input')?.value).toBe(
+      'ana@example.com',
+    )
+    type(root, 'billing.email', 'bo@example.com')
+    expect(getInput(jsonForm.form)).toEqual({ billing: { email: 'bo@example.com' } })
+    expect(error).not.toHaveBeenCalled()
   })
 
   it('follows `only` and `except` when they change, and keeps what a hidden field had', async () => {

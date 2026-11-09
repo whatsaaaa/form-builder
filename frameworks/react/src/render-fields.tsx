@@ -1,4 +1,4 @@
-import { type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
+import { dotPathOf, type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
 import type { ComponentType, ReactElement } from 'react'
 import { ArrayField } from './array-field'
 import type {
@@ -47,7 +47,7 @@ export function renderField(
   // The fields were checked for components, and the role tells which props the component takes.
   const component = ctx.components[node.type]
   const path = toFieldPath(node.dataPath, indexes)
-  const key = node.field.name ?? `#${position}`
+  const key = dotPathOf(node) ?? `#${position}`
   switch (node.role) {
     case 'display': {
       const Display = component as ComponentType<DisplayFieldProps>

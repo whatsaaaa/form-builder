@@ -1,4 +1,4 @@
-import { type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
+import { dotPathOf, type FieldNode, toFieldPath } from '@whatsaaaa/form-builder-schema'
 import { type Component, h, type VNode } from 'vue'
 import { ArrayField } from './array-field'
 import type { FieldComponents } from './field-components'
@@ -40,7 +40,7 @@ export function renderField(
 ): VNode {
   const component = ctx.components[node.type] as Component
   const path = toFieldPath(node.dataPath, indexes)
-  const key = node.field.name ?? `#${position}`
+  const key = dotPathOf(node) ?? `#${position}`
   switch (node.role) {
     case 'display':
       return h(component, { key, field: node.field })
