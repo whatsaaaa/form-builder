@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-schema
 
+## 0.13.2
+
+### Patch Changes
+
+- [#33](https://github.com/whatsaaaa/form-builder/pull/33) [`f39434d`](https://github.com/whatsaaaa/form-builder/commit/f39434d3298781e0b0d5fca61a15a0a7bf9c86d0) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - A display element with a `name` no longer takes the dot path of the field of that name. Its name is no key of the value, so it has its parent's `dataPath`, and `dotPathOf` gives undefined for it. Before, a heading named `email` next to an `email` field was what `findField(fields, 'email')` and `<JsonField path="email">` gave, `except: ['email']` left out both, and the adapters gave both the same key.
+
 ## 0.13.1
 
 ### Patch Changes
