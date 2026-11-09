@@ -48,6 +48,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@formisch/vue": "^1.1.1",
+    "@whatsaaaa/form-builder-affects": "workspace:^",
     "happy-dom": "^20.0.0",
     "publint": "^0.3.25",
     "tsdown": "^0.23.2",

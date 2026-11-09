@@ -14,12 +14,16 @@ import {
   issuesOfStep,
   type LayoutStep,
   type StepIssue,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 import { computed, getCurrentScope, nextTick, onScopeDispose, ref, watch } from 'vue'
 
 /** The steps of a form, from its layout. A form without `steps` in its layout has one. */
 export interface JsonFormSteps {
-  /** Every step, in order. */
+  /**
+   * The steps on show, in order. A step whose fields are all hidden by conditions, or that is
+   * hidden itself, is left out, unless it is the current one: Next and Back skip it.
+   */
   readonly list: readonly LayoutStep[]
   /** The index of the current step in `list`. */
   readonly index: number
@@ -58,9 +62,9 @@ export const fieldEventsOf = (form: FormStore): FieldEvents | undefined => field
 
 /**
  * The steps of `layout`, for `useJsonForm`. With more than one, a step shows the errors it had
- * when the user left it, and none the first time they get to it, a step that failed Next revalidates as the user fixes it, a submit
- * before the last step moves on like Next, and a submit that fails because of an earlier step
- * goes back to it.
+ * when the user left it, and none the first time they get to it, a step that failed Next
+ * revalidates as the user fixes it, a submit before the last step moves on like Next, and a submit
+ * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped.
  */
 export function useJsonFormSteps(
   form: FormStore,
@@ -69,33 +73,42 @@ export function useJsonFormSteps(
     validate?: ValidationMode | undefined
     revalidate?: Exclude<ValidationMode, 'initial'> | undefined
   },
+  visibility: { readonly value: VisibilityState },
 ): JsonFormSteps {
-  const list = layout.steps
-  const index = ref(0)
-  const current = computed(() => list[index.value] as LayoutStep)
+  const all = layout.steps
+  // The current step, by its index in `all`, as are the steps of the maps and sets below.
+  const at = ref(0)
+  const current = computed(() => all[at.value] as LayoutStep)
+  // The current step stays on show, so it never goes from under the user.
+  const list = computed(() =>
+    all.filter((step, i) => i === at.value || !visibility.value.isStepHidden(step)),
+  )
+  const index = computed(() => list.value.indexOf(current.value))
   // The errors each step had when the user left it, by the JSON of each field's path.
   const left = new Map<number, Map<string, Errors>>()
   // The steps that failed Next, and haven't passed since.
   const failed = new Set<number>()
 
   async function goTo(target: number): Promise<boolean> {
-    if (!Number.isInteger(target) || target < 0 || target >= list.length) {
-      throw new RangeError(`No step ${target}. The form has ${list.length}.`)
+    const shown = list.value
+    if (!Number.isInteger(target) || target < 0 || target >= shown.length) {
+      throw new RangeError(`No step ${target}. The form has ${shown.length}.`)
     }
+    const to = all.indexOf(shown[target] as LayoutStep)
     if (target <= index.value) {
-      move(target)
+      move(to)
       return true
     }
     const { issues } = await validate(form)
-    for (let at = index.value; at < target; at++) {
-      const found = issuesOfStep(list[at] as LayoutStep, issues)
+    for (const step of shown.slice(index.value, target)) {
+      const found = issuesOfStep(step, issues)
       if (found.length) {
-        await stop(at, found)
+        await stop(all.indexOf(step), found)
         return false
       }
-      failed.delete(at)
+      failed.delete(all.indexOf(step))
     }
-    move(target)
+    move(to)
     return true
   }
 
@@ -107,26 +120,26 @@ export function useJsonFormSteps(
   function move(target: number) {
     leave()
     const errors = left.get(target)
-    for (const path of fieldPathsOf(list[target] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(all[target] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
     }
-    index.value = target
+    at.value = target
   }
 
   /** Keeps the errors of the current step, for when the user comes back to it. */
   function leave() {
     const paths = fieldPathsOf(current.value, getInput(form))
     const errors = paths.map((path): [string, Errors] => [JSON.stringify(path), errorsAt(path)])
-    left.set(index.value, new Map(errors))
+    left.set(at.value, new Map(errors))
   }
 
   const errorsAt = (path: FieldPath): Errors => getErrors(form, { path } as never)
 
-  /** Stays on, or goes to, the step at `at`, with its issues shown. */
-  async function stop(at: number, found: readonly StepIssue[]) {
-    failed.add(at)
-    if (at !== index.value) leave()
-    index.value = at
+  /** Stays on, or goes to, the step at `target`, with its issues shown. */
+  async function stop(target: number, found: readonly StepIssue[]) {
+    failed.add(target)
+    if (target !== at.value) leave()
+    at.value = target
     await nextTick()
     // A group or an array has no element: the first field that has one gets the focus.
     const first = found.find((issue) => issue.field.role === 'value')
@@ -134,7 +147,9 @@ export function useJsonFormSteps(
   }
 
   const steps: JsonFormSteps = {
-    list,
+    get list() {
+      return list.value
+    },
     get index() {
       return index.value
     },
@@ -145,22 +160,22 @@ export function useJsonFormSteps(
       return index.value === 0
     },
     get isLast() {
-      return index.value === list.length - 1
+      return index.value === list.value.length - 1
     },
     next: () => (steps.isLast ? Promise.resolve(false) : goTo(index.value + 1)),
     back: () => {
-      if (index.value > 0) move(index.value - 1)
+      if (index.value > 0) move(all.indexOf(list.value[index.value - 1] as LayoutStep))
     },
     goTo,
   }
-  if (list.length > 1) watchSteps()
+  if (all.length > 1) watchSteps()
   return steps
 
   function watchSteps() {
     fieldEvents.set(form, (event) => {
       // In the other modes, Formisch revalidates a field with errors itself.
       const validateMode = modes.validate ?? 'submit'
-      if (!failed.has(index.value) || validateMode !== 'submit' || form.isSubmitted) return
+      if (!failed.has(at.value) || validateMode !== 'submit' || form.isSubmitted) return
       if (event === (modes.revalidate ?? 'input')) void validate(form)
     })
 
@@ -170,9 +185,12 @@ export function useJsonFormSteps(
       async (submitting, was) => {
         if (submitting || !was || form.isValid) return
         const { issues } = await validate(form)
-        const at = list.findIndex((step) => issuesOfStep(step, issues).length)
-        if (at !== -1 && at < index.value)
-          await stop(at, issuesOfStep(list[at] as LayoutStep, issues))
+        const shown = list.value
+        const first = shown.find((step) => issuesOfStep(step, issues).length)
+        const target = first ? all.indexOf(first) : -1
+        if (first && shown.indexOf(first) < index.value) {
+          await stop(target, issuesOfStep(first, issues))
+        }
       },
     )
 

@@ -29,16 +29,25 @@ export function resolveComponents(
   return resolved
 }
 
-/** `indexes` are the indexes of the array items the fields are in, outermost first. */
+/**
+ * Renders the fields that conditions don't hide. `indexes` are the indexes of the array items the
+ * fields are in, outermost first.
+ */
 export function renderFields(
   ctx: RenderContext,
   nodes: readonly FieldNode[],
   indexes: readonly number[],
 ): ReactElement[] {
-  return nodes.map((node, position) =>
-    renderField(ctx, node, indexes, dotPathOf(node) ?? `#${position}`, (inner) =>
-      renderFields(ctx, node.children, inner),
-    ),
+  const { visibility } = ctx.of
+  // A display element is keyed by its position among all the nodes, which stays the same.
+  return nodes.flatMap((node, position) =>
+    visibility.isHidden(node, indexes)
+      ? []
+      : [
+          renderField(ctx, node, indexes, dotPathOf(node) ?? `#${position}`, (inner) =>
+            renderFields(ctx, node.children, inner),
+          ),
+        ],
   )
 }
 

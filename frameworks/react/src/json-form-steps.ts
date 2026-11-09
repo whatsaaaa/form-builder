@@ -14,12 +14,16 @@ import {
   issuesOfStep,
   type LayoutStep,
   type StepIssue,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 /** The steps of a form, from its layout. A form without `steps` in its layout has one. */
 export interface JsonFormSteps {
-  /** Every step, in order. */
+  /**
+   * The steps on show, in order. A step whose fields are all hidden by conditions, or that is
+   * hidden itself, is left out, unless it is the current one: Next and Back skip it.
+   */
   readonly list: readonly LayoutStep[]
   /** The index of the current step in `list`. */
   readonly index: number
@@ -63,12 +67,19 @@ interface Modes {
 
 /**
  * The steps of `layout`, for `useJsonForm`. With more than one, a step shows the errors it had
- * when the user left it, and none the first time they get to it, a step that failed Next revalidates as the user fixes it, a submit
- * before the last step moves on like Next, and a submit that fails because of an earlier step
- * goes back to it. Like Formisch's `useForm`, it reads the validation modes on the first render.
+ * when the user left it, and none the first time they get to it, a step that failed Next
+ * revalidates as the user fixes it, a submit before the last step moves on like Next, and a submit
+ * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped.
+ * Like Formisch's `useForm`, it reads the validation modes on the first render.
  */
-export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Modes): JsonFormSteps {
-  const list = layout.steps
+export function useJsonFormSteps(
+  form: FormStore,
+  layout: FormLayout,
+  modes: Modes,
+  visibility: VisibilityState,
+): JsonFormSteps {
+  const all = layout.steps
+  // The current step, by its index in `all`, as are the steps in `state` below.
   const [index, setIndex] = useState(0)
   // What the async methods and the event handlers read: always the latest.
   const state = useRef({
@@ -86,25 +97,30 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
 
   const methods = useMemo(() => {
     const at = state.current
+    // The current step stays on show, so it never goes from under the user.
+    const shown = () => all.filter((step, i) => i === at.index || !visibility.isStepHidden(step))
+    const position = (list: readonly LayoutStep[]) => list.indexOf(all[at.index] as LayoutStep)
 
     async function goTo(target: number): Promise<boolean> {
+      const list = shown()
       if (!Number.isInteger(target) || target < 0 || target >= list.length) {
         throw new RangeError(`No step ${target}. The form has ${list.length}.`)
       }
-      if (target <= at.index) {
-        move(target)
+      const to = all.indexOf(list[target] as LayoutStep)
+      if (target <= position(list)) {
+        move(to)
         return true
       }
       const { issues } = await validate(form)
-      for (let step = at.index; step < target; step++) {
-        const found = issuesOfStep(list[step] as LayoutStep, issues)
+      for (const step of list.slice(position(list), target)) {
+        const found = issuesOfStep(step, issues)
         if (found.length) {
-          stop(step, found)
+          stop(all.indexOf(step), found)
           return false
         }
-        at.failed.delete(step)
+        at.failed.delete(all.indexOf(step))
       }
-      move(target)
+      move(to)
       return true
     }
 
@@ -116,7 +132,7 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     function move(target: number) {
       leave()
       const errors = at.left.get(target)
-      for (const path of fieldPathsOf(list[target] as LayoutStep, getInput(form))) {
+      for (const path of fieldPathsOf(all[target] as LayoutStep, getInput(form))) {
         setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
       }
       at.index = target
@@ -125,7 +141,7 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
 
     /** Keeps the errors of the current step, for when the user comes back to it. */
     function leave() {
-      const paths = fieldPathsOf(list[at.index] as LayoutStep, getInput(form))
+      const paths = fieldPathsOf(all[at.index] as LayoutStep, getInput(form))
       const errors = paths.map((path): [string, Errors] => [
         JSON.stringify(path),
         getErrors(form, { path } as never),
@@ -158,16 +174,25 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     /** After a failed submit: back to the first step before this one with issues, if any. */
     async function afterSubmit() {
       const { issues } = await validate(form)
-      const step = list.findIndex((each) => issuesOfStep(each, issues).length)
-      if (step !== -1 && step < at.index) stop(step, issuesOfStep(list[step] as LayoutStep, issues))
+      const list = shown()
+      const step = list.find((each) => issuesOfStep(each, issues).length)
+      if (step && list.indexOf(step) < position(list)) {
+        stop(all.indexOf(step), issuesOfStep(step, issues))
+      }
     }
 
-    const next = () => (at.index === list.length - 1 ? Promise.resolve(false) : goTo(at.index + 1))
-    const back = () => {
-      if (at.index > 0) move(at.index - 1)
+    const isLast = () => {
+      const list = shown()
+      return position(list) === list.length - 1
     }
-    return { goTo, next, back, events, afterSubmit }
-  }, [form, list])
+    const next = () => (isLast() ? Promise.resolve(false) : goTo(position(shown()) + 1))
+    const back = () => {
+      const list = shown()
+      const before = list[position(list) - 1]
+      if (before) move(all.indexOf(before))
+    }
+    return { goTo, next, back, isLast, events, afterSubmit }
+  }, [form, all, visibility])
 
   // The field a step was stopped on, once the step has rendered.
   useEffect(() => {
@@ -176,7 +201,7 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     if (path) focus(form, { path: path as never })
   }, [form, index])
 
-  const stepped = list.length > 1
+  const stepped = all.length > 1
   useEffect(() => {
     if (!stepped) return
     fieldEvents.set(form, methods.events)
@@ -184,7 +209,7 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     // It is caught on its way down to the form, before Formisch's own handler sees it.
     const onSubmit = (event: Event) => {
       if (event.target !== formElementOf(form)) return
-      if (state.current.index === list.length - 1) {
+      if (methods.isLast()) {
         state.current.submitting = true
         return
       }
@@ -197,7 +222,7 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
       fieldEvents.delete(form)
       document.removeEventListener('submit', onSubmit, { capture: true })
     }
-  }, [form, list, methods, stepped])
+  }, [form, methods, stepped])
 
   // A submit that fails because of a step before the last, e.g. on a form rule, goes back to it.
   // React can batch the start and the end of a submit into one render, so the submit is marked
@@ -209,19 +234,21 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     if (!form.isValid) void methods.afterSubmit()
   })
 
-  return useMemo(
-    () => ({
+  return useMemo(() => {
+    const list = all.filter((step, i) => i === index || !visibility.isStepHidden(step))
+    const current = all[index] as LayoutStep
+    const at = list.indexOf(current)
+    return {
       list,
-      index,
-      current: list[index] as LayoutStep,
-      isFirst: index === 0,
-      isLast: index === list.length - 1,
+      index: at,
+      current,
+      isFirst: at === 0,
+      isLast: at === list.length - 1,
       next: methods.next,
       back: methods.back,
       goTo: methods.goTo,
-    }),
-    [list, index, methods],
-  )
+    }
+  }, [all, index, visibility, methods])
 }
 
 /** The `<form>` Formisch's `<Form>` renders, which it keeps on the store for its `submit()`. */

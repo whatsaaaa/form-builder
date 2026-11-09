@@ -7,6 +7,7 @@ import type { AnyJsonFormInstance } from './use-json-form'
 /**
  * Renders one field of a `useJsonForm` form, wherever you put it inside Formisch's `<Form>`. A
  * group or an array comes with its fields. Leave the field out of `<JsonFields>` with `except`.
+ * It renders nothing while conditions hide the field.
  */
 export const JsonField = defineComponent({
   name: 'JsonField',
@@ -27,8 +28,10 @@ export const JsonField = defineComponent({
     checkComponents([node], ctx.components)
 
     return () =>
-      renderField(ctx, node, [], dotPathOf(node) ?? '#0', (indexes) =>
-        renderFields(ctx, node.children, indexes),
-      )
+      props.of.visibility.isHidden(node, [])
+        ? null
+        : renderField(ctx, node, [], dotPathOf(node) ?? '#0', (indexes) =>
+            renderFields(ctx, node.children, indexes),
+          )
   },
 })
