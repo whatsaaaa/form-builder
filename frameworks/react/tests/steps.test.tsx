@@ -5,6 +5,7 @@ import {
   type JsonFormInstance,
   useJsonForm,
   type UseJsonFormOptions,
+  type ValueFieldProps,
 } from '@whatsaaaa/form-builder-react'
 import { act, useEffect } from 'react'
 import { describe, expect, it } from 'vitest'
@@ -209,6 +210,27 @@ describe('steps', () => {
       values.get('name')?.inputProps.onChange({ target: input, currentTarget: input } as never),
     )
     expect(errorAt(root, 'name')).toBeNull()
+  })
+
+  it("revalidates as the user types into an input with Formisch's own onChange", async () => {
+    function PropsInput(props: ValueFieldProps) {
+      return (
+        <div data-role="value" data-path={props.path.join('.')}>
+          <input {...props.inputProps} />
+          {props.errors && <small>{props.errors[0]}</small>}
+        </div>
+      )
+    }
+    const { root, current } = mountSteps(json(), {
+      components: { ...builtInComponents, text: PropsInput },
+    })
+    await run(current, (steps) => steps.next())
+    expect(errorAt(root, 'name')).toBe('Required')
+
+    type(root, 'name', 'Ana')
+    await settle()
+    expect(errorAt(root, 'name')).toBeNull()
+    expect(errorAt(root, 'email')).toBe('Required')
   })
 
   it('revalidates when the items of an array change after a failed Next', async () => {

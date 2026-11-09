@@ -45,6 +45,7 @@ export function ValueField({
           },
           onChange: (event: Parameters<typeof field.props.onChange>[0]) => {
             field.props.onChange(event)
+            fieldEventsOf(form)?.('input')
             fieldEventsOf(form)?.('change')
           },
           onBlur: () => {
