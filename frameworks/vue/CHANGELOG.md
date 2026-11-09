@@ -1,5 +1,16 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.1.5
+
+### Patch Changes
+
+- [#29](https://github.com/whatsaaaa/form-builder/pull/29) [`84e9a90`](https://github.com/whatsaaaa/form-builder/commit/84e9a90831602a875cb7f6f511f365e0f7558edc) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `only`, `except` and the check for missing components now use the schema package's `selectFields` and `checkComponents`, which the React adapter shares. They behave as before.
+
+  `<JsonFields>` with `only` no longer gives two fields the same key when they share a name at different depths, like `email` and `billing.email`.
+
+- Updated dependencies [[`84e9a90`](https://github.com/whatsaaaa/form-builder/commit/84e9a90831602a875cb7f6f511f365e0f7558edc)]:
+  - @whatsaaaa/form-builder-schema@0.13.0
+
 ## 0.1.4
 
 ### Patch Changes
