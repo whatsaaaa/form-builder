@@ -3,6 +3,7 @@ import {
   createSchemaBuilder,
   DefinitionError,
   defineFieldType,
+  type FieldNode,
   type JsonField,
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
@@ -13,6 +14,16 @@ import { fixtures } from './fixtures'
 import { form, settle, silenceVueWarnings, withSetup } from './helpers'
 
 // The field tree itself is tested in the schema package, which makes it with getFieldTree().
+
+interface Shape {
+  role: FieldNode['role']
+  dataPath: FieldNode['dataPath']
+  children: Shape[]
+}
+
+function shape({ role, dataPath, children }: FieldNode): Shape {
+  return { role, dataPath, children: children.map(shape) }
+}
 
 describe('useJsonForm', () => {
   it('starts the form with the initial input of the definition', () => {
@@ -36,12 +47,30 @@ describe('useJsonForm', () => {
     expect(getErrors(store, { path: ['email'] })).toEqual(['Email please'])
   })
 
-  it("gives the definition's fields as the builder's tree", () => {
-    const builder = createSchemaBuilder()
-    for (const json of Object.values(fixtures) as JsonForm[]) {
-      const { fields } = withSetup(() => useJsonForm(json))
-      expect(fields).toEqual(builder.getFieldTree(json))
-    }
+  it("gives the definition's fields as a tree of roles and data paths", () => {
+    const { fields: group } = withSetup(() => useJsonForm(fixtures.group as JsonForm))
+    const { fields: array } = withSetup(() => useJsonForm(fixtures.array as JsonForm))
+
+    expect(group.map(shape)).toEqual([
+      {
+        role: 'group',
+        dataPath: ['address'],
+        children: [
+          { role: 'value', dataPath: ['address', 'street'], children: [] },
+          { role: 'value', dataPath: ['address', 'city'], children: [] },
+          { role: 'value', dataPath: ['address', 'zip'], children: [] },
+          { role: 'value', dataPath: ['address', 'country'], children: [] },
+        ],
+      },
+    ])
+    expect(shape(array[1]!)).toEqual({
+      role: 'array',
+      dataPath: ['lines'],
+      children: [
+        { role: 'value', dataPath: ['lines', '*', 'product'], children: [] },
+        { role: 'value', dataPath: ['lines', '*', 'quantity'], children: [] },
+      ],
+    })
   })
 
   it('reads your own types through the builder you pass', () => {
@@ -56,8 +85,13 @@ describe('useJsonForm', () => {
     const json = form({ name: 'person', type: 'section', fields: [{ name: 'name', type: 'text' }] })
     const { fields, form: store } = withSetup(() => useJsonForm(json, { builder }))
 
-    expect(fields).toEqual(builder.getFieldTree(json))
-    expect(fields.map((node) => node.role)).toEqual(['group'])
+    expect(fields.map(shape)).toEqual([
+      {
+        role: 'group',
+        dataPath: ['person'],
+        children: [{ role: 'value', dataPath: ['person', 'name'], children: [] }],
+      },
+    ])
     expect(getInput(store)).toEqual({ person: {} })
   })
 })
