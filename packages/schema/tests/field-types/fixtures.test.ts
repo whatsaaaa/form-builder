@@ -4,7 +4,7 @@ import {
   defaultFieldTypes,
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
-import { type Fixture, fixtures } from '../fixtures'
+import { type Fixture, fixtures, formRuleFixtures } from '../fixtures'
 
 const { build, validate } = createSchemaBuilder()
 
@@ -21,4 +21,8 @@ describe('fixtures', () => {
       expect(json.fields.map((field) => field.type)).toContain(type)
     },
   )
+
+  it.each(Object.entries(formRuleFixtures))('%s with form rules is valid', (_, json: Fixture) => {
+    expect(validate(json).issues).toEqual([])
+  })
 })

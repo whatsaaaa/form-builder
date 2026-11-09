@@ -11,7 +11,7 @@ import type { BuildContext } from '../field-types/field-type-def'
 import type { AnySchema } from '../shared/valibot-types'
 import { buildFieldSchema, type Messages } from './build-field-schema'
 import { checkFormRules } from './check-form-rules'
-import { formRuleAction } from './form-rule-action'
+import { formRuleAction, type FormRuleAction } from './form-rule-action'
 import { lookup, type Registry } from './registry'
 import { type CheckedField, checkField } from './validate-definition'
 
@@ -19,7 +19,7 @@ export interface CompileResult {
   /** Every issue in the definition, in document order. */
   issues: DefinitionIssue[]
   /** The form's schema. Only complete when there are no issues. */
-  schema: FieldsSchema
+  schema: JsonFormSchema
   /** Every field the compiler read, as `walkFields` yields them, your own containers included. */
   walked: WalkedField[]
   /** Formisch's `initialInput`, as `getInitialInput` gives it, your own containers included. */
@@ -28,6 +28,14 @@ export interface CompileResult {
 
 /** The schema of a list of fields: an object with a key for each field that has a value. */
 export type FieldsSchema = v.ObjectSchema<v.ObjectEntries, undefined>
+
+/**
+ * The schema of a definition: the object schema of its fields, in a pipe with a check for each
+ * form rule when it has form rules. A new object from its `entries` leaves the form rules out.
+ */
+export type JsonFormSchema =
+  | FieldsSchema
+  | v.SchemaWithPipe<readonly [FieldsSchema, ...FormRuleAction[]]>
 
 const formShape = v.object({
   $schema: v.optional(v.string()),
@@ -74,11 +82,11 @@ export function compileDefinition(
 
   // Form rules run after every field's schema, on the whole value. They only check, so the schema
   // keeps the object's type, entries and output, and Formisch still keeps a field for each entry.
-  const withRules = rules.reduce<AnySchema>((acc, rule) => {
+  const checks = rules.map((rule) => {
     const ctx = { field: rule.field, rule: rule.name, path: rule.path }
-    return v.pipe(acc, formRuleAction(rule, messages.resolve(rule.message, ctx)))
-  }, schema)
-  return { issues, schema: withRules as FieldsSchema, walked, initialInput: input }
+    return formRuleAction(rule, messages.resolve(rule.message, ctx))
+  })
+  return { issues, schema: v.pipe(schema, ...checks), walked, initialInput: input }
 }
 
 export interface Compiler {

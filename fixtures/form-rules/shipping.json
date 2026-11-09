@@ -1,0 +1,40 @@
+{
+  "$schema": "../../packages/schema/definition.schema.json",
+  "version": "1",
+  "fields": [
+    {
+      "name": "billing",
+      "type": "group",
+      "label": "Billing",
+      "fields": [
+        {
+          "name": "zip",
+          "type": "text",
+          "label": "Billing ZIP",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "shipping",
+      "type": "group",
+      "label": "Shipping",
+      "fields": [
+        {
+          "name": "zip",
+          "type": "text",
+          "label": "Shipping ZIP",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "formRules": [
+    {
+      "rule": "sameAs",
+      "field": "shipping.zip",
+      "other": "billing.zip",
+      "message": "We only ship to the billing ZIP"
+    }
+  ]
+}

@@ -178,6 +178,7 @@ A form rule checks a field against other fields, such as a repeated password or 
 - **A form rule runs last**, after every field's own rules, and only when the fields it reads have no issues. So a password that is too short never also shows "Passwords differ". It never runs on an empty value either: make the fields required when they must be filled.
 - **`message` is required**, unlike on a field's rules. Without it, the error would be Valibot's generic "Invalid input", which says nothing about the other field. It goes through `resolveMessage` like every other message, with the rule's field in `ctx.field`.
 - The fields a rule reads must have the same kind: `compare` on a number and a date is `kind_mismatch`. A date with `output: 'date'` holds a `Date`, which is compared by its time, also with a date that holds the ISO string.
+- **Form rules live in the schema's pipe.** With form rules, `build()` gives the object schema of the fields in a `v.pipe()` with one check per rule, and its type, `JsonFormSchema`, says so. A new object made from `schema.entries`, as with `v.pick()`, `v.omit()` or `v.object({ ...schema.entries })`, leaves the form rules out: pipe it with the checks from `schema.pipe` too.
 
 ## Checking definitions
 
