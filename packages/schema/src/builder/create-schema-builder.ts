@@ -13,10 +13,11 @@ import type { FormRuleDef } from '../rules/form-rule-def'
 import type { defaultFormRules } from '../rules/form-rules'
 import type { RuleDef } from '../rules/rule-def'
 import type { ValueKind } from '../shared/value-kind'
-import { createVisibility, type Visibility } from '../visibility/visibility'
+import { NO_CONDITIONS, type Visibility } from '../visibility/visibility'
 import type { MessageContext, Messages } from './build-field-schema'
 import { checkRegistry } from './check-registry'
 import { compileDefinition, createCompiler, type JsonFormSchema } from './compile-definition'
+import { runtimeOf } from './extension-runtime'
 import { lookup, mergeRegistry } from './registry'
 import type { ExtensionProps, NoExtensionProps, TypedForm } from './typed-form'
 
@@ -245,7 +246,7 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
   function getVisibility(json: JsonForm): Visibility {
     const { issues, engine } = compileDefinition(json, registry, messages)
     if (issues.length) throw new DefinitionError(issues)
-    return createVisibility(engine)
+    return runtimeOf(registry.extensions[0])?.createVisibility(engine) ?? NO_CONDITIONS
   }
 
   function rulesForKind(kind: ValueKind): [name: string, def: RuleDef][] {

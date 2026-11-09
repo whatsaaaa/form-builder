@@ -138,12 +138,16 @@ export function findField(
   return found === undefined ? unknownField(keys, keys.length - 1, fieldsByPath) : found
 }
 
-/** The message for `keys` when the key at index `at` has no field. */
+/**
+ * The message for `keys` when the key at index `at` has no field. Under a list, `'*'` reads its
+ * items: it takes the place of an index, like `lines.0.qty`, or goes in, like in `lines.qty`.
+ */
 function unknownField(keys: readonly string[], at: number, fieldsByPath: FieldsByPath): string {
   const dotPath = keys.join('.')
   const parent = fieldsByPath.get(keys.slice(0, at).join('.'))
   if (parent?.valueKind === 'array' && keys[at] !== '*') {
-    const withStar = [...keys.slice(0, at), '*', ...keys.slice(at)].join('.')
+    const rest = /^\d+$/.test(keys[at] as string) ? keys.slice(at + 1) : keys.slice(at)
+    const withStar = [...keys.slice(0, at), '*', ...rest].join('.')
     return `Unknown field "${dotPath}". A list's items are read with "*": "${withStar}"`
   }
   return `Unknown field "${dotPath}"`

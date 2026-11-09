@@ -1,0 +1,75 @@
+{
+  "$schema": "../../packages/affects/definition.schema.json",
+  "version": "1",
+  "fields": [
+    { "name": "isGift", "type": "checkbox", "label": "This order is a gift" },
+    {
+      "name": "lines",
+      "type": "array",
+      "label": "Lines",
+      "required": { "message": "Add at least one line" },
+      "rules": [{ "rule": "maxLength", "value": 20 }],
+      "fields": [
+        {
+          "name": "kind",
+          "type": "select",
+          "label": "Kind",
+          "required": true,
+          "options": [
+            { "value": "product", "label": "Product" },
+            { "value": "service", "label": "Service" },
+            { "value": "discount", "label": "Discount" }
+          ]
+        },
+        {
+          "name": "sku",
+          "type": "text",
+          "label": "SKU",
+          "required": true,
+          "affects": [
+            {
+              "effect": "hideAndClear",
+              "when": { "field": "lines.*.kind", "notEquals": "product" }
+            }
+          ]
+        },
+        {
+          "name": "quantity",
+          "type": "number",
+          "label": "Quantity",
+          "required": true,
+          "default": 1,
+          "rules": [{ "rule": "minValue", "value": 1 }],
+          "affects": [
+            { "effect": "hideAndClear", "when": { "field": "lines.*.kind", "equals": "discount" } }
+          ]
+        },
+        {
+          "name": "hours",
+          "type": "number",
+          "label": "Hours",
+          "required": true,
+          "affects": [
+            { "effect": "show", "when": { "field": "lines.*.kind", "equals": "service" } }
+          ]
+        },
+        {
+          "name": "giftNote",
+          "type": "textarea",
+          "label": "Gift note",
+          "affects": [
+            {
+              "effect": "show",
+              "when": {
+                "all": [
+                  { "field": "isGift", "equals": true },
+                  { "field": "lines.*.kind", "in": ["product", "service"] }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

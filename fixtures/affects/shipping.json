@@ -1,0 +1,55 @@
+{
+  "$schema": "../../packages/affects/definition.schema.json",
+  "version": "1",
+  "fields": [
+    {
+      "name": "billing",
+      "type": "group",
+      "label": "Billing address",
+      "fields": [
+        { "name": "street", "type": "text", "label": "Street", "required": true },
+        { "name": "zip", "type": "text", "label": "ZIP code", "required": true },
+        { "name": "city", "type": "text", "label": "City", "required": true }
+      ]
+    },
+    {
+      "name": "sameAsBilling",
+      "type": "checkbox",
+      "label": "Ship to my billing address",
+      "default": true
+    },
+    {
+      "type": "paragraph",
+      "text": "We ship to your billing address.",
+      "affects": [{ "effect": "show", "when": { "field": "sameAsBilling", "equals": true } }]
+    },
+    {
+      "name": "shipping",
+      "type": "group",
+      "label": "Shipping address",
+      "affects": [
+        { "effect": "hideAndClear", "when": { "field": "sameAsBilling", "equals": true } }
+      ],
+      "fields": [
+        { "name": "street", "type": "text", "label": "Street", "required": true },
+        { "name": "zip", "type": "text", "label": "ZIP code", "required": true },
+        { "name": "city", "type": "text", "label": "City", "required": true },
+        { "name": "country", "type": "text", "label": "Country", "default": "DE" }
+      ]
+    },
+    {
+      "name": "confirmZip",
+      "type": "text",
+      "label": "Repeat the shipping ZIP",
+      "affects": [{ "effect": "show", "when": { "field": "shipping.zip", "notEmpty": true } }]
+    }
+  ],
+  "formRules": [
+    {
+      "rule": "sameAs",
+      "field": "confirmZip",
+      "other": "shipping.zip",
+      "message": "The ZIPs differ"
+    }
+  ]
+}

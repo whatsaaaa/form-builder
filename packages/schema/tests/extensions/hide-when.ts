@@ -1,8 +1,8 @@
 import * as v from 'valibot'
-import type {
-  ExtensionTarget,
-  SchemaExtension,
-  TargetConditions,
+import {
+  defineExtension,
+  type ExtensionTarget,
+  type TargetConditions,
 } from '@whatsaaaa/form-builder-schema'
 
 /**
@@ -37,7 +37,7 @@ export const otherWhen = () => extension('other', 'otherWhen')
 
 /** The extension, named `name`, which reads its conditions from `key`. */
 const extension = <TKey extends string>(name: string, key: TKey) =>
-  ({
+  defineExtension({
     name,
     fieldProps: propsOf(key),
     layoutProps: propsOf(key),
@@ -69,4 +69,4 @@ const extension = <TKey extends string>(name: string, key: TKey) =>
       }
       return found
     },
-  }) satisfies SchemaExtension
+  })

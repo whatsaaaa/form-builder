@@ -11,13 +11,11 @@ import type { BuildContext } from '../field-types/field-type-def'
 import type { FormLayout } from '../render/form-layout'
 import type { AnySchema } from '../shared/valibot-types'
 import type { Engine } from '../visibility/engine'
-import { fieldGate, rootGate } from '../visibility/gate'
-import { clearFields } from '../visibility/visibility'
 import { buildFieldSchema, type MessageContext, type Messages } from './build-field-schema'
-import { checkExtensions } from './check-extensions'
 import { checkFormRules } from './check-form-rules'
 import { checkLayout } from './check-layout'
 import { formRuleAction, type FormRuleAction } from './form-rule-action'
+import { type ExtensionRuntime, runtimeOf } from './extension-runtime'
 import { lookup, type Registry } from './registry'
 import { type CheckedField, checkField } from './validate-definition'
 
@@ -96,7 +94,8 @@ export function compileDefinition(
   }
 
   // With extensions, the fields may be built again, with the messages they resolved the first time.
-  const resolved = registry.extensions.length ? recordMessages(messages) : undefined
+  const runtime = runtimeOf(registry.extensions[0])
+  const resolved = runtime ? recordMessages(messages) : undefined
   const compiler = createCompiler(registry, resolved?.messages ?? messages, issues)
   const issueCount = issues.length
   const { schema, input } = compiler.list(form.output.fields, ['fields'])
@@ -106,13 +105,14 @@ export function compileDefinition(
   const rules = checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
   const layout = checkLayout(form.output.layout, fieldsBuilt ? walked : undefined, registry, issues)
   const { fieldsByPath, schemas } = compiler
-  const engine = checkExtensions(registry, { walked, fieldsByPath, schemas, layout }, issues)
+  const engine = runtime?.check(registry, { walked, fieldsByPath, schemas, layout }, issues)
   const result = { issues, schema, walked, initialInput: input, layout, engine }
   if (issues.length) return { ...result, layout: undefined, engine: undefined }
 
   // A field conditions can hide is built again in a gate, which the root gate opens on each parse.
   // Nothing else changes: without conditions, the schema is the one built above.
-  const conditional = engine?.conditional ? engine : undefined
+  const conditional: Conditional | undefined =
+    runtime && engine?.conditional ? { runtime, engine } : undefined
   const fields = conditional
     ? gatedFields(form.output.fields, registry, resolved?.replay ?? messages, conditional)
     : schema
@@ -125,11 +125,12 @@ export function compileDefinition(
   })
   const withRules: JsonFormSchema = checks.length ? v.pipe(fields, ...checks) : fields
   if (!conditional) return { ...result, schema: withRules }
+  const { runtime: gates, engine: conditions } = conditional
   return {
     ...result,
-    schema: rootGate(withRules, conditional),
+    schema: gates.rootGate(withRules, conditions),
     // A field its conditions clear when the form starts starts blank, without its default.
-    initialInput: clearFields(input, conditional.evaluate(input).toClear),
+    initialInput: gates.clearFields(input, conditions.evaluate(input).toClear),
   }
 }
 
@@ -138,18 +139,21 @@ function gatedFields(
   fields: readonly unknown[],
   registry: Registry,
   messages: Messages,
-  engine: Engine,
+  { runtime, engine }: Conditional,
 ): FieldsSchema {
   const gate: WrapField = (checked, schema) => {
     if (checked.name === undefined || !engine.canHide(checked.path)) return schema
-    const role = !checked.type.container
-      ? 'value'
-      : checked.valueKind === 'array'
-        ? 'array'
-        : 'group'
-    return fieldGate(schema, role)
+    const container = checked.type.container === true
+    const role = !container ? 'value' : checked.valueKind === 'array' ? 'array' : 'group'
+    return runtime.fieldGate(schema, role)
   }
   return createCompiler(registry, messages, [], gate).fields(fields, ['fields'])
+}
+
+/** The conditions of a definition, and the runtime of its builder's extensions. */
+interface Conditional {
+  readonly runtime: ExtensionRuntime
+  readonly engine: Engine
 }
 
 /**

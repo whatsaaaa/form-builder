@@ -1,0 +1,15 @@
+[
+  {
+    "name": "affects(), with the condition engine of the schema package it brings",
+    "path": "dist/index.js",
+    "import": "{ affects }",
+    "limit": "6.5 kB"
+  },
+  {
+    "name": "affects(), without the schema package and Valibot",
+    "path": "dist/index.js",
+    "import": "{ affects }",
+    "ignore": ["@whatsaaaa/form-builder-schema", "valibot"],
+    "limit": "2.5 kB"
+  }
+]

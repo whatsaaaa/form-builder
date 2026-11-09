@@ -77,7 +77,7 @@ export interface FieldToClear {
 
 /** The visibility of `engine`, or of a definition without conditions when there is none. */
 export function createVisibility(engine: Engine | undefined): Visibility {
-  if (!engine?.conditional) return NOTHING_HIDDEN
+  if (!engine?.conditional) return NO_CONDITIONS
   let last: { signature: string; state: VisibilityState } | undefined
   return {
     conditional: true,
@@ -106,7 +106,8 @@ const ALL_SHOWN: VisibilityState = {
   toClear: [],
 }
 
-const NOTHING_HIDDEN: Visibility = {
+/** The visibility of a definition without conditions, or of a builder without extensions. */
+export const NO_CONDITIONS: Visibility = {
   conditional: false,
   of: () => ALL_SHOWN,
   clear: (input) => input,

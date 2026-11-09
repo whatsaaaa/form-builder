@@ -37,6 +37,16 @@ const packageFeatures: Record<string, Record<string, string[]>> = {
     ],
     'json-schema': ['shared', 'definition', 'rules', 'field-types', 'extensions'],
   },
+  affects: {
+    definition: [],
+    evaluate: ['definition'],
+    check: ['definition', 'evaluate'],
+  },
+}
+
+// The packages each package builds on, by their public entry, like an app uses them.
+const packageDependencies: Record<string, string[]> = {
+  affects: ['schema'],
 }
 
 // UI frameworks belong in frameworks/ and apps/, never in the core packages.
@@ -141,6 +151,17 @@ export default defineConfigWithVueTs(
                 },
               })),
             ),
+            ...Object.entries(packageDependencies).map(([pkg, dependencies]) => ({
+              from: {
+                element: {
+                  types: ['package-entry', 'package-feature', 'package-tests'],
+                  captured: { pkg },
+                },
+              },
+              allow: {
+                to: { element: { type: 'package-entry', captured: { pkg: dependencies } } },
+              },
+            })),
             {
               from: { element: { type: 'package-tests' } },
               allow: {

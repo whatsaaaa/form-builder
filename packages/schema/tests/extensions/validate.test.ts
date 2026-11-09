@@ -2,6 +2,7 @@ import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import {
   createSchemaBuilder,
+  defineExtension,
   defineFieldType,
   type ExtensionTarget,
   type JsonForm,
@@ -14,11 +15,30 @@ import { hideWhen } from './hide-when'
 const builder = createSchemaBuilder({ extensions: [hideWhen()] })
 
 describe('creating a builder with extensions', () => {
-  const extension = (props: v.ObjectEntries, layout?: v.ObjectEntries): SchemaExtension => ({
-    name: 'x',
-    fieldProps: v.object(props),
-    ...(layout && { layoutProps: v.object(layout) }),
-    check: () => new Map(),
+  const extension = (props: v.ObjectEntries, layout?: v.ObjectEntries): SchemaExtension =>
+    defineExtension({
+      name: 'x',
+      fieldProps: v.object(props),
+      ...(layout && { layoutProps: v.object(layout) }),
+      check: () => new Map(),
+    })
+
+  it('rejects an extension not made with defineExtension()', () => {
+    const plain: SchemaExtension = { name: 'plain', check: () => new Map() }
+    expect(() => createSchemaBuilder({ extensions: [plain] })).toThrow(
+      new TypeError('Extension "plain": make it with defineExtension()'),
+    )
+  })
+
+  it('rejects extensions made with two copies of the schema package', () => {
+    const made = defineExtension({ name: 'a', check: () => new Map() })
+    const [key] = Object.getOwnPropertySymbols(made)
+    const other = { ...made, name: 'b', [key as symbol]: {} }
+    expect(() => createSchemaBuilder({ extensions: [made, other] })).toThrow(
+      new TypeError(
+        'Extension "b" and extension "a" were made with two copies of @whatsaaaa/form-builder-schema. Install one',
+      ),
+    )
   })
 
   it("rejects a key that is reserved, or a field type's prop", () => {
@@ -163,7 +183,7 @@ describe('resolving a path', () => {
   /** What `resolve` gives each target for each path, from an extension that only records it. */
   function resolved(json: JsonForm, paths: readonly string[]) {
     const results: Record<string, unknown> = {}
-    const recorder: SchemaExtension = {
+    const recorder: SchemaExtension = defineExtension({
       name: 'recorder',
       fieldProps: v.object({ reads: v.optional(v.string()) }),
       layoutProps: v.object({ reads: v.optional(v.string()) }),
@@ -177,7 +197,7 @@ describe('resolving a path', () => {
         }
         return new Map()
       },
-    }
+    })
     createSchemaBuilder({ extensions: [recorder] }).validate(json)
     return results
   }
