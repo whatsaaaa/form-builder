@@ -10,7 +10,8 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/signup">Sign-up form</RouterLink>
       <RouterLink to="/order">Order form</RouterLink>
       <RouterLink to="/field-types">Field types</RouterLink>
-      <RouterLink to="/checkout">Placed fields</RouterLink>
+      <RouterLink to="/checkout">Checkout layout</RouterLink>
+      <RouterLink to="/stepped-signup">Stepped sign-up</RouterLink>
     </nav>
   </header>
 
@@ -38,10 +39,12 @@ h1 {
 
 nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
 }
 
 nav a {
+  white-space: nowrap;
   color: var(--color-text);
 }
 
