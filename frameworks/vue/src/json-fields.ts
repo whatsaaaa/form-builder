@@ -1,10 +1,9 @@
 import {
-  allLayoutNodes,
   checkComponents,
   checkLayoutComponents,
   dotPathOf,
   type FieldNode,
-  type LayoutStep,
+  type LayoutNode,
   selectFields,
 } from '@whatsaaaa/form-builder-schema'
 import { defineComponent, Fragment, h, type PropType } from 'vue'
@@ -58,7 +57,10 @@ export const JsonFields = defineComponent({
       slots,
       isShown: (node) => !except.has(dotPathOf(node) ?? ''),
     }
-    checkComponents(fieldsOf(layout.steps), ctx.components)
+    checkComponents(
+      layout.steps.flatMap((step) => fieldsOf(step.children)),
+      ctx.components,
+    )
     checkLayoutComponents(layout, layoutCtx.layoutComponents, slots)
 
     return () => {
@@ -71,11 +73,11 @@ export const JsonFields = defineComponent({
   },
 })
 
-/** Every field of the steps, display elements written in the layout included. */
-function fieldsOf(steps: readonly LayoutStep[]): FieldNode[] {
-  return steps.flatMap((step) =>
-    [...allLayoutNodes(step.children)].flatMap((node) =>
-      node.type === 'field' ? [node.node] : [],
-    ),
-  )
+/** Every field of the nodes, display elements written in the layout included. */
+function fieldsOf(nodes: readonly LayoutNode[]): FieldNode[] {
+  return nodes.flatMap((node) => {
+    if (node.type === 'slot') return []
+    const inner = fieldsOf(node.children)
+    return node.type === 'field' ? [node.node, ...inner] : inner
+  })
 }

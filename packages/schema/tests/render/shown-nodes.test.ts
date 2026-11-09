@@ -6,7 +6,6 @@ import {
   type IsFieldShown,
   type JsonForm,
   shownNodes,
-  shownSteps,
 } from '@whatsaaaa/form-builder-schema'
 import { outline } from '../helpers'
 
@@ -61,7 +60,7 @@ const json: JsonForm = {
 }
 
 const { steps } = createSchemaBuilder().getLayout(json)
-const [first, company, thanks, lines] = steps
+const [first, company, , lines] = steps
 
 const hiding =
   (...paths: string[]): IsFieldShown =>
@@ -119,12 +118,5 @@ describe('shownNodes', () => {
       ['lines.*.product', [1]],
       ['lines.*.note', [1]],
     ])
-  })
-})
-
-describe('shownSteps', () => {
-  it('leaves out a step whose fields are all hidden, and keeps one with only text', () => {
-    expect(shownSteps(steps, hiding('company'))).toEqual([first, thanks, lines])
-    expect(shownSteps(steps, () => true)).toEqual(steps)
   })
 })

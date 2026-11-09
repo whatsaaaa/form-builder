@@ -703,6 +703,30 @@ describe('checking the layout', () => {
     ])('reports %s', (_, item, expected) => {
       expect(codesAndPaths({ items: [item, '*'] })).toEqual(expected)
     })
+
+    it('reports a slot in a group in the items of an array', () => {
+      const json = {
+        version: '1',
+        fields: [
+          {
+            name: 'stops',
+            type: 'array',
+            fields: [{ name: 'address', type: 'group', fields: [{ name: 'city', type: 'text' }] }],
+          },
+        ],
+        layout: {
+          items: [
+            {
+              field: 'stops',
+              items: [{ field: 'address', items: ['*', { type: 'slot', name: 'a' }] }],
+            },
+          ],
+        },
+      } as JsonForm
+      expect(validate(json).issues.map(({ code, path }) => ({ code, path }))).toEqual([
+        { code: 'invalid_shape', path: at('items', 0, 'items', 0, 'items', 1) },
+      ])
+    })
   })
 
   describe('ids', () => {

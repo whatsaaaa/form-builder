@@ -25,18 +25,9 @@ export interface RenderedForm {
   update(change: () => void): Promise<void>
 }
 
-/**
- * Runs every scenario on forms from `render`, which may wait for the form to render. A renderer
- * that doesn't render layouts leaves out the fixtures with one.
- */
-export function runScenarios(
-  render: (json: JsonForm) => RenderedForm | Promise<RenderedForm>,
-  options: { layouts?: boolean } = {},
-) {
-  const run = scenarios.filter(
-    (scenario) => options.layouts !== false || !fixtures[scenario.fixture].layout,
-  )
-  it.each(run)('$fixture: $name', async (scenario) => {
+/** Runs every scenario on forms from `render`, which may wait for the form to render. */
+export function runScenarios(render: (json: JsonForm) => RenderedForm | Promise<RenderedForm>) {
+  it.each(scenarios)('$fixture: $name', async (scenario) => {
     const form = await render(fixtures[scenario.fixture])
     for (const step of scenario.steps) await form.update(() => perform(form.root, step))
 

@@ -3,22 +3,32 @@
 // checkboxes, checkbox groups, selects and files from the element. A value the element can't hold,
 // like a number or `false`, is set with `field.onChange`, the way a React app sets it.
 import {
+  focus,
   Form,
   type FormStore,
+  getInput,
   insert,
   remove,
+  setErrors,
   useField,
   useFieldArray,
   useForm,
+  validate,
 } from '@formisch/react'
 import {
   createSchemaBuilder,
+  type FieldNode,
+  fieldPathsOf,
+  issuesOfStep,
   type JsonField,
   type JsonForm,
+  type LayoutField,
+  type LayoutNode,
+  type LayoutStep,
   type SchemaBuilder,
-  type WalkedField,
+  toFieldPath,
 } from '@whatsaaaa/form-builder-schema'
-import { act, type ChangeEvent, type ReactNode } from 'react'
+import { act, type ChangeEvent, Fragment, type ReactNode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { describe, onTestFinished } from 'vitest'
 import { type RenderedForm, runScenarios } from './run-scenarios'
@@ -26,28 +36,19 @@ import { type RenderedForm, runScenarios } from './run-scenarios'
 // Tells React that tests wrap their updates in act().
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-type Path = (string | number)[]
+type Path = readonly (string | number)[]
 type Option = { value: string | number | boolean; label: string }
 
 const builder: SchemaBuilder = createSchemaBuilder()
 
-/** A field of the definition, with the fields of a group, or of one item of a list. */
-interface Node {
-  walked: WalkedField
-  children: Node[]
-}
-
-/** The definition's fields as a tree, from `walkFields`, which gives each field its kind. */
-function tree(json: JsonForm): Node[] {
-  const roots: Node[] = []
-  const lists: Node[][] = [roots]
-  for (const walked of builder.walkFields(json)) {
-    const node: Node = { walked, children: [] }
-    lists.length = walked.depth + 1
-    lists.at(-1)?.push(node)
-    lists.push(node.children)
-  }
-  return roots
+/** The content of the layout's slots, by name. */
+const slots: Record<string, ReactNode> = {
+  shipping: <p data-slot="shipping">Ships in three days</p>,
+  submit: (
+    <button type="submit" data-slot="submit">
+      Place order
+    </button>
+  ),
 }
 
 const optionsOf = (field: JsonField) => (field.options ?? []) as Option[]
@@ -60,43 +61,75 @@ const inputTypes: Record<string, string> = {
   datetime: 'datetime-local',
 }
 
-function Fields(props: { form: FormStore; nodes: Node[]; path: Path }) {
-  return props.nodes.map((node, i) => {
-    const { field, kind, type } = node.walked
-    if (kind === 'none') return <p key={i}>{String(field.text ?? '')}</p>
-    // The field of a list of single values has no name: its value is the item itself.
-    const path = field.name === undefined ? props.path : [...props.path, field.name]
-    if (builder.fieldTypes[type]?.container) {
-      return kind === 'array' ? (
-        <List key={i} form={props.form} node={node} path={path} />
-      ) : (
-        <fieldset key={i}>
-          <Fields form={props.form} nodes={node.children} path={path} />
-        </fieldset>
-      )
+interface LayoutProps {
+  form: FormStore
+  nodes: readonly LayoutNode[]
+  /** The index of each array item the nodes are in, outermost first. */
+  indexes: readonly number[]
+}
+
+function Layout(props: LayoutProps) {
+  const { form, indexes } = props
+  return props.nodes.map((node) => {
+    switch (node.type) {
+      case 'section':
+        return (
+          <fieldset key={node.key}>
+            <Layout form={form} nodes={node.children} indexes={indexes} />
+          </fieldset>
+        )
+      case 'row':
+        return (
+          <div key={node.key}>
+            {node.children.map((cell) => (
+              <div key={cell.key} data-span={cell.span}>
+                <Layout form={form} nodes={[cell]} indexes={indexes} />
+              </div>
+            ))}
+          </div>
+        )
+      case 'slot':
+        return <Fragment key={node.key}>{slots[node.name]}</Fragment>
+      case 'field':
+        return <Field key={node.key} form={form} node={node} indexes={indexes} />
     }
-    return <Value key={i} form={props.form} walked={node.walked} path={path} />
   })
 }
 
-/** A new item's input: the defaults of the item's fields, the way `getInitialInput` reads them. */
-function newItem(list: Node): unknown {
-  const fields = list.children.map((child) => child.walked.field)
-  if (list.walked.field.of !== undefined) {
-    return builder.getInitialInput({ version: '1', fields: [{ ...fields[0]!, name: 'item' }] }).item
+function Field(props: { form: FormStore; node: LayoutField; indexes: readonly number[] }) {
+  const { form, node, indexes } = props
+  const path = toFieldPath(node.node.dataPath, indexes)
+  switch (node.node.role) {
+    case 'display':
+      return <p>{String(node.node.field.text ?? '')}</p>
+    case 'group':
+      return (
+        <fieldset>
+          <Layout form={form} nodes={node.children} indexes={indexes} />
+        </fieldset>
+      )
+    case 'array':
+      return <List form={form} node={node} path={path} indexes={indexes} />
+    case 'value':
+      return <Value form={form} node={node.node} path={path} />
   }
-  return builder.getInitialInput({ version: '1', fields })
 }
 
-function List(props: { form: FormStore; node: Node; path: Path }) {
-  const { form, node, path } = props
+function List(props: {
+  form: FormStore
+  node: LayoutField
+  path: Path
+  indexes: readonly number[]
+}) {
+  const { form, node, path, indexes } = props
   // The path comes from the definition at runtime, so the schema's types can't check it.
   const list = useFieldArray(form, { path: path as never })
+  const initialInput = () => builder.getItemInput(node.node.field) as never
   return (
     <fieldset>
       {list.items.map((item, index) => (
         <div key={item}>
-          <Fields form={form} nodes={node.children} path={[...path, index]} />
+          <Layout form={form} nodes={node.children} indexes={[...indexes, index]} />
           <button
             type="button"
             data-remove={`${dotPath(path)}.${index}`}
@@ -109,7 +142,7 @@ function List(props: { form: FormStore; node: Node; path: Path }) {
       <button
         type="button"
         data-add={dotPath(path)}
-        onClick={() => insert(form, { path: path as never, initialInput: newItem(node) as never })}
+        onClick={() => insert(form, { path: path as never, initialInput: initialInput() })}
       >
         Add
       </button>
@@ -121,8 +154,8 @@ function List(props: { form: FormStore; node: Node; path: Path }) {
 /** A number from a number input. A cleared one has no value. */
 const toNumber = (text: string) => (text.trim() === '' ? undefined : Number(text))
 
-function Value(props: { form: FormStore; walked: WalkedField; path: Path }) {
-  const { field, kind, itemKind } = props.walked
+function Value(props: { form: FormStore; node: FieldNode; path: Path }) {
+  const { field, kind, itemKind } = props.node
   const f = useField(props.form, { path: props.path as never })
   const set = (value: unknown) => f.onChange(value as never)
   const options = optionsOf(field)
@@ -217,13 +250,43 @@ function Value(props: { form: FormStore; walked: WalkedField; path: Path }) {
 }
 
 function JsonFormView(props: { json: JsonForm; onSubmit: (output: unknown) => void }) {
-  const form = useForm({
+  const [{ steps, ...config }] = useState(() => ({
     schema: builder.build(props.json),
     initialInput: builder.getInitialInput(props.json),
-  })
+    steps: builder.getLayout(props.json).steps,
+  }))
+  const form = useForm(config)
+  const [index, setIndex] = useState(0)
+  const step = steps[index] as LayoutStep
+
+  // Next validates the whole form, and only the issues on this step's fields keep the user here.
+  const next = async () => {
+    const found = issuesOfStep(step, (await validate(form)).issues)
+    if (found.length) {
+      const first = found.find((issue) => issue.field.role === 'value')
+      if (first) focus(form, { path: first.path as never })
+      return
+    }
+    // That validation set errors on the next step's fields too, which nobody saw.
+    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+      setErrors(form, { path, errors: null } as never)
+    }
+    setIndex(index + 1)
+  }
+
   return (
     <Form of={form} onSubmit={props.onSubmit}>
-      <Fields form={form as FormStore} nodes={tree(props.json)} path={[]} />
+      <Layout key={index} form={form as FormStore} nodes={step.children} indexes={[]} />
+      {index > 0 && (
+        <button type="button" data-back="" onClick={() => setIndex(index - 1)}>
+          Back
+        </button>
+      )}
+      {index < steps.length - 1 && (
+        <button type="button" data-next="" onClick={() => void next()}>
+          Next
+        </button>
+      )}
     </Form>
   )
 }
@@ -254,8 +317,6 @@ function render(json: JsonForm): RenderedForm {
   }
 }
 
-// It shows Formisch's own wiring, field by field, in the order of the definition. The React
-// adapter and the Preact renderer run the fixtures with a layout.
 describe('the fixtures in @formisch/react, with field.props', () => {
-  runScenarios(render, { layouts: false })
+  runScenarios(render)
 })

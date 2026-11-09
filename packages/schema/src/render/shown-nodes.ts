@@ -1,5 +1,5 @@
 import type { FieldNode } from './field-tree'
-import type { LayoutNode, LayoutStep } from './form-layout'
+import type { LayoutNode } from './form-layout'
 
 /**
  * Whether a field is shown, e.g. by the conditions of the affects package. `indexes` are those of
@@ -33,16 +33,6 @@ export function shownNodes(
       children.every((child, i) => child === node.children[i])
     return same ? [node] : [{ ...node, children }]
   })
-}
-
-/**
- * The steps to show when some fields are hidden: a step whose fields are all hidden is left out,
- * like a section. One with no field with a value, only text and slots, always stays.
- */
-export function shownSteps(steps: readonly LayoutStep[], isShown: IsFieldShown): LayoutStep[] {
-  return steps.filter(
-    (step) => !hasValues(step.children) || hasValues(shownNodes(step.children, [], isShown)),
-  )
 }
 
 /** True when a field with a value is among the nodes, at any depth. */

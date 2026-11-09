@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  allLayoutNodes,
   checkLayoutComponents,
   createSchemaBuilder,
   type JsonForm,
@@ -65,17 +64,5 @@ describe('checkLayoutComponents', () => {
         summary: 1,
       }),
     ).toThrow(TypeError)
-  })
-})
-
-describe('allLayoutNodes', () => {
-  it('gives every node, a container before its items', () => {
-    const [step] = layout.steps
-    expect([...allLayoutNodes(step!.children)].map((node) => node.type)).toEqual([
-      'section',
-      'row',
-      'field',
-      'slot',
-    ])
   })
 })

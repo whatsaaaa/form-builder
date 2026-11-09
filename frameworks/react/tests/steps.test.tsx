@@ -166,6 +166,19 @@ describe('steps', () => {
     expect(errorAt(root, 'email')).toBe('Required')
   })
 
+  it('revalidates a step that failed Next when the user comes back to it', async () => {
+    const { root, current } = mountSteps()
+    await fillFirstStep(root, current)
+    expect(await run(current, (steps) => steps.next())).toBe(false)
+    await run(current, (steps) => steps.back())
+    expect(await run(current, (steps) => steps.next())).toBe(true)
+    expect(errorAt(root, 'city')).toBe('Required')
+
+    type(root, 'city', 'Graz')
+    await settle()
+    expect(errorAt(root, 'city')).toBeNull()
+  })
+
   it('revalidates on the event `revalidate` names', async () => {
     const { root, current } = mountSteps(json(), { revalidate: 'blur' })
     await run(current, (steps) => steps.next())

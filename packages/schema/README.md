@@ -574,7 +574,6 @@ const set = (input: unknown) => {
 - **Every node has a `span`**, the columns it takes in its row: 12 outside one. Render a row as a grid of 12 columns, `grid-template-columns: repeat(12, 1fr)`, and each cell with `grid-column: span N`. A display element written in the layout is a `field` node too, with the role `display`.
 - **Every node has a `key`**, unique among its siblings and the same for the life of the layout, for frameworks that key what they render.
 - **Each step** has `step`, the step as written (`{ items }` for a layout with `items`, `{ items: ['*'] }` without one), `children`, and `fields`: every field with a value placed in it, in layout order.
-- `allLayoutNodes(nodes)` gives every node of a tree, a container before its items.
 
 ### Steps
 
@@ -588,7 +587,7 @@ The Vue and React adapters do more: a step shows the errors it had when the user
 
 ### Showing and hiding
 
-`shownNodes(nodes, indexes, isShown)` gives the nodes to render when some fields are hidden, by a function that says whether a field, in the array items at `indexes`, is shown. A hidden field drops out with the fields inside it. A group, a section or a row whose fields are all hidden drops out too, even with text in it, while one with no field with a value, only text, stays. A row's other cells keep their spans and line up from its first column: a row is one line, so no field moves to another. An array's items aren't looked into: call it for each item, with its indexes. `shownSteps(steps, isShown)` leaves out a step whose fields are all hidden, the same way. The adapters use them for `except`. They are where conditions on fields, like those of the planned affects package, plug in.
+`shownNodes(nodes, indexes, isShown)` gives the nodes to render when some fields are hidden, by a function that says whether a field, in the array items at `indexes`, is shown. A hidden field drops out with the fields inside it. A group, a section or a row whose fields are all hidden drops out too, even with text in it, while one with no field with a value, only text, stays. A row's other cells keep their spans and line up from its first column: a row is one line, so no field moves to another. An array's items aren't looked into: call it for each item, with its indexes. The adapters use it for `except`. It is where conditions on fields, like those of the planned affects package, plug in.
 
 ### Other frameworks
 

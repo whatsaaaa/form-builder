@@ -75,8 +75,8 @@ export function useJsonFormSteps(
   const current = computed(() => list[index.value] as LayoutStep)
   // The errors each step had when the user left it, by the JSON of each field's path.
   const left = new Map<number, Map<string, Errors>>()
-  // The current step failed Next, and hasn't passed since.
-  let failed = false
+  // The steps that failed Next, and haven't passed since.
+  const failed = new Set<number>()
 
   async function goTo(target: number): Promise<boolean> {
     if (!Number.isInteger(target) || target < 0 || target >= list.length) {
@@ -93,17 +93,18 @@ export function useJsonFormSteps(
         await stop(at, found)
         return false
       }
+      failed.delete(at)
     }
     move(target)
     return true
   }
 
   /**
-   * Moves to a step as the user left it: with the errors it had then, and none the first time.
-   * Validating the steps before set errors on its fields, which the user never saw.
+   * Moves to a step as the user left it: with the errors it had then, and none the first time, and
+   * revalidating if it failed Next. Validating the steps before set errors on its fields, which
+   * the user never saw.
    */
   function move(target: number) {
-    failed = false
     leave()
     const errors = left.get(target)
     for (const path of fieldPathsOf(list[target] as LayoutStep, getInput(form))) {
@@ -123,7 +124,7 @@ export function useJsonFormSteps(
 
   /** Stays on, or goes to, the step at `at`, with its issues shown. */
   async function stop(at: number, found: readonly StepIssue[]) {
-    failed = true
+    failed.add(at)
     if (at !== index.value) leave()
     index.value = at
     await nextTick()
@@ -159,7 +160,7 @@ export function useJsonFormSteps(
     fieldEvents.set(form, (event) => {
       // In the other modes, Formisch revalidates a field with errors itself.
       const validateMode = modes.validate ?? 'submit'
-      if (!failed || validateMode !== 'submit' || form.isSubmitted) return
+      if (!failed.has(index.value) || validateMode !== 'submit' || form.isSubmitted) return
       if (event === (modes.revalidate ?? 'input')) void validate(form)
     })
 

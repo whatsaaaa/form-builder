@@ -75,8 +75,8 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     index: 0,
     // The errors each step had when the user left it, by the JSON of each field's path.
     left: new Map<number, Map<string, Errors>>(),
-    // The current step failed Next, and hasn't passed since.
-    failed: false,
+    // The steps that failed Next, and haven't passed since.
+    failed: new Set<number>(),
     // The field to focus once the step it is on has rendered.
     focus: undefined as FieldPath | undefined,
     modes,
@@ -100,17 +100,18 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
           stop(step, found)
           return false
         }
+        at.failed.delete(step)
       }
       move(target)
       return true
     }
 
     /**
-     * Moves to a step as the user left it: with the errors it had then, and none the first time.
-     * Validating the steps before set errors on its fields, which the user never saw.
+     * Moves to a step as the user left it: with the errors it had then, and none the first time, and
+     * revalidating if it failed Next. Validating the steps before set errors on its fields, which
+     * the user never saw.
      */
     function move(target: number) {
-      at.failed = false
       leave()
       const errors = at.left.get(target)
       for (const path of fieldPathsOf(list[target] as LayoutStep, getInput(form))) {
@@ -132,7 +133,7 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
 
     /** Stays on, or goes to, the step at `target`, with its issues shown. */
     function stop(target: number, found: readonly StepIssue[]) {
-      at.failed = true
+      at.failed.add(target)
       // A group or an array has no element: the first field that has one gets the focus.
       const path = found.find((issue) => issue.field.role === 'value')?.path
       if (target === at.index) {
@@ -148,7 +149,7 @@ export function useJsonFormSteps(form: FormStore, layout: FormLayout, modes: Mod
     const events: FieldEvents = (event) => {
       // In the other modes, Formisch revalidates a field with errors itself.
       const validateMode = at.modes.validate ?? 'submit'
-      if (!at.failed || validateMode !== 'submit' || form.isSubmitted) return
+      if (!at.failed.has(at.index) || validateMode !== 'submit' || form.isSubmitted) return
       if (event === (at.modes.revalidate ?? 'input')) void validate(form)
     }
 

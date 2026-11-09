@@ -256,17 +256,20 @@ export function checkLayout(
 
     const node = item?.kind === 'field' ? item.node : undefined
     const inner =
-      (node && innerScope(node, [...path, 'items'])) ??
+      (node && innerScope(node, [...path, 'items'], scope.inItems)) ??
       createScope(undefined, [], undefined, scope.inItems)
     const list = checkItems(raw, path, inner)
     checkPlaced(inner, [...path, 'items'])
     return node && { kind: 'field', node, span, items: { list, scope: inner } }
   }
 
-  /** The scope of a group's or array's fields. Adds an issue when the field holds none. */
-  function innerScope(node: FieldNode, at: DefinitionPath): Scope | undefined {
+  /**
+   * The scope of a group's or array's fields. Adds an issue when the field holds none. `inItems`
+   * tells whether the field is in an array's items.
+   */
+  function innerScope(node: FieldNode, at: DefinitionPath, inItems: boolean): Scope | undefined {
     const dot = dotOf(node)
-    if (node.role === 'group') return createScope(node.children, node.dataPath, node, false)
+    if (node.role === 'group') return createScope(node.children, node.dataPath, node, inItems)
     if (node.role !== 'array') {
       report('invalid_shape', at, `"${dot}" holds no fields, so it takes no "items"`)
       return undefined
