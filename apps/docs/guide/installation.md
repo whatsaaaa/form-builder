@@ -43,7 +43,7 @@ bun add @whatsaaaa/form-builder-vue @whatsaaaa/form-builder-schema @formisch/vue
 
 :::
 
-Vue 3.5, `@formisch/vue` 1.1 and Valibot 1.3 or later are required. The schema package is a dependency of the adapter, but install it too: your code imports its types, such as `JsonForm`.
+The [Vue page](/frameworks/vue#installation) lists the versions it requires.
 
 ## React
 
@@ -69,7 +69,7 @@ bun add @whatsaaaa/form-builder-react @whatsaaaa/form-builder-schema @formisch/r
 
 :::
 
-React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required.
+The [React page](/frameworks/react#installation) lists the versions it requires.
 
 ## Other frameworks
 
