@@ -30,6 +30,18 @@ jobs:
       - run: pnpm type-check
       - run: pnpm -r --filter '!@whatsaaaa/form-builder-schema' --filter '!@whatsaaaa/form-builder-affects' --filter '!@whatsaaaa/form-builder-vue' --filter '!@whatsaaaa/form-builder-react' test
       - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-vue --filter @whatsaaaa/form-builder-react test:coverage
+      # Codecov maps each flag to its package by path, so every lcov path must start with that
+      # package's directory.
+      - name: Check the lcov paths are from the repo root
+        run: |
+          for package in packages/schema packages/affects frameworks/vue frameworks/react; do
+            report="$package/coverage/lcov.info"
+            grep -q '^SF:' "$report" || { echo "$report has no SF lines"; exit 1; }
+            if grep '^SF:' "$report" | grep -v "^SF:$package/"; then
+              echo "$report has paths outside $package/"
+              exit 1
+            fi
+          done
       - name: Upload schema coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
