@@ -4,6 +4,8 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'form-builder',
   description: 'Describe forms in JSON and get validated Formisch forms out.',
+  // GitHub Pages serves the site at https://whatsaaaa.github.io/form-builder/
+  base: '/form-builder/',
   cleanUrls: true,
   lastUpdated: true,
 
