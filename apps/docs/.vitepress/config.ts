@@ -34,11 +34,17 @@ const guide: DefaultTheme.SidebarItem[] = [
       { text: 'Custom field types', link: '/guide/custom-field-types' },
       { text: 'Custom rules', link: '/guide/custom-rules' },
       { text: 'Extensions', link: '/guide/extensions' },
+      { text: 'Validating on the server', link: '/guide/server-validation' },
     ],
   },
   {
-    text: 'Upgrading',
-    items: [{ text: 'Migrating to 1.0', link: '/guide/migrating-to-1.0' }],
+    text: 'Versions',
+    items: [
+      { text: 'Stability', link: '/guide/stability' },
+      { text: 'Supported versions', link: '/guide/support' },
+      { text: 'Format version', link: '/guide/format-version' },
+      { text: 'Migrating to 1.0', link: '/guide/migrating-to-1.0' },
+    ],
   },
 ]
 
