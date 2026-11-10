@@ -1,0 +1,56 @@
+name: Latest peers
+
+# A canary for releases of the peers: the adapters read parts of Formisch that Formisch keeps out
+# of semver (frameworks/*/src/formisch-internals.ts), so a Formisch minor or patch can break them.
+# It runs on each PR and every day, so a new release shows up before users meet it.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The adapter and integration tests and types, with the latest Formisch bindings, Valibot, Vue
+  # and React. The overrides make every package in the workspace use that one copy.
+  suites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # use the latest major
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install with the latest peers
+        run: |
+          {
+            echo 'overrides:'
+            for package in valibot vue react react-dom @types/react @types/react-dom \
+              @formisch/angular @formisch/preact @formisch/qwik @formisch/react @formisch/solid \
+              @formisch/svelte @formisch/vue; do
+              echo "  '$package': latest"
+            done
+          } >> pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+      - run: pnpm --filter integration ls --depth 0
+      - run: pnpm --filter @whatsaaaa/form-builder-vue --filter @whatsaaaa/form-builder-react --filter integration test
+      - run: pnpm --filter @whatsaaaa/form-builder-vue --filter @whatsaaaa/form-builder-react --filter integration type-check
+
+  # The packed packages in a new npm project, with the latest TypeScript and peers: a type-check of
+  # their published types with skipLibCheck off, and a server render with each adapter.
+  consumer-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # use the latest major
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: consumer-smoke/run.sh latest

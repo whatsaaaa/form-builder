@@ -45,11 +45,12 @@ The docs site is in [`apps/docs`](./apps/docs), and deploys to [GitHub Pages](ht
 ## Repository layout
 
 ```
-packages/      the framework-agnostic core: schema and affects
-frameworks/    thin adapters for Vue and React
-apps/          the playground and the docs site (a visual builder is planned)
-fixtures/      sample JSON forms every test suite shares
-integration/   tests that run the fixtures through Formisch's own bindings, and the renderers the docs show
+packages/        the framework-agnostic core: schema and affects
+frameworks/      thin adapters for Vue and React
+apps/            the playground and the docs site (a visual builder is planned)
+fixtures/        sample JSON forms every test suite shares
+integration/     tests that run the fixtures through Formisch's own bindings, and the renderers the docs show
+consumer-smoke/  the packed packages in a new npm project at the lowest or latest peers: `consumer-smoke/run.sh min`
 ```
 
 The JSON Schema of the definition format ships with the schema package as

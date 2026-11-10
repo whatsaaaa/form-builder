@@ -120,3 +120,72 @@ jobs:
           pnpm install --no-frozen-lockfile
       - run: pnpm --filter @whatsaaaa/form-builder-react test:coverage
       - run: pnpm --filter @whatsaaaa/form-builder-react type-check
+
+  # Each adapter's tests and types again, with the lowest Formisch, Valibot and Vue its peer ranges
+  # allow. The overrides make every package in the workspace use that one copy.
+  adapters-min:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - adapter: vue
+            overrides: '{ vue: 3.5.2, "@formisch/vue": 1.1.1, valibot: 1.4.1 }'
+          - adapter: react
+            overrides: '{ "@formisch/react": 1.2.0, valibot: 1.4.1 }'
+    name: adapters-min (${{ matrix.adapter }})
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # use the latest major
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install with the lowest peers
+        run: |
+          echo 'overrides: ${{ matrix.overrides }}' >> pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} ls --depth 0
+      - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} test
+      - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} type-check
+
+  # The schema and affects tests on the older Node versions they support, as they run on servers.
+  # pnpm installs with Node 24, and the tests run on the matrix version.
+  node:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    name: node (${{ matrix.node }})
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # use the latest major
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node --version
+      - working-directory: packages/schema
+        run: node node_modules/vitest/vitest.mjs run
+      - working-directory: packages/affects
+        run: node node_modules/vitest/vitest.mjs run
+
+  # The packed packages in a new npm project, with the lowest TypeScript and peers they support:
+  # a type-check of their published types with skipLibCheck off, and a server render with each
+  # adapter. latest-peers.yml runs it with the latest.
+  consumer-smoke-min:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6 # use the latest major
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: consumer-smoke/run.sh min

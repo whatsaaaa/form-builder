@@ -1,0 +1,16 @@
+// A consumer's settings, as strict as they come: the published types are checked too.
+{
+  "include": ["*.ts"],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "skipLibCheck": false,
+    "noEmit": true
+  }
+}
