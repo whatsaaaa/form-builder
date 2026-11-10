@@ -1,5 +1,13 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.5.1
+
+### Patch Changes
+
+- [#53](https://github.com/whatsaaaa/form-builder/pull/53) [`ee418eb`](https://github.com/whatsaaaa/form-builder/commit/ee418eb20f12aab4c1956166f67e90d691f5f473) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - The `homepage` of each package points at its page on the docs site, https://whatsaaaa.github.io/form-builder/, instead of the repository.
+- Updated dependencies [[`ee418eb`](https://github.com/whatsaaaa/form-builder/commit/ee418eb20f12aab4c1956166f67e90d691f5f473)]:
+  - @whatsaaaa/form-builder-schema@0.17.1
+
 ## 0.5.0
 
 ### Minor Changes
