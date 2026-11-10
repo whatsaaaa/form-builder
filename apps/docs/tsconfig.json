@@ -1,0 +1,11 @@
+// TSConfig for the VitePress config, which runs in Node.js.
+{
+  "extends": "@tsconfig/node24/tsconfig.json",
+  "include": [".vitepress/config.ts"],
+  "compilerOptions": {
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "noEmit": true
+  }
+}

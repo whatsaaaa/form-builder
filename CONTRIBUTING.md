@@ -16,6 +16,7 @@ pnpm dev # starts the playground
 | Command           | What it does                                       |
 | ----------------- | -------------------------------------------------- |
 | `pnpm dev`        | Starts the playground against the live source      |
+| `pnpm docs:dev`   | Starts the docs site                               |
 | `pnpm build`      | Builds every package in dependency order           |
 | `pnpm test`       | Runs every test suite                              |
 | `pnpm lint`       | Runs oxlint and ESLint                             |
@@ -38,7 +39,7 @@ pnpm --filter @whatsaaaa/form-builder-schema test
 ```
 packages/      the framework-agnostic core: schema and affects
 frameworks/    thin adapters for Vue and React
-apps/          the playground (a visual builder and a docs site are planned)
+apps/          the playground and the docs site (a visual builder is planned)
 fixtures/      sample JSON forms every test suite shares
 integration/   tests that run the fixtures through Formisch's own bindings, and the renderers the docs show
 ```

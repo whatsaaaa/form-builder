@@ -79,6 +79,7 @@ jobs:
       - name: Fail if the generated files are out of date
         run: git diff --exit-code
       - run: pnpm build
+      - run: pnpm docs:build
       - run: pnpm -r --filter "./packages/*" --filter "./frameworks/*" lint:pkg
       - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-react size
 

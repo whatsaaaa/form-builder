@@ -40,3 +40,7 @@ __screenshots__/
 
 *.tgz
 .attw/
+
+# VitePress
+**/.vitepress/cache
+**/.vitepress/dist
