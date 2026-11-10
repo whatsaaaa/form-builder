@@ -8,7 +8,7 @@ A JSON Schema lets your editor suggest field types, rules and their params while
 
 ## Using the shipped schema
 
-The schema package ships `definition.schema.json`, the JSON Schema of definitions for the built-in types and rules, and this site hosts it for each [format version](/guide/define-your-form#the-format-version). Point a definition at it with `$schema`, and VS Code and other editors pick it up:
+The schema package ships `definition.schema.json`, the JSON Schema of definitions for the built-in types and rules, and this site hosts it for each [format version](/guide/format-version). Point a definition at it with `$schema`, and VS Code and other editors pick it up:
 
 ```json
 {

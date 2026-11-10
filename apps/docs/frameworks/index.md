@@ -35,4 +35,4 @@ You don't start from nothing: each framework has a whole renderer, with layouts,
 
 ## Without a UI
 
-The schema is a plain Valibot schema, so it also validates on a server, with `v.parse` or `v.safeParse`, against the same definition the form renders. Conditions hide fields there too.
+The schema is a plain Valibot schema, so it also validates on a server, with `v.parse` or `v.safeParse`, against the same definition the form renders. Conditions hide fields there too. See [validating on the server](/guide/server-validation).

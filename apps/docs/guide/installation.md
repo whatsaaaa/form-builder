@@ -95,7 +95,7 @@ bun add @whatsaaaa/form-builder-schema @formisch/solid valibot
 
 :::
 
-The schema package needs Valibot 1.3 or later on its own, and every Formisch package needs 1.4.1 or later. The [Formisch bindings](/frameworks/formisch) have a tested renderer for each framework to start from.
+The schema package needs Valibot 1.3 or later on its own, and every Formisch package needs 1.4.1 or later. [Supported versions](/guide/support) lists every range. The [Formisch bindings](/frameworks/formisch) have a tested renderer for each framework to start from.
 
 ## Conditions
 

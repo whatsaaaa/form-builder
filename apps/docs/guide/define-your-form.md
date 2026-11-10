@@ -10,23 +10,13 @@ Every form starts with a definition: a JSON object that lists the form's fields,
 
 A definition takes these keys:
 
-- `version`: the version of the format, `"1"`. See [the format version](#the-format-version).
+- `version`: the version of the format, `"1"`. It stays `"1"` for every 1.x release. See [format version](/guide/format-version).
 - `fields`: the fields of the form, in order.
 - `formRules`: rules that check a field against other fields, like a repeated password. See [form rules](/guide/form-rules).
 - `layout`: where the fields go, in sections, rows and steps. Without it, the fields render in their order. See [layout](/guide/layout).
 - `$schema`: where the definition's JSON Schema is, so your editor can suggest keys. It is never read. See [JSON Schema](/guide/json-schema).
 
 Any other key is a mistake, and [`validate()`](/guide/checking-definitions) reports it.
-
-## The format version
-
-`version` is the version of the JSON format, not of the packages. It stays `"1"` for every 1.x release of the schema package:
-
-- A minor release can add to the format, like a new field type, rule, key or layout node, and keeps `version: "1"`. A definition that uses something new needs a package version that has it: an older one reports it, for example as `unknown_type`. The docs and the changelog name the version that added each feature.
-- A definition that works today keeps working, with the same meaning, in every later 1.x release.
-- `"2"` only comes with a change that breaks definitions, in a major release of the package. Any other `version` is `unsupported_version`.
-
-The keys of an [extension](/guide/extensions), like `affects`, are versioned by the extension's own package.
 
 ## Fields
 

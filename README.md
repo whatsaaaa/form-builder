@@ -66,7 +66,7 @@ Planned: `@whatsaaaa/form-builder-codegen`, a CLI that turns definitions into ty
 
 ## Status
 
-The packages are pre-1.0. Expect the API and the JSON format to change between `0.x` releases.
+The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects package stays before 1.0 for now. See [stability](https://whatsaaaa.github.io/form-builder/guide/stability), [supported versions](https://whatsaaaa.github.io/form-builder/guide/support), and [migrating to 1.0](https://whatsaaaa.github.io/form-builder/guide/migrating-to-1.0).
 
 ## Contributing
 
