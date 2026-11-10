@@ -149,15 +149,10 @@ jobs:
       - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} test
       - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} type-check
 
-  # The schema and affects tests on each Node version Vitest supports, as they run on servers. pnpm
-  # installs with Node 24, and the tests run on the matrix version.
-  node:
+  # The schema and affects tests on Node 22, the lowest Node Vitest supports, as they run on
+  # servers. The check job runs them on Node 24. pnpm installs with Node 24, and the tests run on 22.
+  node-22:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [22, 24]
-    name: node (${{ matrix.node }})
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6 # use the latest major
@@ -168,7 +163,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: actions/setup-node@v7
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 22
       - run: node --version
       - working-directory: packages/schema
         run: node node_modules/vitest/vitest.mjs run
