@@ -41,7 +41,7 @@ const schema = builder.build(json)
 const schema = builder.build<TInput, TOutput>(json)
 ```
 
-Checks the definition and builds the Valibot schema of the whole form: an object schema with a key for each field, in a `v.pipe()` with a check for each form rule when it has any. Throws one [`DefinitionError`](/api/schema/DefinitionError) with every issue. With your input type, and your output type when it differs, the schema is typed as a [`TypedJsonFormSchema`](/api/schema/TypedJsonFormSchema). See [TypeScript](/guide/typescript#typing-the-form).
+Checks the definition and builds the Valibot schema of the whole form: an object schema with a key for each field, in a `v.pipe()` with one check that runs every form rule when it has any. Throws one [`DefinitionError`](/api/schema/DefinitionError) with every issue. With your input type, and your output type when it differs, the schema is typed as a [`TypedJsonFormSchema`](/api/schema/TypedJsonFormSchema). See [TypeScript](/guide/typescript#typing-the-form).
 
 ### validate
 

@@ -51,6 +51,7 @@ A field that isn't required may stay empty. What counts as empty depends on the 
 
 - An empty field that isn't required outputs `undefined`, and its rules don't run.
 - A required field that is empty reports only the required message, never the messages of its rules.
+- A required field whose key is missing from the input reports the required message too, the same as one that is `undefined`. Formisch always sends every key, but a request to your server may leave one out.
 - A required checkbox must be ticked. A required list or multiselect needs at least one item.
 - A group or a list is never empty: a missing list is read as `[]`, so its own rules, like `maxLength`, still run.
 

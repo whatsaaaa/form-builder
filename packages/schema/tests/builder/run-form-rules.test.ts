@@ -60,6 +60,45 @@ describe('running form rules', () => {
     ])
   })
 
+  it('gives the same issues in any order, as each sees only the issues of the fields', () => {
+    const fields: JsonField[] = [
+      { name: 'a', type: 'text' },
+      { name: 'b', type: 'text' },
+      { name: 'c', type: 'text' },
+    ]
+    const rules: JsonFormRule[] = [
+      { rule: 'sameAs', field: 'b', other: 'a', message: 'b must equal a' },
+      { rule: 'differentFrom', field: 'c', other: 'b', message: 'c must differ from b' },
+      { rule: 'differentFrom', field: 'a', other: 'c', message: 'a must differ from c' },
+    ]
+    const orders = [
+      [0, 1, 2],
+      [0, 2, 1],
+      [1, 0, 2],
+      [1, 2, 0],
+      [2, 0, 1],
+      [2, 1, 0],
+    ]
+    const byPath = (issues: { path: unknown[]; message: string }[]) =>
+      issues.map(({ path, message }) => `${path.join('.')}: ${message}`).sort()
+
+    for (const input of [
+      { a: 'x', b: 'y', c: 'y' },
+      { a: 'x', b: 'x', c: 'x' },
+    ]) {
+      const results = orders.map((order) =>
+        byPath(issuesOf(build(formWith(fields, ...order.map((i) => rules[i]!))), input)),
+      )
+      expect(new Set(results.map((result) => JSON.stringify(result))).size).toBe(1)
+    }
+    expect(byPath(issuesOf(build(formWith(fields, ...rules)), { a: 'x', b: 'y', c: 'y' }))).toEqual(
+      ['b: b must equal a', 'c: c must differ from b'],
+    )
+    expect(byPath(issuesOf(build(formWith(fields, ...rules)), { a: 'x', b: 'x', c: 'x' }))).toEqual(
+      ['a: a must differ from c', 'c: c must differ from b'],
+    )
+  })
+
   it('never runs on a value that is no object', () => {
     expect(issuesOf(passwords, null)).toEqual([{ path: [], message: expect.any(String) }])
   })

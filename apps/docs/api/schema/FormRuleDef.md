@@ -22,7 +22,7 @@ A form rule, as [`defineFormRule`](/api/schema/defineFormRule) takes it.
 
 ### Explanation
 
-`check` runs only when none of the fields has an issue or is empty. See [custom rules](/guide/custom-rules#form-rules).
+`check` runs only when none of the fields has an issue of its own or is empty. The issues of other form rules don't count, so their order never changes what a rule reports. See [custom rules](/guide/custom-rules#form-rules).
 
 ## Related
 

@@ -18,6 +18,12 @@ export interface Messages {
   resolve(text: string, ctx: MessageContext): string
 }
 
+/** A field's schema, and its required message, resolved, when it is required. */
+export interface BuiltField {
+  schema: AnySchema
+  requiredMessage: string | undefined
+}
+
 /** An action, or a schema that runs on the value so far, e.g. on each item of an array. */
 type PipeItem = AnyAction | AnySchema
 
@@ -31,7 +37,7 @@ export function buildFieldSchema(
   checked: CheckedField,
   messages: Messages,
   ctx: BuildContext,
-): AnySchema {
+): BuiltField {
   const { field, path, type, kind, valueKind } = checked
   // Undefined for a field that isn't required, so resolveMessage only sees messages in use.
   const requiredMessage = field.required
@@ -57,7 +63,7 @@ export function buildFieldSchema(
     // They sit in a nested pipe, so an empty required list reports only the required message.
     const validate = rules.validate.length ? [pipe(v.unknown(), rules.validate)] : []
     const schema = v.optional(pipe(head, validate), valueKind === 'object' ? () => ({}) : () => [])
-    return withMetadata(schema, field, path, messages)
+    return { schema: withMetadata(schema, field, path, messages), requiredMessage }
   }
 
   const empty = required
@@ -75,13 +81,17 @@ export function buildFieldSchema(
 
   // Formisch starts a field inside optional without a value, but a required string field outside
   // it with ''. So a required field is inside optional too, to start the same as one that isn't,
-  // and nonOptional reports a missing value with the required message.
-  return withMetadata(
-    required ? v.nonOptional(v.optional(schema), requiredMessage) : v.optional(schema),
-    field,
-    path,
-    messages,
-  )
+  // and nonOptional reports a missing value with the required message. A missing key gets it from
+  // the object schema of the list the field is in.
+  return {
+    schema: withMetadata(
+      required ? v.nonOptional(v.optional(schema), requiredMessage) : v.optional(schema),
+      field,
+      path,
+      messages,
+    ),
+    requiredMessage,
+  }
 }
 
 /**

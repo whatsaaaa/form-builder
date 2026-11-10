@@ -17,7 +17,7 @@ import { buildFieldSchema, type MessageContext, type Messages } from './build-fi
 import { checkExtensions } from './check-extensions'
 import { checkFormRules } from './check-form-rules'
 import { checkLayout } from './check-layout'
-import { formRuleAction, type FormRuleAction } from './form-rule-action'
+import { type FormRuleAction, formRulesAction } from './form-rule-action'
 import { lookup, type Registry } from './registry'
 import { type CheckedField, checkField } from './validate-definition'
 
@@ -43,8 +43,8 @@ export interface CompileResult {
 export type FieldsSchema = v.ObjectSchema<v.ObjectEntries, undefined>
 
 /**
- * The schema of a definition: the object schema of its fields, in a pipe with a check for each
- * form rule when it has form rules. A new object from its `entries` leaves the form rules out, and
+ * The schema of a definition: the object schema of its fields, in a pipe with the check of its
+ * form rules when it has form rules. A new object from its `entries` leaves the form rules out, and
  * the conditions of the extensions, if any.
  */
 export type JsonFormSchema =
@@ -119,11 +119,13 @@ export function compileDefinition(
 
   // Form rules run after every field's schema, on the whole value. They only check, so the schema
   // keeps the object's type, entries and output, and Formisch still keeps a field for each entry.
-  const checks = rules.map((rule) => {
+  const withMessages = rules.map((rule) => {
     const ctx = { field: rule.field, rule: rule.name, path: rule.path }
-    return formRuleAction(rule, messages.resolve(rule.message, ctx))
+    return { rule, message: messages.resolve(rule.message, ctx) }
   })
-  const withRules: JsonFormSchema = checks.length ? v.pipe(fields, ...checks) : fields
+  const withRules: JsonFormSchema = withMessages.length
+    ? v.pipe(fields, formRulesAction(withMessages))
+    : fields
   if (!conditional) return { ...result, schema: withRules }
   return {
     ...result,
@@ -240,6 +242,7 @@ export function createCompiler(
 
   function list(raws: readonly unknown[], path: DefinitionPath) {
     const entries: v.ObjectEntries = {}
+    const requiredMessages = new Map<string, string>()
     const input: Record<string, unknown> = {}
     const names = new Set<string>()
     raws.forEach((raw, i) => {
@@ -254,11 +257,12 @@ export function createCompiler(
       if (!checked) return
       const built = build(checked, dataPath)
       entries[name] = built.schema
+      if (built.requiredMessage !== undefined) requiredMessages.set(name, built.requiredMessage)
       if (built.input !== undefined) input[name] = built.input
     })
     keepFirst(childInputs, input)
     keepFirst(itemInputs, { input })
-    return { schema: v.object(entries), input }
+    return { schema: objectOf(entries, requiredMessages), input }
   }
 
   function fields(raws: readonly unknown[], path: DefinitionPath): FieldsSchema {
@@ -291,13 +295,14 @@ export function createCompiler(
     itemInputs.push(undefined)
     try {
       const issueCount = issues.length
-      const schema = buildFieldSchema(checked, messages, context(checked.path))
+      const { schema, requiredMessage } = buildFieldSchema(checked, messages, context(checked.path))
       // A child field with issues is left out or built as v.never(), so the schema can't check
       // the default.
       if (issues.length === issueCount) checkDefault(checked, schema, issues)
       schemas.set(checked, schema)
       return {
         schema: wrap ? wrap(checked, schema) : schema,
+        requiredMessage,
         input: initialValue(checked, childInputs.at(-1)),
         itemInput: itemInputs.at(-1)?.input,
       }
@@ -338,6 +343,36 @@ export function createCompiler(
 }
 
 type DataPath = readonly string[]
+
+/**
+ * The object schema of a list of fields. A required field whose key is missing gets its required
+ * message, the same as one whose value is undefined, from `requiredMessages`, by name. Valibot
+ * reports a missing key with the object's message, so the object has a message function. It gives
+ * every other issue of the object, e.g. on an input that is no object, the message Valibot would
+ * without one: the one set for `v.object`, else the one set for schemas, else the global one, else
+ * its own. The type is that of an object without a message, like any `v.object(entries)`, as the
+ * function only gives messages: converters and Formisch read the same schema.
+ */
+function objectOf(
+  entries: v.ObjectEntries,
+  requiredMessages: ReadonlyMap<string, string>,
+): FieldsSchema {
+  const message = (issue: v.ObjectIssue): string => {
+    const item = issue.path?.[0]
+    const required =
+      item?.origin === 'key' && typeof item.key === 'string'
+        ? requiredMessages.get(item.key)
+        : undefined
+    if (required !== undefined) return required
+    const fallback =
+      v.getSpecificMessage(v.object, issue.lang) ??
+      v.getSchemaMessage(issue.lang) ??
+      v.getGlobalMessage(issue.lang)
+    if (fallback === undefined) return issue.message
+    return typeof fallback === 'function' ? fallback(issue) : fallback
+  }
+  return v.object(entries, message) as unknown as FieldsSchema
+}
 
 /** Sets what the running container built first, unless it has built something already. */
 function keepFirst<T>(stack: (T | undefined)[], value: T): void {

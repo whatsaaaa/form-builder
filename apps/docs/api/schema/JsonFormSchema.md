@@ -4,7 +4,7 @@ description: The type of the schema build() gives.
 
 # JsonFormSchema
 
-The type of the schema [`build()`](/api/schema/SchemaBuilder#build) gives: the object schema of the fields, in a pipe with a check for each form rule when the definition has form rules.
+The type of the schema [`build()`](/api/schema/SchemaBuilder#build) gives: the object schema of the fields, in a pipe with one check that runs every form rule when the definition has form rules.
 
 ```ts
 type JsonFormSchema =
