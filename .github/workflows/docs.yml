@@ -28,6 +28,7 @@ jobs:
         with:
           # lastUpdated reads each page's time from the git history.
           fetch-depth: 0
+          persist-credentials: false
       - uses: pnpm/action-setup@v6 # use the latest major
       - uses: actions/setup-node@v7
         with:
