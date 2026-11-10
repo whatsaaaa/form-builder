@@ -14,7 +14,7 @@ import { paramsFor } from '../rules/rule-params'
 import { isReservedFieldKey, isReservedName, isReservedRuleKey } from '../shared/reserved-keys'
 import type { AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
-import { lookup, type Registry } from './registry'
+import { isExtensionFieldKey, lookup, type Registry } from './registry'
 
 export interface CheckedField {
   /** Undefined for the field of a list's items, which has no name. */
@@ -97,7 +97,7 @@ export function checkField(
     return undefined
   }
 
-  const props = checkProps(raw as JsonField, type, path, issues)
+  const props = checkProps(raw as JsonField, type, path, registry, issues)
 
   // Only a fixed kind can be 'none'. A kind() function that returns it throws in kindDef.
   if (type.kind === 'none') {
@@ -246,17 +246,19 @@ export function checkDefaultRules(
 }
 
 /**
- * Checks the props of a field: every key that isn't reserved must be one of its type's props,
- * and together they must pass them. Returns the parsed props, or undefined when they fail.
- * `field` is the input itself: see `pickKeys`.
+ * Checks the props of a field: every key that isn't reserved, or an extension's, must be one of
+ * its type's props, and together they must pass them. Returns the parsed props, or undefined when
+ * they fail. The extensions check their own keys. `field` is the input itself: see `pickKeys`.
  */
 function checkProps(
   field: JsonField,
   type: FieldTypeDef,
   path: DefinitionPath,
+  registry: Registry,
   issues: DefinitionIssue[],
 ): Record<string, unknown> | undefined {
-  const input = pickKeys(field, type.props, isReservedFieldKey, issues, (key) =>
+  const isOwnKey = (key: string) => isReservedFieldKey(key) || isExtensionFieldKey(registry, key)
+  const input = pickKeys(field, type.props, isOwnKey, issues, (key) =>
     issue('unknown_key', [...path, key], `Unknown key "${key}" on a "${field.type}" field`),
   )
   const parsed = v.safeParse(type.props ?? noKeys, input)

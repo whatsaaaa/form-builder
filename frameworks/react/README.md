@@ -304,14 +304,14 @@ function Signup({ definition }: { definition: JsonForm }) {
 }
 ```
 
-| Member              |                                                                                                      |
-| ------------------- | ---------------------------------------------------------------------------------------------------- |
-| `list`              | every step, with its `step` as written (`id`, `label`, `description`, `ui`), `children` and `fields` |
-| `index`, `current`  | the step `<JsonFields>` renders                                                                      |
-| `isFirst`, `isLast` |                                                                                                      |
-| `next()`            | validates, and moves on when the step's fields have no issues. Resolves to whether it moved          |
-| `back()`            | moves back, without validating                                                                       |
-| `goTo(index)`       | back freely; forward through each step on the way, stopping at the first with issues                 |
+| Member              |                                                                                                                                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list`              | the steps on show, each with its `step` as written (`id`, `label`, `description`, `ui`), `children` and `fields`: a step that [conditions](#conditions) hide is left out, unless the user is on it |
+| `index`, `current`  | the step `<JsonFields>` renders                                                                                                                                                                    |
+| `isFirst`, `isLast` |                                                                                                                                                                                                    |
+| `next()`            | validates, and moves on when the step's fields have no issues. Resolves to whether it moved                                                                                                        |
+| `back()`            | moves back, without validating                                                                                                                                                                     |
+| `goTo(index)`       | back freely; forward through each step on the way, stopping at the first with issues                                                                                                               |
 
 The form is one Formisch form, so Formisch validates all of it at once. The steps make that work:
 
@@ -321,6 +321,30 @@ The form is one Formisch form, so Formisch validates all of it at once. The step
 - **A submit before the last step is a Next**, so Enter in a step with a single text input doesn't submit the form early. On the last step, Formisch submits as usual.
 - **A submit that fails because of an earlier step**, like a form rule that reads fields of two steps, goes back to that step.
 - `<JsonFields step={2} />` renders a given step instead of the current one, e.g. on a review page. A form without steps has one, and nothing changes for it.
+
+## Conditions
+
+With the [affects package](https://github.com/whatsaaaa/form-builder/tree/main/packages/affects), fields, sections and steps show and hide by the values of other fields. Pass `useJsonForm` a builder with the extension:
+
+```tsx
+import { affects } from '@whatsaaaa/form-builder-affects'
+
+const builder = createSchemaBuilder({ extensions: [affects()] })
+
+function DefinitionForm({ definition }: { definition: JsonForm }) {
+  const jsonForm = useJsonForm(definition, { builder, components, layoutComponents })
+  // ...
+}
+```
+
+- **`<JsonFields>` and `<JsonField>` leave out what the conditions hide**: a hidden field, a hidden section, and a group, section or row whose fields are all hidden. A field hidden in a row drops out of it, and the others keep their spans.
+- **Steps skip the hidden ones.** `steps.list` holds the steps on show, so a step whose fields are all hidden is left out, and Next and Back go past it. The step the user is on stays, until they leave it.
+- **`useJsonForm` clears what `hideAndClear` clears**, with Formisch's `setInput`, as soon as it is cleared, wherever the field renders: in `<JsonFields>`, with `<JsonField>`, or by your own code. A field that starts hidden this way starts blank.
+- **The schema skips hidden fields**, so they never block the form, and submits what the affects package says.
+- **The form renders again only when what is hidden changes**, not on every keystroke: `useJsonForm` watches the input outside React, through `@formisch/react/internals`.
+- **`jsonForm.visibility`** is the state for the form's input now, for your own renderers: `isHidden(node, indexes)`, `isStepHidden(step)`, `shownNodes(nodes, indexes)`. It is a new object only when what is hidden changes.
+
+Without conditions, nothing is hidden, nothing is watched, and nothing changes.
 
 ## Placing fields yourself
 

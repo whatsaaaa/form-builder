@@ -3,14 +3,16 @@ import {
   type ConversionConfig,
   type JsonSchema,
 } from '@valibot/to-json-schema'
+import type * as v from 'valibot'
 import { LAYOUT_TYPES, ROW_COLUMNS } from '../definition/json-layout'
+import type { SchemaExtension } from '../extensions/schema-extension'
 import { childField, itemField } from '../field-types/child-fields'
 import type { FieldTypeDef, FieldTypeMeta } from '../field-types/field-type-def'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import type { RuleDef, RuleMeta } from '../rules/rule-def'
 import { paramsFor } from '../rules/rule-params'
 import { RESERVED_NAMES } from '../shared/reserved-keys'
-import type { AnyObjectSchema } from '../shared/valibot-types'
+import type { AnyObjectSchema, AnySchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 
 /** The registries a JSON Schema is made from. A builder from `createSchemaBuilder()` has them. */
@@ -18,23 +20,37 @@ export interface JsonSchemaRegistries {
   readonly fieldTypes: Readonly<Record<string, FieldTypeDef>>
   readonly rules: Readonly<Record<string, RuleDef>>
   readonly formRules: Readonly<Record<string, FormRuleDef>>
+  /** The builder's extensions: the keys they add, on every field and on steps and sections. */
+  readonly extensions?: readonly SchemaExtension[]
 }
 
 /**
  * The JSON Schema of definitions for these registries, for editors and other tools.
- * It knows every type, rule and form rule by name, with their props and params, and the layout's
- * nodes. It can't know what only `validate()` checks, such as duplicate names, defaults, form rule
- * paths and layout references.
+ * It knows every type, rule and form rule by name, with their props and params, the layout's
+ * nodes, and the keys of the extensions. It can't know what only `validate()` checks, such as
+ * duplicate names, defaults, form rule paths and layout references, or the paths conditions read.
  */
 export function toJsonSchema(registries: JsonSchemaRegistries): JsonSchema {
-  const converter = createConverter()
+  const extensions = registries.extensions ?? []
+  // Each definition of an extension is named after the extension: `affects.condition`.
+  const named = new Map(
+    extensions.flatMap((extension) =>
+      Object.entries(extension.definitions ?? {}).map(([name, schema]): [AnySchema, string] => [
+        schema,
+        `${extension.name}.${name}`,
+      ]),
+    ),
+  )
+  const converter = createConverter(named)
   const rules = createRuleLists(registries.rules, converter)
   const types = Object.entries(registries.fieldTypes)
   const valueTypes = types.filter(([, type]) => type.kind !== 'none').map(([name]) => name)
+  const fieldProps = extensionProps(extensions, 'fieldProps', converter)
+  const layoutProps = extensionProps(extensions, 'layoutProps', converter)
   const typeSchemas = Object.fromEntries(
     types.map(([name, type]) => [
       `type.${name}`,
-      fieldTypeSchema(name, type, rules.listFor(type), converter),
+      fieldTypeSchema(name, type, rules.listFor(type), converter, fieldProps),
     ]),
   )
 
@@ -84,11 +100,31 @@ export function toJsonSchema(registries: JsonSchemaRegistries): JsonSchema {
       ...layoutSchemas(
         types.filter(([, type]) => type.kind === 'none').map(([name]) => name),
         typeSchemas,
+        layoutProps,
       ),
       ...rules.lists,
       ...rules.rules,
+      ...Object.fromEntries(
+        [...named].map(([schema, name]) => [name, converter.schema(schema, `"${name}"`)]),
+      ),
     },
   }
+}
+
+/** The keys every extension adds with `fieldProps` or `layoutProps`. */
+function extensionProps(
+  extensions: readonly SchemaExtension[],
+  key: 'fieldProps' | 'layoutProps',
+  converter: Converter,
+): NonNullable<JsonSchema['properties']> {
+  return Object.assign(
+    {},
+    ...extensions.map(
+      (extension) =>
+        converter.object(extension[key], `the ${key} of extension "${extension.name}"`)
+          ?.properties ?? {},
+    ),
+  )
 }
 
 /** A reference to one of the definitions, as a JSON Pointer. */
@@ -127,6 +163,7 @@ function byName(
 function layoutSchemas(
   displayTypes: readonly string[],
   typeSchemas: Readonly<Record<string, JsonSchema>>,
+  extensionProps: NonNullable<JsonSchema['properties']>,
 ): Record<string, JsonSchema> {
   const id: JsonSchema = { type: 'string', minLength: 1 }
   const ui: JsonSchema = { type: 'object' }
@@ -179,6 +216,7 @@ function layoutSchemas(
         description: { type: 'string' },
         items: ref('layoutItems'),
         ui,
+        ...extensionProps,
       }),
       ...node('row', { type: { const: 'row' }, id, items: ref('rowItems'), ui }),
       ...node('slot', { type: { const: 'slot' }, name: { type: 'string', minLength: 1 } }),
@@ -202,6 +240,7 @@ function layoutSchemas(
         description: { type: 'string' },
         items: ref('layoutItems'),
         ui,
+        ...extensionProps,
       },
       required: ['items'],
       additionalProperties: false,
@@ -226,6 +265,7 @@ function fieldTypeSchema(
   type: FieldTypeDef,
   rules: string | undefined,
   converter: Converter,
+  extensionProps: NonNullable<JsonSchema['properties']>,
 ): JsonSchema {
   const props = converter.object(type.props, `the props of field type "${name}"`)
   if (!props) return { type: 'object', ...describe(type.meta) }
@@ -267,6 +307,7 @@ function fieldTypeSchema(
           }),
         ...(rules && { rules: { type: 'array', items: ref(rules) } }),
         ui: { type: 'object' },
+        ...extensionProps,
       },
     },
     props,
@@ -390,25 +431,49 @@ interface Converter {
    * a console warning, and the type or rule takes any keys.
    */
   object(schema: AnyObjectSchema | undefined, what: string): ObjectParts | undefined
+  /** A whole schema, or any value with a console warning when it can't be converted. */
+  schema(schema: AnySchema, what: string): JsonSchema
 }
 
-const config: ConversionConfig = {
-  target: 'draft-07',
-  // A definition holds what the props and params schemas take, before any transformation.
-  typeMode: 'input',
-  errorMode: 'throw',
-  // A child field is a reference to the schema of fields, or of list items.
-  overrideSchema: ({ valibotSchema }) =>
-    valibotSchema === childField ? ref('field') : valibotSchema === itemField ? ref('item') : null,
-  // Checks like "every option has a different value" have no JSON Schema keyword. validate()
-  // still runs them, so the schema without them is right, only less strict.
-  overrideAction: ({ jsonSchema, errors }) => (errors ? jsonSchema : null),
+/**
+ * The config to convert with. A child field is a reference to the schema of fields, or of list
+ * items, and a `v.lazy()` that returns one of `named` a reference to it.
+ */
+function configWith(named: ReadonlyMap<AnySchema, string>): ConversionConfig {
+  return {
+    target: 'draft-07',
+    // A definition holds what the props and params schemas take, before any transformation.
+    typeMode: 'input',
+    errorMode: 'throw',
+    overrideSchema: ({ valibotSchema }) => {
+      if (valibotSchema === childField) return ref('field')
+      if (valibotSchema === itemField) return ref('item')
+      if (valibotSchema.type !== 'lazy') return null
+      const name = named.get((valibotSchema as v.LazySchema<AnySchema>).getter(undefined))
+      return name === undefined ? null : ref(name)
+    },
+    // Checks like "every option has a different value" have no JSON Schema keyword. validate()
+    // still runs them, so the schema without them is right, only less strict.
+    overrideAction: ({ jsonSchema, errors }) => (errors ? jsonSchema : null),
+  }
 }
 
 /** Converts each schema once, so params shared by many rules warn only once. */
-function createConverter(): Converter {
+function createConverter(named: ReadonlyMap<AnySchema, string>): Converter {
+  const config = configWith(named)
   const done = new Map<AnyObjectSchema, ObjectParts | undefined>()
   return {
+    schema(schema, what) {
+      try {
+        // Only the schema itself: the definitions it refers to are written once, on their own.
+        const { $schema: _, $defs: __, ...json } = convert(schema, config)
+        return json
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error)
+        warn(`toJsonSchema(): ${what} can't be converted, so any value is allowed. ${reason}`)
+        return {}
+      }
+    },
     object(schema, what) {
       if (!schema) return { properties: {}, required: [] }
       if (done.has(schema)) return done.get(schema)

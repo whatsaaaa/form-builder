@@ -127,6 +127,9 @@ describe('checking form rules', () => {
     expect(message('lines.qty')).toBe(
       'Unknown field "lines.qty". A list\'s items are read with "*": "lines.*.qty"',
     )
+    expect(message('lines.0.qty')).toBe(
+      'Unknown field "lines.0.qty". A list\'s items are read with "*": "lines.*.qty"',
+    )
     expect(message('lines.*')).toBe('Unknown field "lines.*"')
   })
 

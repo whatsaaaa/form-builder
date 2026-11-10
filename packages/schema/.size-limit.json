@@ -3,18 +3,18 @@
     "name": "createSchemaBuilder with every default rule",
     "path": "dist/index.js",
     "import": "{ createSchemaBuilder }",
-    "limit": "12 kB"
+    "limit": "15.5 kB"
   },
   {
     "name": "createSchemaBuilder with formatRules only",
     "path": "dist/index.js",
     "import": "{ createSchemaBuilder, formatRules }",
-    "limit": "12 kB"
+    "limit": "15.5 kB"
   },
   {
     "name": "createSchemaBuilder with the render and layout helpers",
     "path": "dist/index.js",
     "import": "{ allFields, checkComponents, checkLayoutComponents, coerceInput, createSchemaBuilder, dotPathOf, fieldPathsOf, findField, isRequired, issuesOfStep, selectFields, shownNodes, toFieldPath }",
-    "limit": "13 kB"
+    "limit": "16.5 kB"
   }
 ]

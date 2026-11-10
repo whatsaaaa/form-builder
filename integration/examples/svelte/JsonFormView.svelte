@@ -5,6 +5,7 @@
     Form,
     getInput,
     setErrors,
+    setInput,
     type SubmitHandler,
     validate,
   } from '@formisch/svelte'
@@ -31,14 +32,30 @@
   } = $props()
 
   // Formisch reads its config once, so read the definition once too.
-  const { steps, ...config } = untrack(() => ({
+  const { steps, conditions, ...config } = untrack(() => ({
     schema: builder.build(json),
     initialInput: builder.getInitialInput(json),
     steps: builder.getLayout(json).steps,
+    conditions: builder.getVisibility(json),
   }))
   const form = createForm(config)
+  // What the conditions hide for the input now: the same object until that changes.
+  const visibility = $derived(conditions.of(getInput(form)))
+  // The fields the conditions clear, set blank as soon as they are cleared.
+  $effect(() => {
+    const { toClear } = visibility
+    untrack(() => {
+      for (const { path, input } of toClear) setInput(form, { path, input } as never)
+    })
+  })
   let index = $state(0)
   const step = $derived(steps[index] as LayoutStep)
+  // A step whose fields are all hidden is skipped. The current one stays, while the user is on it.
+  const shown = $derived(
+    steps.flatMap((each, i) => (i === index || !visibility.isStepHidden(each) ? [i] : [])),
+  )
+  const before = $derived(shown[shown.indexOf(index) - 1])
+  const after = $derived(shown[shown.indexOf(index) + 1])
 
   // Next validates the whole form, and only the issues on this step's fields keep the user here.
   async function next() {
@@ -48,23 +65,24 @@
       if (first) focus(form, { path: first.path as never })
       return
     }
+    if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[index + 1] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
-    index += 1
+    index = after
   }
 </script>
 
 <Form of={form} onsubmit={(output) => onsubmit(output)}>
   <!-- Keyed by the step, so its fields render anew when it changes. -->
   {#key index}
-    <Layout {form} nodes={step.children} indexes={[]} {slots} />
+    <Layout {form} {visibility} nodes={step.children} indexes={[]} {slots} />
   {/key}
-  {#if index > 0}
-    <button type="button" data-back="" onclick={() => (index -= 1)}>Back</button>
+  {#if before !== undefined}
+    <button type="button" data-back="" onclick={() => (index = before as number)}>Back</button>
   {/if}
-  {#if index < steps.length - 1}
+  {#if after !== undefined}
     <button type="button" data-next="" onclick={next}>Next</button>
   {:else}
     <button type="submit">Save</button>

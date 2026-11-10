@@ -1,0 +1,81 @@
+{
+  "$schema": "../../packages/affects/definition.schema.json",
+  "version": "1",
+  "fields": [
+    { "name": "email", "type": "email", "label": "Email", "required": true },
+    {
+      "name": "accountType",
+      "type": "radio",
+      "label": "Account",
+      "required": true,
+      "options": [
+        { "value": "personal", "label": "Personal" },
+        { "value": "business", "label": "Business" }
+      ]
+    },
+    {
+      "name": "company",
+      "type": "group",
+      "fields": [
+        { "name": "name", "type": "text", "label": "Company name", "required": true },
+        { "name": "vatId", "type": "text", "label": "VAT ID", "required": true }
+      ]
+    },
+    { "name": "newsletter", "type": "checkbox", "label": "Send me the newsletter" },
+    {
+      "name": "topics",
+      "type": "multiselect",
+      "label": "Topics",
+      "required": { "message": "Pick a topic" },
+      "ui": { "widget": "checkboxes" },
+      "options": [
+        { "value": "news", "label": "News" },
+        { "value": "offers", "label": "Offers" },
+        { "value": "other", "label": "Other" }
+      ]
+    },
+    {
+      "name": "otherTopic",
+      "type": "text",
+      "label": "Which topic?",
+      "required": true,
+      "affects": [{ "effect": "show", "when": { "field": "topics", "includes": "other" } }]
+    },
+    {
+      "name": "acceptTerms",
+      "type": "checkbox",
+      "label": "I accept the terms",
+      "required": { "message": "Please accept the terms" }
+    }
+  ],
+  "layout": {
+    "steps": [
+      { "id": "account", "label": "Account", "items": ["email", "accountType"] },
+      {
+        "id": "company",
+        "label": "Company",
+        "affects": [
+          { "effect": "hideAndClear", "when": { "field": "accountType", "notEquals": "business" } }
+        ],
+        "items": [
+          { "type": "row", "items": [{ "field": "company.name", "span": 8 }, "company.vatId"] }
+        ]
+      },
+      {
+        "id": "confirm",
+        "label": "Confirm",
+        "items": [
+          "newsletter",
+          {
+            "type": "section",
+            "id": "topics",
+            "label": "Your topics",
+            "affects": [{ "effect": "show", "when": { "field": "newsletter", "equals": true } }],
+            "items": ["topics", "otherTopic"]
+          },
+          "acceptTerms"
+        ]
+      }
+    ]
+  }
+}

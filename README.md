@@ -28,7 +28,8 @@ Forms are everywhere, and a lot of them don't really belong in your source code.
 edit them. Some come from an API. Some get dragged together in a visual editor.
 
 **form-builder** lets you write a form down as plain JSON and hands you back a working Formisch form, with fields and
-validation already wired up. Where the fields go can be in the JSON too: sections, a 12-column grid and steps. The core doesn't care which framework you use: it works with Formisch's own package for
+validation already wired up. Where the fields go can be in the JSON too: sections, a 12-column grid and steps. So can
+conditions: fields, sections and steps that show, hide and clear by the values of other fields. The core doesn't care which framework you use: it works with Formisch's own package for
 Vue, React, Preact, Solid, Svelte, Qwik or Angular. Small adapters for Vue and React render the fields with your
 components, and the docs have a tested renderer for each of the others.
 
@@ -55,13 +56,13 @@ This repo is a **pnpm workspace**. Everything lives together so the packages can
 
 ### Published packages
 
-|     | Package                                               | What it does                                                                                                                 | Status |
-| :-: | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | :----: |
-| 🧩  | [`@whatsaaaa/form-builder-schema`](./packages/schema) | The heart of it all. Turns JSON definitions into Valibot schemas Formisch understands, with helpers to render them anywhere. |   🚧   |
-| 💚  | [`@whatsaaaa/form-builder-vue`](./frameworks/vue)     | Pass it a definition and a component per field type, and you have a working form. Headless, so any UI library fits.          |   🚧   |
-| ⚛️  | [`@whatsaaaa/form-builder-react`](./frameworks/react) | The same for React: a definition and a component per field type give you a working form, with any UI library.                |   🚧   |
-| 🔗  | `@whatsaaaa/form-builder-affects`                     | Lets fields react to each other: show this when that's checked, make it required, change the options, compute a value.       |   💭   |
-| ⚙️  | `@whatsaaaa/form-builder-codegen`                     | A CLI that turns your JSON into fully typed TypeScript, for when you know the form at build time.                            |   💭   |
+|     | Package                                                 | What it does                                                                                                                        | Status |
+| :-: | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | :----: |
+| 🧩  | [`@whatsaaaa/form-builder-schema`](./packages/schema)   | The heart of it all. Turns JSON definitions into Valibot schemas Formisch understands, with helpers to render them anywhere.        |   🚧   |
+| 💚  | [`@whatsaaaa/form-builder-vue`](./frameworks/vue)       | Pass it a definition and a component per field type, and you have a working form. Headless, so any UI library fits.                 |   🚧   |
+| ⚛️  | [`@whatsaaaa/form-builder-react`](./frameworks/react)   | The same for React: a definition and a component per field type give you a working form, with any UI library.                       |   🚧   |
+| 🔗  | [`@whatsaaaa/form-builder-affects`](./packages/affects) | Lets fields react to each other: show this when that's checked, hide that, or hide it and clear it. Hidden fields aren't validated. |   🚧   |
+| ⚙️  | `@whatsaaaa/form-builder-codegen`                       | A CLI that turns your JSON into fully typed TypeScript, for when you know the form at build time.                                   |   💭   |
 
 🚧 in progress · 💭 planned
 
@@ -118,7 +119,8 @@ pnpm --filter @whatsaaaa/form-builder-schema test
 ```
 
 The JSON Schema for the definition format (editor autocomplete!) ships with the schema package as
-[`packages/schema/definition.schema.json`](./packages/schema/definition.schema.json).
+[`packages/schema/definition.schema.json`](./packages/schema/definition.schema.json), and the one with conditions with the affects
+package as [`packages/affects/definition.schema.json`](./packages/affects/definition.schema.json).
 
 There's one rule to keep things tidy. **Dependencies only flow downhill:**
 
@@ -145,12 +147,14 @@ packages/schema/
 │   │   └── registry.ts
 │   ├── definition/                   the JSON format the package reads
 │   ├── errors/
+│   ├── extensions/                   what a feature from another package, like affects, plugs into
 │   ├── field-types/
 │   ├── json-schema/
 │   ├── kinds/
 │   ├── render/                       helpers for renderers in any framework
 │   ├── rules/
-│   └── shared/                       small building blocks used by several features
+│   ├── shared/                       small building blocks used by several features
+│   └── visibility/                   what the conditions of extensions hide
 └── tests/                            mirrors src/
     └── builder/
         ├── build.test.ts
@@ -167,8 +171,9 @@ packages/schema/
   `@whatsaaaa/form-builder-schema/json-schema`, because it needs `@valibot/to-json-schema`. Anything not exported from
   an entry is internal and free to change. Feature folders don't get their own `index.ts`, so imports always point at
   the real file.
-- ⬇️ **Dependencies flow one way.** `shared` ← `errors`, `kinds`, `definition` ← `rules`, `field-types`, `render` ←
-  `builder` ← `index.ts`, and `definition`, `rules`, `field-types` ← `json-schema` ← `json-schema.ts`.
+- ⬇️ **Dependencies flow one way.** `shared` ← `errors`, `kinds`, `definition` ← `rules`, `field-types`, `render`,
+  `extensions` ← `visibility` ← `builder` ← `index.ts`, and `definition`, `rules`, `field-types`, `extensions` ←
+  `json-schema` ← `json-schema.ts`.
   Each package lists its features and what they may import in `packageFeatures` in
   [`eslint.config.ts`](./eslint.config.ts). Add a new feature folder there, and lint will enforce the rest.
 - 🧪 **Tests live in `tests/`.** They mirror the `src/` tree, end in `.test.ts`, and import the package by its name

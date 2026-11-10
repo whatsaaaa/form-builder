@@ -1,4 +1,11 @@
-import { type FormSchema, type FormStore, useForm, type ValidationMode } from '@formisch/vue'
+import {
+  type FormSchema,
+  type FormStore,
+  getInput,
+  setInput,
+  useForm,
+  type ValidationMode,
+} from '@formisch/vue'
 import {
   createSchemaBuilder,
   type FieldNode,
@@ -7,7 +14,9 @@ import {
   type JsonFormSchema,
   type SchemaBuilder,
   type TypedJsonFormSchema,
+  type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
+import { computed, watch } from 'vue'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type JsonFormSteps, useJsonFormSteps } from './json-form-steps'
 
@@ -40,6 +49,12 @@ export interface JsonFormInstance<TSchema extends FormSchema = JsonFormSchema> {
   readonly layout: FormLayout
   /** The layout's steps: the current one, and Next, Back and Go to. A form without steps has one. */
   readonly steps: JsonFormSteps
+  /**
+   * What the conditions of the builder's extensions hide for the form's input now, like the
+   * `affects` of `@whatsaaaa/form-builder-affects`: `<JsonFields>` and `<JsonField>` leave it out.
+   * Read it in your own renderers. Without conditions, it hides nothing.
+   */
+  readonly visibility: VisibilityState
 }
 
 /** Any form `useJsonForm` returns, typed or not: what the components take. */
@@ -49,7 +64,8 @@ export type AnyJsonFormInstance = JsonFormInstance<FormSchema>
  * A Formisch form for a definition, with its schema and initial input from the builder. A
  * definition with issues throws the builder's `DefinitionError`, so run `validate()` first when it
  * comes from outside your code. The definition is read once: give the form a new `:key` to use
- * another one.
+ * another one. With conditions, it clears the fields they clear as soon as they do, with
+ * Formisch's `setInput`, wherever the fields are rendered.
  */
 export function useJsonForm(definition: JsonForm, options?: UseJsonFormOptions): JsonFormInstance
 /**
@@ -72,6 +88,21 @@ export function useJsonForm(
     revalidate: options.revalidate,
   })
   const layout = builder.getLayout(definition)
+  const visibility = builder.getVisibility(definition)
+  // Without conditions, nothing is hidden whatever the input, so the input isn't watched.
+  const state = visibility.conditional
+    ? computed(() => visibility.of(getInput(form)))
+    : { value: visibility.of(undefined) }
+  // A new state means something to clear may have come. It is empty once the fields are blank.
+  if (visibility.conditional) {
+    watch(
+      () => state.value.toClear,
+      (fields) => {
+        // The paths come from the definition at runtime, so the schema's types can't check them.
+        for (const { path, input } of fields) setInput(form, { path, input } as never)
+      },
+    )
+  }
   return {
     form,
     definition,
@@ -80,6 +111,9 @@ export function useJsonForm(
     layoutComponents: options.layoutComponents,
     fields: builder.getFieldTree(definition),
     layout,
-    steps: useJsonFormSteps(form, layout, options),
+    steps: useJsonFormSteps(form, layout, options, state),
+    get visibility() {
+      return state.value
+    },
   }
 }

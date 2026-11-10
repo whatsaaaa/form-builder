@@ -1,4 +1,5 @@
 import * as v from 'valibot'
+import { evaluationOf } from '../visibility/gate'
 import type { CheckedFormRule } from './check-form-rules'
 
 type Path = readonly (string | number)[]
@@ -10,17 +11,20 @@ export type FormRuleAction = v.RawCheckAction<Record<string, unknown>>
  * Runs a form rule on the form's value and puts its issue on `field`. A rule on the fields of a
  * list's items runs once per item, with the item's index in place of each `'*'`.
  *
- * The rule only runs when none of the fields it reads has an issue. `v.partialCheck` can't do
- * this: it runs whenever the form has no schema issues, even when a field it reads failed a rule.
+ * The rule only runs when none of the fields it reads has an issue, or is hidden by conditions.
+ * `v.partialCheck` can't do this: it runs whenever the form has no schema issues, even when a
+ * field it reads failed a rule.
  */
 export function formRuleAction(rule: CheckedFormRule, message: string): FormRuleAction {
   const { def, params, paths } = rule
   const fieldKeys = paths[0] as string[]
 
-  return v.rawCheck(({ dataset, addIssue }) => {
+  return v.rawCheck(({ dataset, config, addIssue }) => {
+    const hidden = evaluationOf(config)
     for (const indexes of itemIndexes(dataset.value, fieldKeys)) {
       const read = paths.map((keys) => withIndexes(keys, indexes))
       if (read.some((path) => hasIssue(dataset.issues, path))) continue
+      if (hidden && read.some((path) => hidden.isHiddenAt(path))) continue
 
       const values = read.map((path) => valueAt(dataset.value, path))
       // Like a field's rules, a form rule never runs on an empty value.

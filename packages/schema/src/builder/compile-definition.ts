@@ -10,7 +10,11 @@ import {
 import type { BuildContext } from '../field-types/field-type-def'
 import type { FormLayout } from '../render/form-layout'
 import type { AnySchema } from '../shared/valibot-types'
-import { buildFieldSchema, type Messages } from './build-field-schema'
+import type { Engine } from '../visibility/engine'
+import { fieldGate, rootGate } from '../visibility/gate'
+import { clearFields } from '../visibility/visibility'
+import { buildFieldSchema, type MessageContext, type Messages } from './build-field-schema'
+import { checkExtensions } from './check-extensions'
 import { checkFormRules } from './check-form-rules'
 import { checkLayout } from './check-layout'
 import { formRuleAction, type FormRuleAction } from './form-rule-action'
@@ -28,6 +32,11 @@ export interface CompileResult {
   initialInput: Record<string, unknown>
   /** The layout, with every reference resolved. Only there when the definition has no issues. */
   layout: FormLayout | undefined
+  /**
+   * What the extensions' conditions hide, for each input. Only there when the builder has
+   * extensions and the definition has no issues.
+   */
+  engine: Engine | undefined
 }
 
 /** The schema of a list of fields: an object with a key for each field that has a value. */
@@ -35,7 +44,8 @@ export type FieldsSchema = v.ObjectSchema<v.ObjectEntries, undefined>
 
 /**
  * The schema of a definition: the object schema of its fields, in a pipe with a check for each
- * form rule when it has form rules. A new object from its `entries` leaves the form rules out.
+ * form rule when it has form rules. A new object from its `entries` leaves the form rules out, and
+ * the conditions of the extensions, if any.
  */
 export type JsonFormSchema =
   | FieldsSchema
@@ -59,7 +69,13 @@ export function compileDefinition(
   messages: Messages,
 ): CompileResult {
   const issues: DefinitionIssue[] = []
-  const empty = { schema: v.object({}), walked: [], initialInput: {}, layout: undefined }
+  const empty = {
+    schema: v.object({}),
+    walked: [],
+    initialInput: {},
+    layout: undefined,
+    engine: undefined,
+  }
 
   const form = v.safeParse(formShape, json)
   if (!form.success) {
@@ -79,7 +95,9 @@ export function compileDefinition(
     }
   }
 
-  const compiler = createCompiler(registry, messages, issues)
+  // With extensions, the fields may be built again, with the messages they resolved the first time.
+  const resolved = registry.extensions.length ? recordMessages(messages) : undefined
+  const compiler = createCompiler(registry, resolved?.messages ?? messages, issues)
   const issueCount = issues.length
   const { schema, input } = compiler.list(form.output.fields, ['fields'])
   const walked = [...compiler.walked]
@@ -87,9 +105,17 @@ export function compileDefinition(
   const fieldsBuilt = issues.length === issueCount
   const rules = checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
   const layout = checkLayout(form.output.layout, fieldsBuilt ? walked : undefined, registry, issues)
-  const result = { issues, schema, walked, initialInput: input, layout }
-  if (issues.length) return { ...result, layout: undefined }
-  if (!rules.length) return result
+  const { fieldsByPath, schemas } = compiler
+  const engine = checkExtensions(registry, { walked, fieldsByPath, schemas, layout }, issues)
+  const result = { issues, schema, walked, initialInput: input, layout, engine }
+  if (issues.length) return { ...result, layout: undefined, engine: undefined }
+
+  // A field conditions can hide is built again in a gate, which the root gate opens on each parse.
+  // Nothing else changes: without conditions, the schema is the one built above.
+  const conditional = engine?.conditional ? engine : undefined
+  const fields = conditional
+    ? gatedFields(form.output.fields, registry, resolved?.replay ?? messages, conditional)
+    : schema
 
   // Form rules run after every field's schema, on the whole value. They only check, so the schema
   // keeps the object's type, entries and output, and Formisch still keeps a field for each entry.
@@ -97,7 +123,54 @@ export function compileDefinition(
     const ctx = { field: rule.field, rule: rule.name, path: rule.path }
     return formRuleAction(rule, messages.resolve(rule.message, ctx))
   })
-  return { ...result, schema: v.pipe(schema, ...checks) }
+  const withRules: JsonFormSchema = checks.length ? v.pipe(fields, ...checks) : fields
+  if (!conditional) return { ...result, schema: withRules }
+  return {
+    ...result,
+    schema: rootGate(withRules, conditional),
+    // A field its conditions clear when the form starts starts blank, without its default.
+    initialInput: clearFields(input, conditional.evaluate(input).toClear),
+  }
+}
+
+/** The fields again, each that conditions can hide in a gate. Their issues were reported. */
+function gatedFields(
+  fields: readonly unknown[],
+  registry: Registry,
+  messages: Messages,
+  engine: Engine,
+): FieldsSchema {
+  const gate: WrapField = (checked, schema) => {
+    if (checked.name === undefined || !engine.canHide(checked.path)) return schema
+    const container = checked.type.container === true
+    const role = !container ? 'value' : checked.valueKind === 'array' ? 'array' : 'group'
+    return fieldGate(schema, role)
+  }
+  return createCompiler(registry, messages, [], gate).fields(fields, ['fields'])
+}
+
+/**
+ * Messages that remember what `resolveMessage` gave for each text, and the same messages again,
+ * which give that back without calling it, so it sees each message once.
+ */
+function recordMessages(messages: Messages): { messages: Messages; replay: Messages } {
+  const resolved = new Map<string, string>()
+  const keyOf = (text: string, ctx: MessageContext) =>
+    JSON.stringify([ctx.path, ctx.rule ?? null, text])
+  return {
+    messages: {
+      required: messages.required,
+      resolve(text, ctx) {
+        const message = messages.resolve(text, ctx)
+        resolved.set(keyOf(text, ctx), message)
+        return message
+      },
+    },
+    replay: {
+      required: messages.required,
+      resolve: (text, ctx) => resolved.get(keyOf(text, ctx)) ?? text,
+    },
+  }
 }
 
 export interface Compiler {
@@ -128,13 +201,22 @@ export interface Compiler {
    * built, so the fields inside it aren't.
    */
   readonly walked: readonly WalkedField[]
+  /** The schema of each field the compiler built, without its gate. */
+  readonly schemas: ReadonlyMap<CheckedField, AnySchema>
 }
+
+/**
+ * Wraps the schema of a field, e.g. in a gate for the fields that conditions can hide. It gets
+ * the field's schema, which is a container's too, after its fields are wrapped.
+ */
+export type WrapField = (checked: CheckedField, schema: AnySchema) => AnySchema
 
 /** Every field the compiler checks adds its issues to `issues`. */
 export function createCompiler(
   registry: Registry,
   messages: Messages,
   issues: DefinitionIssue[],
+  wrap?: WrapField,
 ): Compiler {
   // A field type builds its child fields through these, so it never imports the builder.
   const context = (path: DefinitionPath): BuildContext => ({
@@ -145,6 +227,7 @@ export function createCompiler(
 
   const fieldsByPath = new Map<string, CheckedField | null>()
   const walked: WalkedField[] = []
+  const schemas = new Map<CheckedField, AnySchema>()
   // Where the values of the child fields go, for each container whose schema() is running.
   const parents: DataPath[] = []
   const parentPath = (): DataPath => parents.at(-1) ?? []
@@ -212,8 +295,9 @@ export function createCompiler(
       // A child field with issues is left out or built as v.never(), so the schema can't check
       // the default.
       if (issues.length === issueCount) checkDefault(checked, schema, issues)
+      schemas.set(checked, schema)
       return {
-        schema,
+        schema: wrap ? wrap(checked, schema) : schema,
         input: initialValue(checked, childInputs.at(-1)),
         itemInput: itemInputs.at(-1)?.input,
       }
@@ -250,7 +334,7 @@ export function createCompiler(
     fieldsByPath.set(key, checked ?? null)
   }
 
-  return { fields, list, field, itemInput, fieldsByPath, walked }
+  return { fields, list, field, itemInput, fieldsByPath, walked, schemas }
 }
 
 type DataPath = readonly string[]

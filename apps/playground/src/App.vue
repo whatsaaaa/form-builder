@@ -12,6 +12,8 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/field-types">Field types</RouterLink>
       <RouterLink to="/checkout">Checkout layout</RouterLink>
       <RouterLink to="/stepped-signup">Stepped sign-up</RouterLink>
+      <RouterLink to="/conditions">Conditions</RouterLink>
+      <RouterLink to="/conditional-steps">Conditional steps</RouterLink>
     </nav>
   </header>
 

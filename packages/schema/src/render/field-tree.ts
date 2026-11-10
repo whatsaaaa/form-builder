@@ -1,5 +1,6 @@
 import type { JsonField } from '../definition/json-form-schema'
 import type { WalkedField } from '../definition/walk-fields'
+import type { DefinitionPath } from '../errors/definition-error'
 import type { ValueKind } from '../shared/value-kind'
 
 /**
@@ -20,6 +21,12 @@ export interface FieldNode {
   readonly itemKind: ValueKind | undefined
   /** Where the value is, with `'*'` for each array index: `['lines', '*', 'quantity']`. */
   readonly dataPath: readonly (string | number)[]
+  /**
+   * Where the field is in the definition: `['fields', 1, 'fields', 0]`, or in the layout for a
+   * display element written there. Unique in a definition, so it names any field, display elements
+   * included.
+   */
+  readonly definitionPath: DefinitionPath
   /** The fields of a group, or of one item of an array. */
   readonly children: readonly FieldNode[]
 }
@@ -55,6 +62,7 @@ function toNode(walked: WalkedField, container: boolean, children: FieldNode[]):
     kind,
     itemKind: walked.itemKind,
     dataPath: walked.dataPath,
+    definitionPath: walked.definitionPath,
     children,
   }
 }

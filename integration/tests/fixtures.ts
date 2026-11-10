@@ -25,6 +25,10 @@ import shipping from '../../fixtures/form-rules/shipping.json'
 import checkout from '../../fixtures/layout/checkout.json'
 import layoutOrder from '../../fixtures/layout/order.json'
 import layoutSignUp from '../../fixtures/layout/sign-up.json'
+import affectsBusiness from '../../fixtures/affects/business.json'
+import affectsOrder from '../../fixtures/affects/order.json'
+import affectsShipping from '../../fixtures/affects/shipping.json'
+import affectsSignUp from '../../fixtures/affects/sign-up.json'
 
 const all = {
   text,
@@ -53,13 +57,18 @@ const all = {
   'layout/checkout': checkout,
   'layout/sign-up': layoutSignUp,
   'layout/order': layoutOrder,
+  'affects/business': affectsBusiness,
+  'affects/shipping': affectsShipping,
+  'affects/order': affectsOrder,
+  'affects/sign-up': affectsSignUp,
 }
 
 export type FixtureName = keyof typeof all
 
 /**
- * Every shared fixture: one per built-in type, the ones with form rules, and the ones with a
- * layout. TypeScript reads
- * `version` in a JSON file as any string, so they are cast once here.
+ * Every shared fixture: one per built-in type, the ones with form rules, the ones with a layout,
+ * and the ones with the conditions of the affects package, which every binding renders with a
+ * builder that has `affects()`. TypeScript reads `version` in a JSON file as any string, so they
+ * are cast once here.
  */
 export const fixtures = all as unknown as Record<FixtureName, JsonForm>

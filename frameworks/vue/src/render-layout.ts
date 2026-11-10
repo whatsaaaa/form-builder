@@ -1,4 +1,4 @@
-import { type IsFieldShown, type LayoutNode, shownNodes } from '@whatsaaaa/form-builder-schema'
+import type { IsFieldShown, LayoutNode } from '@whatsaaaa/form-builder-schema'
 import { type Component, Fragment, h, type Slots, type VNode } from 'vue'
 import type { LayoutComponents } from './field-components'
 import { type RenderContext, renderField } from './render-fields'
@@ -13,15 +13,18 @@ export interface LayoutContext extends RenderContext {
 }
 
 /**
- * Renders layout nodes. A field left out drops out, and so does a section or a row left without
- * fields. `indexes` are the indexes of the array items the nodes are in, outermost first.
+ * Renders layout nodes. A field left out or hidden by conditions drops out, and so does a section
+ * hidden by them, and a section or a row left without fields. `indexes` are the indexes of the
+ * array items the nodes are in, outermost first.
  */
 export function renderLayout(
   ctx: LayoutContext,
   nodes: readonly LayoutNode[],
   indexes: readonly number[],
 ): VNode[] {
-  return shownNodes(nodes, indexes, ctx.isShown).map((node) => renderNode(ctx, node, indexes))
+  return ctx.of.visibility
+    .shownNodes(nodes, indexes, ctx.isShown)
+    .map((node) => renderNode(ctx, node, indexes))
 }
 
 function renderNode(ctx: LayoutContext, node: LayoutNode, indexes: readonly number[]): VNode {

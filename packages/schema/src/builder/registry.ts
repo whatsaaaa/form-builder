@@ -1,3 +1,4 @@
+import type { SchemaExtension } from '../extensions/schema-extension'
 import { defaultFieldTypes } from '../field-types/default-field-types'
 import type { FieldTypeDef } from '../field-types/field-type-def'
 import { defaultKinds } from '../kinds/default-kinds'
@@ -12,6 +13,7 @@ export interface Registry {
   readonly fieldTypes: Readonly<Record<string, FieldTypeDef>>
   readonly rules: Readonly<Record<string, RuleDef>>
   readonly formRules: Readonly<Record<string, FormRuleDef>>
+  readonly extensions: readonly SchemaExtension[]
 }
 
 export interface RegistryOptions extends Partial<Registry> {
@@ -27,8 +29,13 @@ export function mergeRegistry(custom: RegistryOptions): Registry {
     fieldTypes: Object.freeze({ ...defaultFieldTypes, ...custom.fieldTypes }),
     rules: Object.freeze({ ...(defaults ? defaultRules : {}), ...custom.rules }),
     formRules: Object.freeze({ ...(defaults ? defaultFormRules : {}), ...custom.formRules }),
+    extensions: Object.freeze([...(custom.extensions ?? [])]),
   }
 }
+
+/** True for a key an extension adds to fields, like `affects`. */
+export const isExtensionFieldKey = (registry: Registry, key: string): boolean =>
+  registry.extensions.some((extension) => Object.hasOwn(extension.fieldProps?.entries ?? {}, key))
 
 export function lookup<T>(record: Readonly<Record<string, T>>, key: string): T | undefined {
   return Object.hasOwn(record, key) ? record[key] : undefined

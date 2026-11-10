@@ -2,5 +2,9 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "semi": false,
   "singleQuote": true,
-  "ignorePatterns": ["packages/schema/definition.schema.json", "packages/schema/docs/"]
+  "ignorePatterns": [
+    "packages/schema/definition.schema.json",
+    "packages/schema/docs/",
+    "packages/affects/definition.schema.json"
+  ]
 }

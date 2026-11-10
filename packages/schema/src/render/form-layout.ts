@@ -1,4 +1,5 @@
 import type { JsonLayoutRow, JsonLayoutSection, JsonLayoutStep } from '../definition/json-layout'
+import type { DefinitionPath } from '../errors/definition-error'
 import type { FieldNode } from './field-tree'
 
 /** A definition's layout, with every reference resolved, as the builder's `getLayout` gives it. */
@@ -16,6 +17,11 @@ export interface LayoutStep {
    * with `items` is `{ items }`, and that of a definition without a layout `{ items: ['*'] }`.
    */
   readonly step: JsonLayoutStep
+  /**
+   * Where the step is in the definition: `['layout', 'steps', 1]`, or `['layout']` for the one step
+   * of a layout with `items`, and `[]` for that of a definition without a layout.
+   */
+  readonly definitionPath: DefinitionPath
   readonly children: readonly LayoutNode[]
   /**
    * Every field with a value placed in the step, in layout order, at every depth: a group or an
@@ -51,6 +57,8 @@ export interface LayoutSection extends LayoutNodeBase {
   readonly type: 'section'
   /** The section as written, with its `id`, `label`, `description` and `ui`. */
   readonly section: JsonLayoutSection
+  /** Where the section is in the definition: `['layout', 'steps', 0, 'items', 2]`. */
+  readonly definitionPath: DefinitionPath
   readonly children: readonly LayoutNode[]
 }
 
@@ -59,6 +67,8 @@ export interface LayoutRow extends LayoutNodeBase {
   readonly type: 'row'
   /** The row as written, with its `id` and `ui`. */
   readonly row: JsonLayoutRow
+  /** Where the row is in the definition: `['layout', 'items', 1]`. */
+  readonly definitionPath: DefinitionPath
   readonly children: readonly LayoutNode[]
 }
 

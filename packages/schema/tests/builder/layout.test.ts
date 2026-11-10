@@ -260,6 +260,7 @@ describe('getLayout', () => {
         kind: 'none',
         itemKind: undefined,
         dataPath: ['lines', '*'],
+        definitionPath: ['layout', 'items', 0, 'items', 0],
         children: [],
       })
     })

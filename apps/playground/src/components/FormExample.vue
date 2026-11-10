@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Form } from '@formisch/vue'
-import type { JsonForm } from '@whatsaaaa/form-builder-schema'
+import type { JsonForm, SchemaBuilder } from '@whatsaaaa/form-builder-schema'
 import { JsonFields, useJsonForm } from '@whatsaaaa/form-builder-vue'
 import { fieldComponents } from './fields/field-components'
+import { layoutComponents } from './layout/layout-components'
 
-const { definition } = defineProps<{ definition: JsonForm }>()
+const { definition, builder } = defineProps<{ definition: JsonForm; builder?: SchemaBuilder }>()
 
-const jsonForm = useJsonForm(definition)
+const jsonForm = useJsonForm(definition, { builder, layoutComponents })
 const submitted = ref<unknown>()
 </script>
 

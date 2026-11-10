@@ -9,6 +9,8 @@ export type {
   TypedJsonFormSchema,
 } from './builder/create-schema-builder'
 export type {
+  ExtensionProps,
+  NoExtensionProps,
   TypedField,
   TypedForm,
   TypedFormRule,
@@ -38,6 +40,15 @@ export type {
   DefinitionPath,
   ValidateResult,
 } from './errors/definition-error'
+export type {
+  ExtensionContext,
+  ExtensionTarget,
+  FieldTarget,
+  LayoutTarget,
+  ResolvedField,
+  SchemaExtension,
+  TargetConditions,
+} from './extensions/schema-extension'
 export { defaultFieldTypes } from './field-types/default-field-types'
 export { defineFieldType } from './field-types/define-field-type'
 export type {
@@ -94,3 +105,4 @@ export {
 } from './shared/reserved-keys'
 export type { AnyAction, AnyObjectSchema, AnySchema } from './shared/valibot-types'
 export type { ValueKind } from './shared/value-kind'
+export type { FieldToClear, Visibility, VisibilityState } from './visibility/visibility'

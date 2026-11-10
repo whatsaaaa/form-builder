@@ -16,12 +16,14 @@ export interface JsonFieldProps {
 /**
  * Renders one field of a `useJsonForm` form, wherever you put it inside Formisch's `<Form>`. A
  * group or an array comes with its fields. Leave the field out of `<JsonFields>` with `except`.
+ * It renders nothing while conditions hide the field.
  */
-export function JsonField({ of, path, components }: JsonFieldProps): ReactElement {
+export function JsonField({ of, path, components }: JsonFieldProps): ReactElement | null {
   const node = findField(of.fields, path, { placed: true })
   const ctx: RenderContext = { of, components: resolveComponents(components, of) }
   checkComponents([node], ctx.components)
 
+  if (of.visibility.isHidden(node, [])) return null
   return renderField(ctx, node, [], dotPathOf(node) ?? '#0', (indexes) =>
     renderFields(ctx, node.children, indexes),
   )

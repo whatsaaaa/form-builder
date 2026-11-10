@@ -9,6 +9,7 @@ export type {
   LayoutNode,
   LayoutStep,
   TypedJsonFormSchema,
+  VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 export type {
   ArrayFieldProps,

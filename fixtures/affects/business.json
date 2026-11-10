@@ -1,0 +1,63 @@
+{
+  "$schema": "../../packages/affects/definition.schema.json",
+  "version": "1",
+  "fields": [
+    {
+      "name": "accountType",
+      "type": "radio",
+      "label": "Account",
+      "required": true,
+      "options": [
+        { "value": "personal", "label": "Personal" },
+        { "value": "business", "label": "Business" }
+      ]
+    },
+    { "name": "fullName", "type": "text", "label": "Full name", "required": true },
+    {
+      "name": "company",
+      "type": "group",
+      "label": "Company",
+      "affects": [
+        { "effect": "hideAndClear", "when": { "field": "accountType", "notEquals": "business" } }
+      ],
+      "fields": [
+        { "type": "paragraph", "text": "We put these on your invoices." },
+        { "name": "name", "type": "text", "label": "Company name", "required": true },
+        {
+          "name": "vatId",
+          "type": "text",
+          "label": "VAT ID",
+          "required": true,
+          "rules": [
+            {
+              "rule": "regex",
+              "pattern": "^[A-Z]{2}[0-9A-Z]{8,12}$",
+              "message": "Use a VAT ID like DE123456789"
+            }
+          ]
+        },
+        {
+          "name": "size",
+          "type": "select",
+          "label": "Size",
+          "required": true,
+          "options": [
+            { "value": "small", "label": "1-10" },
+            { "value": "medium", "label": "11-250" },
+            { "value": "large", "label": "250+" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "employees",
+      "type": "number",
+      "label": "Employees",
+      "required": true,
+      "rules": [{ "rule": "minValue", "value": 11, "message": "At least 11" }],
+      "affects": [
+        { "effect": "show", "when": { "field": "company.size", "in": ["medium", "large"] } }
+      ]
+    }
+  ]
+}

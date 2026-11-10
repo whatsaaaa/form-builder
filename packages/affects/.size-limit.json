@@ -1,0 +1,8 @@
+[
+  {
+    "name": "affects(), without its peers, the schema package and Valibot",
+    "path": "dist/index.js",
+    "import": "{ affects }",
+    "limit": "2.5 kB"
+  }
+]
