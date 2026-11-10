@@ -28,7 +28,7 @@ bun add @whatsaaaa/form-builder-react @whatsaaaa/form-builder-schema @formisch/r
 
 :::
 
-React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required.
+React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required. `@whatsaaaa/form-builder-schema` is a peer dependency, so install it too: the adapter and your code share its one copy, with the `createSchemaBuilder` and types your code imports.
 
 ## Usage
 

@@ -17,6 +17,7 @@ import {
   type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { formElementOf } from './formisch-internals'
 
 /** The steps of a form, from its layout. A form without `steps` in its layout has one. */
 export interface JsonFormSteps {
@@ -257,8 +258,3 @@ export function useJsonFormSteps(
 
 /** Resolves once the task that called it is over, and the browser is done with its event. */
 const afterTask = () => new Promise<void>((resolve) => setTimeout(resolve))
-
-/** The `<form>` Formisch's `<Form>` renders, which it keeps on the store for its `submit()`. */
-function formElementOf(form: FormStore): HTMLFormElement | undefined {
-  return (form as unknown as { '~internal'?: { element?: HTMLFormElement } })['~internal']?.element
-}
