@@ -84,7 +84,8 @@ defineProps<ValueFieldProps>()
 
 ## Documentation
 
-The [guide](https://github.com/whatsaaaa/form-builder/blob/main/frameworks/vue/docs/guide.md) covers options, components for every role, layout, steps, conditions, placing fields yourself and typing the form.
+- [Guide](https://whatsaaaa.github.io/form-builder/frameworks/vue): options, components for every role, layout, steps, conditions, placing fields yourself and typing the form
+- [API reference](https://whatsaaaa.github.io/form-builder/api/vue/)
 
 ## Related packages
 

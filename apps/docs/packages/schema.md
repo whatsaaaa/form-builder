@@ -1,3 +1,0 @@
-# Schema
-
-Coming soon.

@@ -1,0 +1,130 @@
+---
+description: How to add form-builder to your project, for Vue, React or any other framework.
+---
+
+# Installation
+
+Below you will learn how to add form-builder to your project. Which packages you need depends on your framework.
+
+## TypeScript
+
+If you use TypeScript, enable strict mode in your `tsconfig.json`, so that every type is computed correctly.
+
+```jsonc
+{
+  "compilerOptions": {
+    "strict": true,
+    // ...
+  },
+}
+```
+
+## Vue
+
+The Vue adapter renders definitions with Formisch and your own components. Install it with the schema package, Formisch for Vue and Valibot:
+
+::: code-group
+
+```sh [npm]
+npm install @whatsaaaa/form-builder-vue @whatsaaaa/form-builder-schema @formisch/vue valibot
+```
+
+```sh [pnpm]
+pnpm add @whatsaaaa/form-builder-vue @whatsaaaa/form-builder-schema @formisch/vue valibot
+```
+
+```sh [yarn]
+yarn add @whatsaaaa/form-builder-vue @whatsaaaa/form-builder-schema @formisch/vue valibot
+```
+
+```sh [bun]
+bun add @whatsaaaa/form-builder-vue @whatsaaaa/form-builder-schema @formisch/vue valibot
+```
+
+:::
+
+Vue 3.5, `@formisch/vue` 1.1 and Valibot 1.3 or later are required. The schema package is a dependency of the adapter, but install it too: your code imports its types, such as `JsonForm`.
+
+## React
+
+The React adapter does the same for React:
+
+::: code-group
+
+```sh [npm]
+npm install @whatsaaaa/form-builder-react @whatsaaaa/form-builder-schema @formisch/react valibot
+```
+
+```sh [pnpm]
+pnpm add @whatsaaaa/form-builder-react @whatsaaaa/form-builder-schema @formisch/react valibot
+```
+
+```sh [yarn]
+yarn add @whatsaaaa/form-builder-react @whatsaaaa/form-builder-schema @formisch/react valibot
+```
+
+```sh [bun]
+bun add @whatsaaaa/form-builder-react @whatsaaaa/form-builder-schema @formisch/react valibot
+```
+
+:::
+
+React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required.
+
+## Other frameworks
+
+Preact, Solid, Svelte, Qwik and Angular need no adapter. Install the schema package with Formisch's own package for your framework, here for Solid:
+
+::: code-group
+
+```sh [npm]
+npm install @whatsaaaa/form-builder-schema @formisch/solid valibot
+```
+
+```sh [pnpm]
+pnpm add @whatsaaaa/form-builder-schema @formisch/solid valibot
+```
+
+```sh [yarn]
+yarn add @whatsaaaa/form-builder-schema @formisch/solid valibot
+```
+
+```sh [bun]
+bun add @whatsaaaa/form-builder-schema @formisch/solid valibot
+```
+
+:::
+
+The schema package needs Valibot 1.3 or later on its own, and every Formisch package needs 1.4.1 or later. The [Formisch bindings](/frameworks/formisch) have a tested renderer for each framework to start from.
+
+## Conditions
+
+To show and hide fields by the values of other fields, also add the affects package:
+
+::: code-group
+
+```sh [npm]
+npm install @whatsaaaa/form-builder-affects
+```
+
+```sh [pnpm]
+pnpm add @whatsaaaa/form-builder-affects
+```
+
+```sh [yarn]
+yarn add @whatsaaaa/form-builder-affects
+```
+
+```sh [bun]
+bun add @whatsaaaa/form-builder-affects
+```
+
+:::
+
+## JSON Schema
+
+To make a JSON Schema for your own field types and rules, also add `@valibot/to-json-schema` 1.6 or later. You don't need it for the built-in ones: the schema package ships their JSON Schema. See [JSON Schema](/guide/json-schema).
+
+## Next steps
+
+Continue to [getting started](/guide/getting-started) to write your first definition and render it.

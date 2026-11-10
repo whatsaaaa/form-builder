@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - apps/docs/**
+      # The framework pages show these renderers as they are.
+      - integration/examples/**
       - .github/workflows/docs.yml
   workflow_dispatch:
 

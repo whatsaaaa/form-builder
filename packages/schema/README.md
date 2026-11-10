@@ -65,9 +65,9 @@ const { steps } = builder.getLayout(json)
 
 ## Documentation
 
-- [Guide](https://github.com/whatsaaaa/form-builder/blob/main/packages/schema/docs/guide.md): field types, rules, form rules, layout, checks, rendering, extending and messages
-- [Formisch in each framework](https://github.com/whatsaaaa/form-builder/blob/main/packages/schema/docs/frameworks.md): a tested renderer for Preact, Solid, Svelte, Qwik and Angular
-- Reference: [rules](https://github.com/whatsaaaa/form-builder/blob/main/packages/schema/docs/rules.md) and [field types](https://github.com/whatsaaaa/form-builder/blob/main/packages/schema/docs/field-types.md)
+- [Guide](https://whatsaaaa.github.io/form-builder/guide/): field types, rules, form rules, layout, checks, extending and messages
+- [Rendering with Formisch](https://whatsaaaa.github.io/form-builder/frameworks/formisch): a tested renderer for Preact, Solid, Svelte, Qwik and Angular
+- [API reference](https://whatsaaaa.github.io/form-builder/api/schema/), with every built-in [rule](https://whatsaaaa.github.io/form-builder/api/schema/rules) and [field type](https://whatsaaaa.github.io/form-builder/api/schema/field-types)
 
 ## Related packages
 

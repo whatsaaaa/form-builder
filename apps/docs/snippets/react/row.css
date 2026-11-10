@@ -1,0 +1,12 @@
+.row {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+
+/* The spans are for a wide screen. On a narrow one, each cell takes the whole row. */
+@media (max-width: 640px) {
+  .row > * {
+    grid-column: 1 / -1 !important;
+  }
+}
