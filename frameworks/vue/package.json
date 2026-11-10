@@ -1,6 +1,6 @@
 {
   "name": "@whatsaaaa/form-builder-vue",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Render JSON form definitions with Formisch and your own Vue components.",
   "keywords": [
     "form",
