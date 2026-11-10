@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-schema
 
+## 0.15.2
+
+### Patch Changes
+
+- [#45](https://github.com/whatsaaaa/form-builder/pull/45) [`43d34b5`](https://github.com/whatsaaaa/form-builder/commit/43d34b5fae8e8fc10993bf871708e7bc1e2fdbda) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - The README links to the guide and the API reference on the docs site, https://whatsaaaa.github.io/form-builder/, which replaces the guides in `docs/` in the repository.
+
 ## 0.15.1
 
 ### Patch Changes
