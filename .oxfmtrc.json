@@ -6,7 +6,9 @@
     "packages/schema/definition.schema.json",
     "apps/docs/api/schema/field-types.md",
     "apps/docs/api/schema/rules.md",
-    "packages/affects/definition.schema.json"
+    "packages/affects/definition.schema.json",
+    "apps/docs/public/schema/v1/definition.schema.json",
+    "apps/docs/public/schema/v1/affects/definition.schema.json"
   ],
   "overrides": [
     {

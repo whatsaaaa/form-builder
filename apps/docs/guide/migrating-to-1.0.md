@@ -30,7 +30,7 @@ The functions only knew the built-in `group` and `array` types, while the builde
 These names are reserved now, so a 1.x minor can give them a meaning without breaking your code. Any other new reserved name only comes in a major version. See [reserved keys](/api/schema/reserved-keys).
 
 - **Field keys** `id`, `disabled`, `readonly`, `hidden`, `help` and `meta`. A field type's props and an extension's keys can't use them: `createSchemaBuilder()` throws a `TypeError`. A field that has one is `unknown_key`. Rename the prop, for example `hidden` to `isHidden`, or put a setting for your renderer under `ui`.
-- **Layout node types** `tabs`, `tab`, `columns`, `column` and `fieldset`, next to `section`, `row` and `slot`. A display element's type can't use them, or the three in use: `createSchemaBuilder()` throws a `TypeError`. A field type with a value, like a container named `section`, still can. A layout item with one of these types is `unknown_type`.
+- **Layout node types** `tabs`, `tab`, `columns`, `column`, `group` and `fieldset`, next to `section`, `row` and `slot`. A display element's type can't use them, or the three in use: `createSchemaBuilder()` throws a `TypeError`. A field type with a value, like a container named `section`, still can. A layout item with one of these types is `unknown_type`. A `group` written in a layout, which was `invalid_shape` as a type with a value, is `unknown_type` now.
 
 ## Issue codes
 

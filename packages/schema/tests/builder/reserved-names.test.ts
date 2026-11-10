@@ -13,7 +13,7 @@ import { form } from '../helpers'
 
 // The names kept for later versions. 1.x minors can give them a meaning, so they are frozen.
 const futureFieldKeys = ['id', 'disabled', 'readonly', 'hidden', 'help', 'meta']
-const futureLayoutTypes = ['tabs', 'tab', 'columns', 'column', 'fieldset']
+const futureLayoutTypes = ['tabs', 'tab', 'columns', 'column', 'group', 'fieldset']
 
 const display = defineFieldType({ kind: 'none', props: v.object({ text: v.string() }) })
 

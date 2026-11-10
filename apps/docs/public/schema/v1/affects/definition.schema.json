@@ -27,7 +27,10 @@
       "$ref": "#/definitions/layout"
     }
   },
-  "required": ["version", "fields"],
+  "required": [
+    "version",
+    "fields"
+  ],
   "additionalProperties": false,
   "definitions": {
     "field": {
@@ -58,7 +61,9 @@
           ]
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "allOf": [
         {
           "if": {
@@ -67,7 +72,9 @@
                 "const": "text"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -75,7 +82,9 @@
                 "$ref": "#/definitions/type.text"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -85,7 +94,9 @@
                 "const": "textarea"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -93,7 +104,9 @@
                 "$ref": "#/definitions/type.textarea"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -103,7 +116,9 @@
                 "const": "email"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -111,7 +126,9 @@
                 "$ref": "#/definitions/type.email"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -121,7 +138,9 @@
                 "const": "password"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -129,7 +148,9 @@
                 "$ref": "#/definitions/type.password"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -139,7 +160,9 @@
                 "const": "url"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -147,7 +170,9 @@
                 "$ref": "#/definitions/type.url"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -157,7 +182,9 @@
                 "const": "tel"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -165,7 +192,9 @@
                 "$ref": "#/definitions/type.tel"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -175,7 +204,9 @@
                 "const": "number"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -183,7 +214,9 @@
                 "$ref": "#/definitions/type.number"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -193,7 +226,9 @@
                 "const": "checkbox"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -201,7 +236,9 @@
                 "$ref": "#/definitions/type.checkbox"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -211,7 +248,9 @@
                 "const": "date"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -219,7 +258,9 @@
                 "$ref": "#/definitions/type.date"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -229,7 +270,9 @@
                 "const": "time"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -237,7 +280,9 @@
                 "$ref": "#/definitions/type.time"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -247,7 +292,9 @@
                 "const": "datetime"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -255,7 +302,9 @@
                 "$ref": "#/definitions/type.datetime"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -265,7 +314,9 @@
                 "const": "select"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -273,7 +324,9 @@
                 "$ref": "#/definitions/type.select"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -283,7 +336,9 @@
                 "const": "radio"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -291,7 +346,9 @@
                 "$ref": "#/definitions/type.radio"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -301,7 +358,9 @@
                 "const": "multiselect"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -309,7 +368,9 @@
                 "$ref": "#/definitions/type.multiselect"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -319,7 +380,9 @@
                 "const": "file"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -327,7 +390,9 @@
                 "$ref": "#/definitions/type.file"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -337,7 +402,9 @@
                 "const": "heading"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.heading"
@@ -350,7 +417,9 @@
                 "const": "paragraph"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.paragraph"
@@ -363,7 +432,9 @@
                 "const": "divider"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.divider"
@@ -376,7 +447,9 @@
                 "const": "group"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -384,7 +457,9 @@
                 "$ref": "#/definitions/type.group"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         },
         {
@@ -394,7 +469,9 @@
                 "const": "array"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "allOf": [
@@ -402,7 +479,9 @@
                 "$ref": "#/definitions/type.array"
               }
             ],
-            "required": ["name"]
+            "required": [
+              "name"
+            ]
           }
         }
       ]
@@ -432,7 +511,9 @@
           ]
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "allOf": [
         {
           "if": {
@@ -441,7 +522,9 @@
                 "const": "text"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.text"
@@ -454,7 +537,9 @@
                 "const": "textarea"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.textarea"
@@ -467,7 +552,9 @@
                 "const": "email"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.email"
@@ -480,7 +567,9 @@
                 "const": "password"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.password"
@@ -493,7 +582,9 @@
                 "const": "url"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.url"
@@ -506,7 +597,9 @@
                 "const": "tel"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.tel"
@@ -519,7 +612,9 @@
                 "const": "number"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.number"
@@ -532,7 +627,9 @@
                 "const": "checkbox"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.checkbox"
@@ -545,7 +642,9 @@
                 "const": "date"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.date"
@@ -558,7 +657,9 @@
                 "const": "time"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.time"
@@ -571,7 +672,9 @@
                 "const": "datetime"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.datetime"
@@ -584,7 +687,9 @@
                 "const": "select"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.select"
@@ -597,7 +702,9 @@
                 "const": "radio"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.radio"
@@ -610,7 +717,9 @@
                 "const": "multiselect"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.multiselect"
@@ -623,7 +732,9 @@
                 "const": "file"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.file"
@@ -636,7 +747,9 @@
                 "const": "group"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.group"
@@ -649,7 +762,9 @@
                 "const": "array"
               }
             },
-            "required": ["type"]
+            "required": [
+              "type"
+            ]
           },
           "then": {
             "$ref": "#/definitions/type.array"
@@ -661,10 +776,16 @@
       "type": "object",
       "properties": {
         "rule": {
-          "enum": ["sameAs", "differentFrom", "compare"]
+          "enum": [
+            "sameAs",
+            "differentFrom",
+            "compare"
+          ]
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "allOf": [
         {
           "if": {
@@ -673,7 +794,9 @@
                 "const": "sameAs"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "title": "Same as",
@@ -693,7 +816,12 @@
                 "type": "string"
               }
             },
-            "required": ["rule", "field", "message", "other"],
+            "required": [
+              "rule",
+              "field",
+              "message",
+              "other"
+            ],
             "type": "object",
             "additionalProperties": false
           }
@@ -705,7 +833,9 @@
                 "const": "differentFrom"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "title": "Different from",
@@ -725,7 +855,12 @@
                 "type": "string"
               }
             },
-            "required": ["rule", "field", "message", "other"],
+            "required": [
+              "rule",
+              "field",
+              "message",
+              "other"
+            ],
             "type": "object",
             "additionalProperties": false
           }
@@ -737,7 +872,9 @@
                 "const": "compare"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "title": "Compare",
@@ -754,14 +891,25 @@
                 "type": "string"
               },
               "op": {
-                "enum": ["lt", "lte", "gt", "gte"],
+                "enum": [
+                  "lt",
+                  "lte",
+                  "gt",
+                  "gte"
+                ],
                 "type": "string"
               },
               "other": {
                 "type": "string"
               }
             },
-            "required": ["rule", "field", "message", "op", "other"],
+            "required": [
+              "rule",
+              "field",
+              "message",
+              "op",
+              "other"
+            ],
             "type": "object",
             "additionalProperties": false
           }
@@ -777,7 +925,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -837,7 +988,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -897,7 +1051,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -957,7 +1114,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1017,7 +1177,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1077,7 +1240,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1136,7 +1302,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1196,7 +1365,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1256,7 +1428,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1304,7 +1479,10 @@
           }
         },
         "output": {
-          "enum": ["string", "date"],
+          "enum": [
+            "string",
+            "date"
+          ],
           "type": "string"
         }
       },
@@ -1320,7 +1498,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1380,7 +1561,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1428,7 +1612,10 @@
           }
         },
         "output": {
-          "enum": ["string", "date"],
+          "enum": [
+            "string",
+            "date"
+          ],
           "type": "string"
         }
       },
@@ -1444,7 +1631,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1510,12 +1700,18 @@
                 "type": "string"
               }
             },
-            "required": ["value", "label"]
+            "required": [
+              "value",
+              "label"
+            ]
           },
           "minItems": 1
         },
         "valueType": {
-          "enum": ["string", "number"],
+          "enum": [
+            "string",
+            "number"
+          ],
           "type": "string"
         }
       },
@@ -1531,7 +1727,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1600,13 +1799,18 @@
                 "type": "string"
               }
             },
-            "required": ["value", "label"]
+            "required": [
+              "value",
+              "label"
+            ]
           },
           "minItems": 1
         }
       },
       "type": "object",
-      "required": ["options"],
+      "required": [
+        "options"
+      ],
       "additionalProperties": false
     },
     "type.multiselect": {
@@ -1618,7 +1822,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1684,13 +1891,18 @@
                 "type": "string"
               }
             },
-            "required": ["value", "label"]
+            "required": [
+              "value",
+              "label"
+            ]
           },
           "minItems": 1
         }
       },
       "type": "object",
-      "required": ["options"],
+      "required": [
+        "options"
+      ],
       "additionalProperties": false
     },
     "type.file": {
@@ -1702,7 +1914,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1797,7 +2012,9 @@
         }
       },
       "type": "object",
-      "required": ["text"],
+      "required": [
+        "text"
+      ],
       "additionalProperties": false
     },
     "type.paragraph": {
@@ -1833,7 +2050,9 @@
         }
       },
       "type": "object",
-      "required": ["text"],
+      "required": [
+        "text"
+      ],
       "additionalProperties": false
     },
     "type.divider": {
@@ -1877,7 +2096,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -1915,7 +2137,9 @@
         }
       },
       "type": "object",
-      "required": ["fields"],
+      "required": [
+        "fields"
+      ],
       "additionalProperties": false
     },
     "type.array": {
@@ -1927,7 +2151,10 @@
           "minLength": 1,
           "pattern": "^[^.[\\]]*$",
           "not": {
-            "enum": ["*", "__proto__"]
+            "enum": [
+              "*",
+              "__proto__"
+            ]
           }
         },
         "type": {
@@ -2008,10 +2235,14 @@
       },
       "oneOf": [
         {
-          "required": ["items"]
+          "required": [
+            "items"
+          ]
         },
         {
-          "required": ["steps"]
+          "required": [
+            "steps"
+          ]
         }
       ],
       "additionalProperties": false
@@ -2042,7 +2273,9 @@
           }
         }
       },
-      "required": ["items"],
+      "required": [
+        "items"
+      ],
       "additionalProperties": false
     },
     "layoutItems": {
@@ -2072,10 +2305,19 @@
           "type": "object",
           "properties": {
             "type": {
-              "enum": ["section", "row", "slot", "heading", "paragraph", "divider"]
+              "enum": [
+                "section",
+                "row",
+                "slot",
+                "heading",
+                "paragraph",
+                "divider"
+              ]
             }
           },
-          "required": ["type"],
+          "required": [
+            "type"
+          ],
           "allOf": [
             {
               "if": {
@@ -2084,7 +2326,9 @@
                     "const": "section"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "$ref": "#/definitions/layoutItem.section"
@@ -2097,7 +2341,9 @@
                     "const": "row"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "$ref": "#/definitions/layoutItem.row"
@@ -2110,7 +2356,9 @@
                     "const": "slot"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "$ref": "#/definitions/layoutItem.slot"
@@ -2123,7 +2371,9 @@
                     "const": "heading"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "title": "Heading",
@@ -2164,7 +2414,9 @@
                   }
                 },
                 "type": "object",
-                "required": ["text"],
+                "required": [
+                  "text"
+                ],
                 "additionalProperties": false
               }
             },
@@ -2175,7 +2427,9 @@
                     "const": "paragraph"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "title": "Paragraph",
@@ -2211,7 +2465,9 @@
                   }
                 },
                 "type": "object",
-                "required": ["text"],
+                "required": [
+                  "text"
+                ],
                 "additionalProperties": false
               }
             },
@@ -2222,7 +2478,9 @@
                     "const": "divider"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "title": "Divider",
@@ -2273,7 +2531,9 @@
           "$ref": "#/definitions/layoutItems"
         }
       },
-      "required": ["field"],
+      "required": [
+        "field"
+      ],
       "additionalProperties": false
     },
     "layoutItem.section": {
@@ -2305,7 +2565,10 @@
           }
         }
       },
-      "required": ["type", "items"],
+      "required": [
+        "type",
+        "items"
+      ],
       "additionalProperties": false
     },
     "layoutItem.row": {
@@ -2325,7 +2588,10 @@
           "type": "object"
         }
       },
-      "required": ["type", "items"],
+      "required": [
+        "type",
+        "items"
+      ],
       "additionalProperties": false
     },
     "layoutItem.slot": {
@@ -2339,7 +2605,10 @@
           "minLength": 1
         }
       },
-      "required": ["type", "name"],
+      "required": [
+        "type",
+        "name"
+      ],
       "additionalProperties": false
     },
     "rowItem": {
@@ -2358,10 +2627,19 @@
           "type": "object",
           "properties": {
             "type": {
-              "enum": ["section", "row", "slot", "heading", "paragraph", "divider"]
+              "enum": [
+                "section",
+                "row",
+                "slot",
+                "heading",
+                "paragraph",
+                "divider"
+              ]
             }
           },
-          "required": ["type"],
+          "required": [
+            "type"
+          ],
           "allOf": [
             {
               "if": {
@@ -2370,7 +2648,9 @@
                     "const": "section"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "$ref": "#/definitions/rowItem.section"
@@ -2383,7 +2663,9 @@
                     "const": "row"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "$ref": "#/definitions/rowItem.row"
@@ -2396,7 +2678,9 @@
                     "const": "slot"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "$ref": "#/definitions/rowItem.slot"
@@ -2409,7 +2693,9 @@
                     "const": "heading"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "title": "Heading",
@@ -2455,7 +2741,9 @@
                   }
                 },
                 "type": "object",
-                "required": ["text"],
+                "required": [
+                  "text"
+                ],
                 "additionalProperties": false
               }
             },
@@ -2466,7 +2754,9 @@
                     "const": "paragraph"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "title": "Paragraph",
@@ -2507,7 +2797,9 @@
                   }
                 },
                 "type": "object",
-                "required": ["text"],
+                "required": [
+                  "text"
+                ],
                 "additionalProperties": false
               }
             },
@@ -2518,7 +2810,9 @@
                     "const": "divider"
                   }
                 },
-                "required": ["type"]
+                "required": [
+                  "type"
+                ]
               },
               "then": {
                 "title": "Divider",
@@ -2579,7 +2873,9 @@
           "maximum": 12
         }
       },
-      "required": ["field"],
+      "required": [
+        "field"
+      ],
       "additionalProperties": false
     },
     "rowItem.section": {
@@ -2616,7 +2912,10 @@
           "maximum": 12
         }
       },
-      "required": ["type", "items"],
+      "required": [
+        "type",
+        "items"
+      ],
       "additionalProperties": false
     },
     "rowItem.row": {
@@ -2641,7 +2940,10 @@
           "maximum": 12
         }
       },
-      "required": ["type", "items"],
+      "required": [
+        "type",
+        "items"
+      ],
       "additionalProperties": false
     },
     "rowItem.slot": {
@@ -2660,7 +2962,10 @@
           "maximum": 12
         }
       },
-      "required": ["type", "name"],
+      "required": [
+        "type",
+        "name"
+      ],
       "additionalProperties": false
     },
     "rules.string": {
@@ -2734,7 +3039,9 @@
           ]
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "allOf": [
         {
           "if": {
@@ -2743,7 +3050,9 @@
                 "const": "length"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.length"
@@ -2756,7 +3065,9 @@
                 "const": "minLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minLength"
@@ -2769,7 +3080,9 @@
                 "const": "maxLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxLength"
@@ -2782,7 +3095,9 @@
                 "const": "notLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notLength"
@@ -2795,7 +3110,9 @@
                 "const": "graphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.graphemes"
@@ -2808,7 +3125,9 @@
                 "const": "minGraphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minGraphemes"
@@ -2821,7 +3140,9 @@
                 "const": "maxGraphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxGraphemes"
@@ -2834,7 +3155,9 @@
                 "const": "notGraphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notGraphemes"
@@ -2847,7 +3170,9 @@
                 "const": "words"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.words"
@@ -2860,7 +3185,9 @@
                 "const": "minWords"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minWords"
@@ -2873,7 +3200,9 @@
                 "const": "maxWords"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxWords"
@@ -2886,7 +3215,9 @@
                 "const": "notWords"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notWords"
@@ -2899,7 +3230,9 @@
                 "const": "bytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.bytes"
@@ -2912,7 +3245,9 @@
                 "const": "minBytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minBytes"
@@ -2925,7 +3260,9 @@
                 "const": "maxBytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxBytes"
@@ -2938,7 +3275,9 @@
                 "const": "notBytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notBytes"
@@ -2951,7 +3290,9 @@
                 "const": "regex"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.regex"
@@ -2964,7 +3305,9 @@
                 "const": "startsWith"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.startsWith"
@@ -2977,7 +3320,9 @@
                 "const": "endsWith"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.endsWith"
@@ -2990,7 +3335,9 @@
                 "const": "includes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.includes.string"
@@ -3003,7 +3350,9 @@
                 "const": "excludes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.excludes.string"
@@ -3016,7 +3365,9 @@
                 "const": "email"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.email"
@@ -3029,7 +3380,9 @@
                 "const": "rfcEmail"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.rfcEmail"
@@ -3042,7 +3395,9 @@
                 "const": "url"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.url"
@@ -3055,7 +3410,9 @@
                 "const": "domain"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.domain"
@@ -3068,7 +3425,9 @@
                 "const": "slug"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.slug"
@@ -3081,7 +3440,9 @@
                 "const": "uuid"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.uuid"
@@ -3094,7 +3455,9 @@
                 "const": "ulid"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ulid"
@@ -3107,7 +3470,9 @@
                 "const": "cuid2"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.cuid2"
@@ -3120,7 +3485,9 @@
                 "const": "nanoid"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.nanoid"
@@ -3133,7 +3500,9 @@
                 "const": "ip"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ip"
@@ -3146,7 +3515,9 @@
                 "const": "ipv4"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ipv4"
@@ -3159,7 +3530,9 @@
                 "const": "ipv6"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ipv6"
@@ -3172,7 +3545,9 @@
                 "const": "mac"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.mac"
@@ -3185,7 +3560,9 @@
                 "const": "mac48"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.mac48"
@@ -3198,7 +3575,9 @@
                 "const": "mac64"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.mac64"
@@ -3211,7 +3590,9 @@
                 "const": "hexColor"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.hexColor"
@@ -3224,7 +3605,9 @@
                 "const": "hexadecimal"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.hexadecimal"
@@ -3237,7 +3620,9 @@
                 "const": "octal"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.octal"
@@ -3250,7 +3635,9 @@
                 "const": "decimal"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.decimal"
@@ -3263,7 +3650,9 @@
                 "const": "digits"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.digits"
@@ -3276,7 +3665,9 @@
                 "const": "base64"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.base64"
@@ -3289,7 +3680,9 @@
                 "const": "bic"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.bic"
@@ -3302,7 +3695,9 @@
                 "const": "creditCard"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.creditCard"
@@ -3315,7 +3710,9 @@
                 "const": "imei"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.imei"
@@ -3328,7 +3725,9 @@
                 "const": "isbn"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isbn"
@@ -3341,7 +3740,9 @@
                 "const": "isrc"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isrc"
@@ -3354,7 +3755,9 @@
                 "const": "emoji"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.emoji"
@@ -3367,7 +3770,9 @@
                 "const": "hash"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.hash"
@@ -3380,7 +3785,9 @@
                 "const": "isoDate"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoDate"
@@ -3393,7 +3800,9 @@
                 "const": "isoDateTime"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoDateTime"
@@ -3406,7 +3815,9 @@
                 "const": "isoTime"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTime"
@@ -3419,7 +3830,9 @@
                 "const": "isoTimeSecond"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTimeSecond"
@@ -3432,7 +3845,9 @@
                 "const": "isoTimestamp"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTimestamp"
@@ -3445,7 +3860,9 @@
                 "const": "isoWeek"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoWeek"
@@ -3458,7 +3875,9 @@
                 "const": "value"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.value.string"
@@ -3471,7 +3890,9 @@
                 "const": "notValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notValue.string"
@@ -3484,7 +3905,9 @@
                 "const": "trim"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.trim"
@@ -3497,7 +3920,9 @@
                 "const": "trimStart"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.trimStart"
@@ -3510,7 +3935,9 @@
                 "const": "trimEnd"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.trimEnd"
@@ -3523,7 +3950,9 @@
                 "const": "toLowerCase"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toLowerCase"
@@ -3536,7 +3965,9 @@
                 "const": "toUpperCase"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toUpperCase"
@@ -3549,7 +3980,9 @@
                 "const": "normalize"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.normalize"
@@ -3579,7 +4012,9 @@
           ]
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "allOf": [
         {
           "if": {
@@ -3588,7 +4023,9 @@
                 "const": "minValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minValue.number"
@@ -3601,7 +4038,9 @@
                 "const": "maxValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxValue.number"
@@ -3614,7 +4053,9 @@
                 "const": "gtValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.gtValue.number"
@@ -3627,7 +4068,9 @@
                 "const": "ltValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ltValue.number"
@@ -3640,7 +4083,9 @@
                 "const": "value"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.value.number"
@@ -3653,7 +4098,9 @@
                 "const": "notValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notValue.number"
@@ -3666,7 +4113,9 @@
                 "const": "values"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.values.number"
@@ -3679,7 +4128,9 @@
                 "const": "notValues"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notValues.number"
@@ -3692,7 +4143,9 @@
                 "const": "integer"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.integer"
@@ -3705,7 +4158,9 @@
                 "const": "safeInteger"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.safeInteger"
@@ -3718,7 +4173,9 @@
                 "const": "finite"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.finite"
@@ -3731,7 +4188,9 @@
                 "const": "multipleOf"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.multipleOf"
@@ -3744,7 +4203,9 @@
                 "const": "toMinValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toMinValue"
@@ -3757,7 +4218,9 @@
                 "const": "toMaxValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toMaxValue"
@@ -3769,10 +4232,15 @@
       "type": "object",
       "properties": {
         "rule": {
-          "enum": ["value", "notValue"]
+          "enum": [
+            "value",
+            "notValue"
+          ]
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "allOf": [
         {
           "if": {
@@ -3781,7 +4249,9 @@
                 "const": "value"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.value.boolean"
@@ -3794,7 +4264,9 @@
                 "const": "notValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notValue.boolean"
@@ -3824,7 +4296,9 @@
           ]
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "allOf": [
         {
           "if": {
@@ -3833,7 +4307,9 @@
                 "const": "isoDate"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoDate"
@@ -3846,7 +4322,9 @@
                 "const": "isoDateTime"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoDateTime"
@@ -3859,7 +4337,9 @@
                 "const": "isoTime"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTime"
@@ -3872,7 +4352,9 @@
                 "const": "isoTimeSecond"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTimeSecond"
@@ -3885,7 +4367,9 @@
                 "const": "isoTimestamp"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTimestamp"
@@ -3898,7 +4382,9 @@
                 "const": "isoWeek"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoWeek"
@@ -3911,7 +4397,9 @@
                 "const": "minValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minValue.date"
@@ -3924,7 +4412,9 @@
                 "const": "maxValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxValue.date"
@@ -3937,7 +4427,9 @@
                 "const": "gtValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.gtValue.date"
@@ -3950,7 +4442,9 @@
                 "const": "ltValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ltValue.date"
@@ -3963,7 +4457,9 @@
                 "const": "value"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.value.date"
@@ -3976,7 +4472,9 @@
                 "const": "notValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notValue.date"
@@ -3989,7 +4487,9 @@
                 "const": "values"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.values.date"
@@ -4002,7 +4502,9 @@
                 "const": "notValues"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notValues.date"
@@ -4098,7 +4600,9 @@
           ]
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "allOf": [
         {
           "if": {
@@ -4107,7 +4611,9 @@
                 "const": "length"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.length"
@@ -4120,7 +4626,9 @@
                 "const": "minLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minLength"
@@ -4133,7 +4641,9 @@
                 "const": "maxLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxLength"
@@ -4146,7 +4656,9 @@
                 "const": "notLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notLength"
@@ -4159,7 +4671,9 @@
                 "const": "graphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.graphemes"
@@ -4172,7 +4686,9 @@
                 "const": "minGraphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minGraphemes"
@@ -4185,7 +4701,9 @@
                 "const": "maxGraphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxGraphemes"
@@ -4198,7 +4716,9 @@
                 "const": "notGraphemes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notGraphemes"
@@ -4211,7 +4731,9 @@
                 "const": "words"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.words"
@@ -4224,7 +4746,9 @@
                 "const": "minWords"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minWords"
@@ -4237,7 +4761,9 @@
                 "const": "maxWords"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxWords"
@@ -4250,7 +4776,9 @@
                 "const": "notWords"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notWords"
@@ -4263,7 +4791,9 @@
                 "const": "bytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.bytes"
@@ -4276,7 +4806,9 @@
                 "const": "minBytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minBytes"
@@ -4289,7 +4821,9 @@
                 "const": "maxBytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxBytes"
@@ -4302,7 +4836,9 @@
                 "const": "notBytes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notBytes"
@@ -4315,7 +4851,9 @@
                 "const": "regex"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.regex"
@@ -4328,7 +4866,9 @@
                 "const": "startsWith"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.startsWith"
@@ -4341,7 +4881,9 @@
                 "const": "endsWith"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.endsWith"
@@ -4354,7 +4896,9 @@
                 "const": "includes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4374,7 +4918,9 @@
                 "const": "excludes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4394,7 +4940,9 @@
                 "const": "email"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.email"
@@ -4407,7 +4955,9 @@
                 "const": "rfcEmail"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.rfcEmail"
@@ -4420,7 +4970,9 @@
                 "const": "url"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.url"
@@ -4433,7 +4985,9 @@
                 "const": "domain"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.domain"
@@ -4446,7 +5000,9 @@
                 "const": "slug"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.slug"
@@ -4459,7 +5015,9 @@
                 "const": "uuid"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.uuid"
@@ -4472,7 +5030,9 @@
                 "const": "ulid"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ulid"
@@ -4485,7 +5045,9 @@
                 "const": "cuid2"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.cuid2"
@@ -4498,7 +5060,9 @@
                 "const": "nanoid"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.nanoid"
@@ -4511,7 +5075,9 @@
                 "const": "ip"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ip"
@@ -4524,7 +5090,9 @@
                 "const": "ipv4"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ipv4"
@@ -4537,7 +5105,9 @@
                 "const": "ipv6"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.ipv6"
@@ -4550,7 +5120,9 @@
                 "const": "mac"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.mac"
@@ -4563,7 +5135,9 @@
                 "const": "mac48"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.mac48"
@@ -4576,7 +5150,9 @@
                 "const": "mac64"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.mac64"
@@ -4589,7 +5165,9 @@
                 "const": "hexColor"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.hexColor"
@@ -4602,7 +5180,9 @@
                 "const": "hexadecimal"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.hexadecimal"
@@ -4615,7 +5195,9 @@
                 "const": "octal"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.octal"
@@ -4628,7 +5210,9 @@
                 "const": "decimal"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.decimal"
@@ -4641,7 +5225,9 @@
                 "const": "digits"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.digits"
@@ -4654,7 +5240,9 @@
                 "const": "base64"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.base64"
@@ -4667,7 +5255,9 @@
                 "const": "bic"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.bic"
@@ -4680,7 +5270,9 @@
                 "const": "creditCard"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.creditCard"
@@ -4693,7 +5285,9 @@
                 "const": "imei"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.imei"
@@ -4706,7 +5300,9 @@
                 "const": "isbn"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isbn"
@@ -4719,7 +5315,9 @@
                 "const": "isrc"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isrc"
@@ -4732,7 +5330,9 @@
                 "const": "emoji"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.emoji"
@@ -4745,7 +5345,9 @@
                 "const": "hash"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.hash"
@@ -4758,7 +5360,9 @@
                 "const": "isoDate"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoDate"
@@ -4771,7 +5375,9 @@
                 "const": "isoDateTime"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoDateTime"
@@ -4784,7 +5390,9 @@
                 "const": "isoTime"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTime"
@@ -4797,7 +5405,9 @@
                 "const": "isoTimeSecond"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTimeSecond"
@@ -4810,7 +5420,9 @@
                 "const": "isoTimestamp"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoTimestamp"
@@ -4823,7 +5435,9 @@
                 "const": "isoWeek"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.isoWeek"
@@ -4836,7 +5450,9 @@
                 "const": "minValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4856,7 +5472,9 @@
                 "const": "maxValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4876,7 +5494,9 @@
                 "const": "gtValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4896,7 +5516,9 @@
                 "const": "ltValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4916,7 +5538,9 @@
                 "const": "value"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4942,7 +5566,9 @@
                 "const": "notValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4968,7 +5594,9 @@
                 "const": "values"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -4988,7 +5616,9 @@
                 "const": "notValues"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "anyOf": [
@@ -5008,7 +5638,9 @@
                 "const": "integer"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.integer"
@@ -5021,7 +5653,9 @@
                 "const": "safeInteger"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.safeInteger"
@@ -5034,7 +5668,9 @@
                 "const": "finite"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.finite"
@@ -5047,7 +5683,9 @@
                 "const": "multipleOf"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.multipleOf"
@@ -5060,7 +5698,9 @@
                 "const": "minSize"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minSize"
@@ -5073,7 +5713,9 @@
                 "const": "maxSize"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxSize"
@@ -5086,7 +5728,9 @@
                 "const": "size"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.size"
@@ -5099,7 +5743,9 @@
                 "const": "notSize"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notSize"
@@ -5112,7 +5758,9 @@
                 "const": "mimeType"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.mimeType"
@@ -5125,7 +5773,9 @@
                 "const": "trim"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.trim"
@@ -5138,7 +5788,9 @@
                 "const": "trimStart"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.trimStart"
@@ -5151,7 +5803,9 @@
                 "const": "trimEnd"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.trimEnd"
@@ -5164,7 +5818,9 @@
                 "const": "toLowerCase"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toLowerCase"
@@ -5177,7 +5833,9 @@
                 "const": "toUpperCase"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toUpperCase"
@@ -5190,7 +5848,9 @@
                 "const": "normalize"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.normalize"
@@ -5203,7 +5863,9 @@
                 "const": "toMinValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toMinValue"
@@ -5216,7 +5878,9 @@
                 "const": "toMaxValue"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.toMaxValue"
@@ -5232,10 +5896,19 @@
       "type": "object",
       "properties": {
         "rule": {
-          "enum": ["length", "minLength", "maxLength", "notLength", "includes", "excludes"]
+          "enum": [
+            "length",
+            "minLength",
+            "maxLength",
+            "notLength",
+            "includes",
+            "excludes"
+          ]
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "allOf": [
         {
           "if": {
@@ -5244,7 +5917,9 @@
                 "const": "length"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.length"
@@ -5257,7 +5932,9 @@
                 "const": "minLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.minLength"
@@ -5270,7 +5947,9 @@
                 "const": "maxLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.maxLength"
@@ -5283,7 +5962,9 @@
                 "const": "notLength"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.notLength"
@@ -5296,7 +5977,9 @@
                 "const": "includes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.includes.array"
@@ -5309,7 +5992,9 @@
                 "const": "excludes"
               }
             },
-            "required": ["rule"]
+            "required": [
+              "rule"
+            ]
           },
           "then": {
             "$ref": "#/definitions/rule.excludes.array"
@@ -5331,7 +6016,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5349,7 +6037,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5367,7 +6058,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5385,7 +6079,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5404,7 +6101,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5423,7 +6123,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5442,7 +6145,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5461,7 +6167,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5482,7 +6191,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5503,7 +6215,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5524,7 +6239,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5545,7 +6263,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5564,7 +6285,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5583,7 +6307,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5602,7 +6329,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5621,7 +6351,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5643,7 +6376,10 @@
           "pattern": "^[dgimsuvy]*$"
         }
       },
-      "required": ["rule", "pattern"],
+      "required": [
+        "rule",
+        "pattern"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5660,7 +6396,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5677,7 +6416,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5694,7 +6436,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5711,7 +6456,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5725,7 +6473,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5739,7 +6489,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5753,7 +6505,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5767,7 +6521,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5781,7 +6537,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5795,7 +6553,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5809,7 +6569,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5823,7 +6585,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5837,7 +6601,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5851,7 +6617,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5865,7 +6633,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5879,7 +6649,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5893,7 +6665,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5907,7 +6681,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5921,7 +6697,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5935,7 +6713,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5949,7 +6729,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5963,7 +6745,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5977,7 +6761,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -5991,7 +6777,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6005,7 +6793,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6019,7 +6809,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6033,7 +6825,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6047,7 +6841,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6061,7 +6857,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6075,7 +6873,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6089,7 +6889,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6126,7 +6928,10 @@
           "minItems": 1
         }
       },
-      "required": ["rule", "types"],
+      "required": [
+        "rule",
+        "types"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6141,7 +6946,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6156,7 +6963,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6171,7 +6980,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6186,7 +6997,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6201,7 +7014,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6216,7 +7031,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6233,7 +7050,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6250,7 +7070,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6264,7 +7087,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6278,7 +7103,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6292,7 +7119,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6306,7 +7135,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6320,7 +7151,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6335,11 +7168,18 @@
           "type": "string"
         },
         "form": {
-          "enum": ["NFC", "NFD", "NFKC", "NFKD"],
+          "enum": [
+            "NFC",
+            "NFD",
+            "NFKC",
+            "NFKD"
+          ],
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6356,7 +7196,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6373,7 +7216,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6390,7 +7236,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6407,7 +7256,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6424,7 +7276,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6441,7 +7296,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6462,7 +7320,10 @@
           "minItems": 1
         }
       },
-      "required": ["rule", "values"],
+      "required": [
+        "rule",
+        "values"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6483,7 +7344,10 @@
           "minItems": 1
         }
       },
-      "required": ["rule", "values"],
+      "required": [
+        "rule",
+        "values"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6497,7 +7361,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6511,7 +7377,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6525,7 +7393,9 @@
           "type": "string"
         }
       },
-      "required": ["rule"],
+      "required": [
+        "rule"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6545,7 +7415,10 @@
           }
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6563,7 +7436,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6581,7 +7457,10 @@
           "type": "number"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6598,7 +7477,10 @@
           "type": "boolean"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6615,7 +7497,10 @@
           "type": "boolean"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6632,7 +7517,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6649,7 +7537,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6666,7 +7557,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6683,7 +7577,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6700,7 +7597,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6717,7 +7617,10 @@
           "type": "string"
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6738,7 +7641,10 @@
           "minItems": 1
         }
       },
-      "required": ["rule", "values"],
+      "required": [
+        "rule",
+        "values"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6759,7 +7665,10 @@
           "minItems": 1
         }
       },
-      "required": ["rule", "values"],
+      "required": [
+        "rule",
+        "values"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6786,7 +7695,10 @@
           ]
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6813,7 +7725,10 @@
           ]
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6832,7 +7747,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6851,7 +7769,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6870,7 +7791,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6889,7 +7813,10 @@
           "minimum": 0
         }
       },
-      "required": ["rule", "value"],
+      "required": [
+        "rule",
+        "value"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6911,7 +7838,10 @@
           "minItems": 1
         }
       },
-      "required": ["rule", "types"],
+      "required": [
+        "rule",
+        "types"
+      ],
       "type": "object",
       "additionalProperties": false
     },
@@ -6919,14 +7849,21 @@
       "type": "object",
       "properties": {
         "effect": {
-          "enum": ["show", "hide", "hideAndClear"],
+          "enum": [
+            "show",
+            "hide",
+            "hideAndClear"
+          ],
           "type": "string"
         },
         "when": {
           "$ref": "#/definitions/affects.condition"
         }
       },
-      "required": ["effect", "when"],
+      "required": [
+        "effect",
+        "when"
+      ],
       "additionalProperties": false
     },
     "affects.condition": {
@@ -6952,7 +7889,10 @@
               ]
             }
           },
-          "required": ["field", "equals"],
+          "required": [
+            "field",
+            "equals"
+          ],
           "additionalProperties": false
         },
         {
@@ -6976,7 +7916,10 @@
               ]
             }
           },
-          "required": ["field", "notEquals"],
+          "required": [
+            "field",
+            "notEquals"
+          ],
           "additionalProperties": false
         },
         {
@@ -7004,7 +7947,10 @@
               "minItems": 1
             }
           },
-          "required": ["field", "in"],
+          "required": [
+            "field",
+            "in"
+          ],
           "additionalProperties": false
         },
         {
@@ -7028,7 +7974,10 @@
               ]
             }
           },
-          "required": ["field", "includes"],
+          "required": [
+            "field",
+            "includes"
+          ],
           "additionalProperties": false
         },
         {
@@ -7042,7 +7991,10 @@
               "const": true
             }
           },
-          "required": ["field", "empty"],
+          "required": [
+            "field",
+            "empty"
+          ],
           "additionalProperties": false
         },
         {
@@ -7056,7 +8008,10 @@
               "const": true
             }
           },
-          "required": ["field", "notEmpty"],
+          "required": [
+            "field",
+            "notEmpty"
+          ],
           "additionalProperties": false
         },
         {
@@ -7070,7 +8025,9 @@
               "minItems": 1
             }
           },
-          "required": ["all"],
+          "required": [
+            "all"
+          ],
           "additionalProperties": false
         },
         {
@@ -7084,7 +8041,9 @@
               "minItems": 1
             }
           },
-          "required": ["any"],
+          "required": [
+            "any"
+          ],
           "additionalProperties": false
         }
       ]

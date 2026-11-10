@@ -40,6 +40,7 @@ export const RESERVED_LAYOUT_TYPES = [
   'tab',
   'columns',
   'column',
+  'group',
   'fieldset',
 ] as const
 
