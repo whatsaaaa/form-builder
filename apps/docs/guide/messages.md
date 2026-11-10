@@ -28,6 +28,8 @@ The second argument of `resolveMessage` is a [`MessageContext`](/api/schema/Mess
 
 A rule without a `message` reports Valibot's own, so Valibot's [i18n package](https://valibot.dev/guides/internationalization/) translates it, with no setup here. Import the languages you need and set the language with Valibot's `setGlobalConfig`.
 
+The object schema of a list of fields has a message of its own, which gives a required field whose key is missing its required message. Its other errors, like an input that is no object, get the message you set with `setSpecificMessage(v.object, ...)`, `setSchemaMessage` or `setGlobalMessage`, else Valibot's own. A `message` in the config of a single parse, like `v.parse(schema, input, { message })`, doesn't reach them, because Valibot uses a schema's own message first. It still reaches the errors of the fields.
+
 ## Labels and text in components
 
 `resolveMessage` changes what goes into the schema: messages, and the label and description the schema carries as metadata. Your components get each field as the definition has it, so translate `field.label`, `field.placeholder`, the `text` of display elements, and the labels of options in your components, with the same function.

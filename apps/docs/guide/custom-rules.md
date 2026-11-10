@@ -57,7 +57,7 @@ A rule with `stage: "normalize"` runs before the required check, like `trim`, an
 
 - `reads(params)` gives the paths the rule reads, so the builder checks that those fields exist.
 - `kinds` are the kinds those fields may have, and `sameKind: true` makes them all have the same one.
-- `check(values, params)` gets the value of `field` first, then the values of the paths from `reads`. It runs only when none of them has an error or is empty.
+- `check(values, params)` gets the value of `field` first, then the values of the paths from `reads`. It runs only when none of them has an error of its own or is empty. The errors of other form rules don't count, so the order of `formRules` never matters.
 
 ## Meta
 

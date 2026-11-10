@@ -109,9 +109,7 @@ describe('the schema Formisch reads', () => {
 
     expect(messages(schema, { picks: [] })).toEqual(['Required'])
     expect(messages(schema, { picks: undefined })).toEqual(['Required'])
-    expect(messages(schema, { more: [] })).toEqual([
-      'Invalid key: Expected "picks" but received undefined',
-    ])
+    expect(messages(schema, { more: [] })).toEqual(['Required'])
     expect(v.parse(schema, { picks: ['a'], more: [] })).toEqual({ picks: ['a'], more: undefined })
     expect(messages(schema, { picks: true })).toEqual([
       'Invalid type: Expected Array but received true',

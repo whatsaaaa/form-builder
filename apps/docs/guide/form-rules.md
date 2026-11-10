@@ -81,6 +81,7 @@ A rule whose `field` has `*` runs once for each item, and its error shows on tha
 ## When they run
 
 - **Form rules run last**, after every field's own rules, and only when the fields they read have no errors. A password that is too short never also shows "Passwords differ".
+- **Their order doesn't matter.** Each form rule looks only at the errors of the fields, never at those of the other form rules, so it reports the same wherever it is in `formRules`.
 - **They never run on an empty value.** Make the fields required when they must be filled.
 - **The fields must have the same kind.** `compare` on a number and a date is an issue. A date with `"output": "date"` is compared by its time, also with a date field that holds an ISO string.
 
@@ -88,7 +89,7 @@ Formisch shows a form rule's error on the field it names, and on that field of e
 
 ## In the schema
 
-With form rules, the schema is the object schema of the fields in a `v.pipe()`, with one check for each form rule. A new object made from `schema.entries`, as with `v.pick()`, `v.omit()` or `v.object({ ...schema.entries })`, leaves the form rules out. Pipe it with the checks from `schema.pipe` when you need them.
+With form rules, the schema is the object schema of the fields in a `v.pipe()`, with one check that runs every form rule. A new object made from `schema.entries`, as with `v.pick()`, `v.omit()` or `v.object({ ...schema.entries })`, leaves the form rules out. Pipe it with the check from `schema.pipe` when you need them.
 
 ## Your own form rules
 
