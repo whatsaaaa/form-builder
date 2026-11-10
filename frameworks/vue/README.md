@@ -15,10 +15,10 @@ This is the Vue adapter of [form-builder](https://github.com/whatsaaaa/form-buil
 ## Install
 
 ```sh
-pnpm add @whatsaaaa/form-builder-vue @formisch/vue valibot
+pnpm add @whatsaaaa/form-builder-vue @whatsaaaa/form-builder-schema @formisch/vue valibot
 ```
 
-Vue 3.5, `@formisch/vue` 1.1 and Valibot 1.3 or later are required. `@whatsaaaa/form-builder-schema` comes with it.
+Vue 3.5, `@formisch/vue` 1.1 and Valibot 1.3 or later are required. Install `@whatsaaaa/form-builder-schema` too: the examples import its types, such as `JsonForm`.
 
 ## Example
 

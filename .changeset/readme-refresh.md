@@ -5,4 +5,4 @@
 '@whatsaaaa/form-builder-react': patch
 ---
 
-A shorter README, with badges for the version, downloads, CI, coverage and size. The full guide moved to `docs/guide.md` in the repository, linked from the README.
+A shorter README, with badges for the version, downloads, CI and coverage. The full guide moved to `docs/guide.md` in the repository, linked from the README.

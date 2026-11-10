@@ -15,10 +15,10 @@ This is the React adapter of [form-builder](https://github.com/whatsaaaa/form-bu
 ## Install
 
 ```sh
-pnpm add @whatsaaaa/form-builder-react @formisch/react valibot
+pnpm add @whatsaaaa/form-builder-react @whatsaaaa/form-builder-schema @formisch/react valibot
 ```
 
-React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required. `@whatsaaaa/form-builder-schema` comes with it.
+React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required. Install `@whatsaaaa/form-builder-schema` too: the examples import its types, such as `JsonForm`.
 
 ## Example
 
