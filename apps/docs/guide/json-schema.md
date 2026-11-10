@@ -28,7 +28,9 @@ With [conditions](/guide/conditions), use the one with `affects` instead. It has
 }
 ```
 
-- Each URL is the schema's `$id`. The `v1` in it is the format version, so it stays the same for every 1.x release, and always has the latest additions.
+While the affects package is before 1.0, this hosted schema follows the latest affects release, so a breaking 0.x release can change it. To keep it stable, point at the copy of the version you installed, like `https://unpkg.com/@whatsaaaa/form-builder-affects@<version>/definition.schema.json`.
+
+- Each URL is the schema's `$id`. The `v1` in it is the format version, so it stays the same for every 1.x release, and always has the latest additions. The affects schema also follows the affects package, see above.
 - To work offline, or to pin the schema to the package version you installed, point at the copy in the package: `./node_modules/@whatsaaaa/form-builder-schema/definition.schema.json`, or `@whatsaaaa/form-builder-affects/definition.schema.json` for conditions.
 - The `$schema` key is allowed in every definition, and never read.
 

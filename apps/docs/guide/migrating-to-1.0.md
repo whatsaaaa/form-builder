@@ -53,6 +53,8 @@ The shipped `definition.schema.json` files now have an `$id`, and this site host
 - `https://whatsaaaa.github.io/form-builder/schema/v1/definition.schema.json`
 - `https://whatsaaaa.github.io/form-builder/schema/v1/affects/definition.schema.json`
 
+The affects package stays before 1.0, so its hosted schema follows the latest affects release. To pin it, use `https://unpkg.com/@whatsaaaa/form-builder-affects@<version>/definition.schema.json`.
+
 ## Unchanged
 
 `version` stays `"1"`: no definition needs a change for 1.0, unless it used a key or a layout type that is now reserved. See [the format version](/guide/define-your-form#the-format-version).

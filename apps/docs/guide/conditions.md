@@ -145,4 +145,4 @@ To render conditions yourself, `getVisibility()` tells what is hidden for any in
 
 ## Checks and types
 
-`validate()` checks every `affects` with the rest of the definition: shapes, paths, operators against the kind of the field they read, values and loops. See [checking definitions](/guide/checking-definitions#conditions). The package ships a [JSON Schema](/guide/json-schema) with `affects`, and `defineForm()` [types](/guide/typescript) it.
+`validate()` checks every `affects` with the rest of the definition: shapes, paths, operators against the kind of the field they read, values and loops. See [checking definitions](/guide/checking-definitions#conditions). The package ships a [JSON Schema](/guide/json-schema#using-the-shipped-schema) with `affects`, and `defineForm()` [types](/guide/typescript) it. While the package is before 1.0, the hosted schema follows its latest release.
