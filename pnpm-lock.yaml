@@ -180,6 +180,8 @@ catalogs:
       specifier: ^3.3.11
       version: 3.3.13
 
+packageExtensionsChecksum: sha256-0P12CnNK5+T8oa7xKvrVwfnJf66BsNQljAJKP8N9Fjc=
+
 importers:
 
   .:
@@ -243,7 +245,7 @@ importers:
     devDependencies:
       '@formisch/react':
         specifier: ^1.2.0
-        version: 1.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
+        version: 1.2.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@formisch/vue':
         specifier: ^1.1.1
         version: 1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
@@ -362,7 +364,7 @@ importers:
         version: 0.18.5
       '@formisch/react':
         specifier: ^1.2.0
-        version: 1.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
+        version: 1.2.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@size-limit/preset-small-lib':
         specifier: ^14.3.0
         version: 14.3.0(size-limit@14.3.0)
@@ -480,7 +482,7 @@ importers:
         version: 1.3.0(@qwik.dev/core@2.0.0-rc.4(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5))(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@formisch/react':
         specifier: ^1.2.0
-        version: 1.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
+        version: 1.2.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@formisch/solid':
         specifier: ^1.3.0
         version: 1.3.0(solid-js@1.9.18)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
@@ -1591,11 +1593,14 @@ packages:
   '@formisch/react@1.2.0':
     resolution: {integrity: sha512-UsWPAIEt8DxfJZH9reeUkc6pAyY+YCGWTJDhrJaUEaKEUxhIFcezoBaFYSbuYuSzKlhj6lJVnIo5PMx8EgfJqg==}
     peerDependencies:
+      '@types/react': '*'
       react: '>=16.8.0 <20'
       react-dom: '>=16.8.0 <20'
       typescript: '>=5 <8'
       valibot: '>=1.4.1 <2'
     peerDependenciesMeta:
+      '@types/react':
+        optional: true
       typescript:
         optional: true
 
@@ -7337,12 +7342,13 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  '@formisch/react@1.2.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))':
+  '@formisch/react@1.2.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))':
     dependencies:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
       valibot: 1.5.0(typescript@6.0.3)
     optionalDependencies:
+      '@types/react': 19.3.0
       typescript: 6.0.3
 
   '@formisch/solid@1.3.0(solid-js@1.9.18)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))':
