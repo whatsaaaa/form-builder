@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter playground dev",
-    "build": "pnpm -r build",
+    "docs:dev": "pnpm --filter docs dev",
+    "docs:build": "pnpm --filter docs build",
+    "docs:preview": "pnpm --filter docs preview",
+    "build": "pnpm -r --filter '!docs' build",
     "test": "pnpm -r test",
     "type-check": "tsc --noEmit && pnpm -r type-check",
     "lint": "run-s \"lint:*\"",
