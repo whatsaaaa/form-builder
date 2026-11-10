@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-react
 
+## 0.5.0
+
+### Minor Changes
+
+- [#50](https://github.com/whatsaaaa/form-builder/pull/50) [`9e5431b`](https://github.com/whatsaaaa/form-builder/commit/9e5431bc9b8687bc8d4d27ab8872117b07e059a0) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `@whatsaaaa/form-builder-schema` is a peer dependency now, not a dependency, so the adapter uses the copy your app installs instead of a second one of its own. With two copies, a builder from your `createSchemaBuilder()` threw in `useJsonForm`, and `instanceof DefinitionError` was `false` for the adapter's errors.
+
 ## 0.4.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.5.0
+
+### Minor Changes
+
+- [#50](https://github.com/whatsaaaa/form-builder/pull/50) [`9e5431b`](https://github.com/whatsaaaa/form-builder/commit/9e5431bc9b8687bc8d4d27ab8872117b07e059a0) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `@whatsaaaa/form-builder-schema` is a peer dependency now, not a dependency, so the adapter uses the copy your app installs instead of a second one of its own. With two copies, a builder from your `createSchemaBuilder()` threw in `useJsonForm`, and `instanceof DefinitionError` was `false` for the adapter's errors. The other peers now ask for what the adapter needs: Valibot 1.4.1 or later, like every `@formisch/vue` 1.x, and Vue 3.5.2 or later, the first Vue its published types check with when `skipLibCheck` is off.
+
 ## 0.4.0
 
 ### Minor Changes
