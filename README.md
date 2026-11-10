@@ -10,6 +10,8 @@ Describe forms in JSON and get validated [Formisch](https://formisch.dev) forms 
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white)](./frameworks/vue)
 [![React](https://img.shields.io/badge/React-18%20%7C%2019-61DAFB?logo=react&logoColor=black)](./frameworks/react)
 
+**[Documentation](https://whatsaaaa.github.io/form-builder/)**
+
 form-builder turns a JSON form definition into a [Valibot](https://valibot.dev) schema that Formisch understands, with the fields, validation, layout and conditions it describes. It is meant for forms that don't belong in your source code: forms stored in a database, served by an API or put together in a visual editor. The core is framework-agnostic and works with Formisch's own package for Vue, React, Preact, Solid, Svelte, Qwik and Angular. Headless adapters for Vue and React render the fields with your own components.
 
 ## Example
@@ -58,9 +60,9 @@ const schema = builder.build(json)
 | [`@whatsaaaa/form-builder-vue`](./frameworks/vue)       | Renders definitions with Formisch and your own Vue components.         |
 | [`@whatsaaaa/form-builder-react`](./frameworks/react)   | Renders definitions with Formisch and your own React components.       |
 
-Preact, Solid, Svelte, Qwik and Angular need no adapter. The schema package works with Formisch's own package for each, and [Formisch in each framework](./packages/schema/docs/frameworks.md) has a tested renderer to start from.
+Preact, Solid, Svelte, Qwik and Angular need no adapter. The schema package works with Formisch's own package for each, and [the docs](https://whatsaaaa.github.io/form-builder/frameworks/) have a tested renderer for each to start from.
 
-Planned: `@whatsaaaa/form-builder-codegen`, a CLI that turns definitions into typed TypeScript, a visual builder that writes definitions, and a docs site.
+Planned: `@whatsaaaa/form-builder-codegen`, a CLI that turns definitions into typed TypeScript, and a visual builder that writes definitions.
 
 ## Status
 

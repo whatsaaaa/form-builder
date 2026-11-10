@@ -34,6 +34,14 @@ pnpm --filter @whatsaaaa/form-builder-schema test
 - Run `pnpm lint`, `pnpm type-check` and `pnpm test`.
 - Add a changeset with `pnpm changeset` if you changed a published package.
 
+## Docs
+
+The docs site is in [`apps/docs`](./apps/docs), and deploys to [GitHub Pages](https://whatsaaaa.github.io/form-builder/) from `main`.
+
+- Code that a page shows lives in `apps/docs/snippets`, which `pnpm type-check` checks and the docs tests run, and the pages include it with `<<<`. The framework pages include the renderers in `integration/examples` the same way.
+- The docs tests check every JSON definition a page shows with `validate()`.
+- `pnpm --filter docs docs:gen` writes the reference of the built-in rules and field types from the registry. CI fails when it is out of date.
+
 ## Repository layout
 
 ```

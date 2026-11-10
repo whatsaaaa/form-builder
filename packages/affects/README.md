@@ -66,7 +66,8 @@ With the Vue or React adapter, pass the builder to `useJsonForm`, and hidden fie
 
 ## Documentation
 
-The [guide](https://github.com/whatsaaaa/form-builder/blob/main/packages/affects/docs/guide.md) covers effects, conditions and their operators, what a hidden field does, groups, sections and steps, loops, checks, rendering and TypeScript.
+- [Guide](https://whatsaaaa.github.io/form-builder/guide/conditions): effects, conditions and their operators, what a hidden field does, groups, sections and steps, loops and rendering
+- [API reference](https://whatsaaaa.github.io/form-builder/api/affects/)
 
 ## Related packages
 

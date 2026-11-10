@@ -32,3 +32,8 @@ peerDependencyRules:
     # one, brings an @emnapi prerelease that @napi-rs/wasm-runtime's range leaves out.
     '@napi-rs/wasm-runtime>@emnapi/core': '2.0.0-alpha.6'
     '@napi-rs/wasm-runtime>@emnapi/runtime': '2.0.0-alpha.6'
+    # The docs install React only to type-check their React snippets. The site uses VitePress's
+    # local search, so DocSearch's React UI, which wants React below 19, never loads.
+    '@docsearch/react>react': '19'
+    '@docsearch/react>react-dom': '19'
+    '@docsearch/react>@types/react': '19'

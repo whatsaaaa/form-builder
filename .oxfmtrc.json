@@ -4,7 +4,16 @@
   "singleQuote": true,
   "ignorePatterns": [
     "packages/schema/definition.schema.json",
-    "packages/schema/docs/",
+    "apps/docs/api/schema/field-types.md",
+    "apps/docs/api/schema/rules.md",
     "packages/affects/definition.schema.json"
+  ],
+  "overrides": [
+    {
+      "files": ["apps/docs/**/*.md", "apps/docs/snippets/**"],
+      "options": {
+        "printWidth": 76
+      }
+    }
   ]
 }

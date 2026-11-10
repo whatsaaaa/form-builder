@@ -75,7 +75,7 @@ jobs:
           files: frameworks/react/coverage/lcov.info
           disable_search: true
           fail_ci_if_error: false
-      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects docs:gen
+      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter docs docs:gen
       - name: Fail if the generated files are out of date
         run: git diff --exit-code
       - run: pnpm build

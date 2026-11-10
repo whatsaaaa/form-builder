@@ -1,0 +1,33 @@
+---
+description: Set the required message, translate the messages of a definition, and use Valibot's translations.
+---
+
+# Messages and i18n
+
+Every error a form shows is a message: a field's required message, a rule's `message`, or Valibot's own. Below you will learn where each one comes from, and how to translate them.
+
+## Where messages come from
+
+- **The required message** is the field's own, from `"required": { "message": "..." }`, or else the builder's `messages.required`, which defaults to `"Required"`.
+- **A rule's message** is its `message`. A rule without one reports Valibot's own message, like "Invalid length: Expected >=10 but received 5".
+- **A form rule's message** is its `message`, which it always has.
+
+## Translating your messages
+
+`resolveMessage` is called with every message of the definition, every label and every description, and the required message of every required field without its own. Return the text to use, or `undefined` to keep the text as written. Write keys in the definition, and translate them here:
+
+<<< @/snippets/schema/messages.ts#resolve
+
+The schema then reports the translated messages:
+
+<<< @/snippets/schema/messages.ts#build
+
+The second argument of `resolveMessage` is a [`MessageContext`](/api/schema/MessageContext): the `field` the text belongs to, the `rule` for a rule's message, and the `path` of the field in the definition. Build one builder per language, or read the current language inside `resolveMessage`. A builder resolves the messages when it builds the schema, so build the form again when the language changes.
+
+## Translating Valibot's messages
+
+A rule without a `message` reports Valibot's own, so Valibot's [i18n package](https://valibot.dev/guides/internationalization/) translates it, with no setup here. Import the languages you need and set the language with Valibot's `setGlobalConfig`.
+
+## Labels and text in components
+
+`resolveMessage` changes what goes into the schema: messages, and the label and description the schema carries as metadata. Your components get each field as the definition has it, so translate `field.label`, `field.placeholder`, the `text` of display elements, and the labels of options in your components, with the same function.
