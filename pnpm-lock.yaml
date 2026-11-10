@@ -361,6 +361,9 @@ importers:
       '@formisch/vue':
         specifier: ^1.1.1
         version: 1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
+      '@vitest/coverage-v8':
+        specifier: ^5.0.5
+        version: 5.0.5(vitest@5.0.5)
       '@whatsaaaa/form-builder-affects':
         specifier: workspace:^
         version: link:../../packages/affects
