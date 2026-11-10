@@ -2,11 +2,11 @@
 
 # Formisch in each framework
 
-The schema package works with Formisch's own package for every framework, with no adapter from this repo. Here is a whole renderer for each of Preact, Solid, Svelte, Qwik and Angular. Each has the shape of the React one in [Using with Formisch](../README.md#using-with-formisch), with the native control of every built-in type from [Controls](../README.md#controls). For Vue and React, use [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue) and [`@whatsaaaa/form-builder-react`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/react).
+The schema package works with Formisch's own package for every framework, with no adapter from this repo. Here is a whole renderer for each of Preact, Solid, Svelte, Qwik and Angular. Each has the shape of the React one in [Using with Formisch](guide.md#using-with-formisch), with the native control of every built-in type from [Controls](guide.md#controls). For Vue and React, use [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue) and [`@whatsaaaa/form-builder-react`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/react).
 
 Every renderer is tested. The [integration tests](https://github.com/whatsaaaa/form-builder/tree/main/integration/examples) run every shared fixture through it, from a text field to arrays, form rules, layouts with steps and conditions: they type, tick, pick, step and submit like a person, and check the fields on show, the errors the form shows and what it submits.
 
-Each one renders the definition's [layout](../README.md#layout), so it renders a definition without one too, as one step with every field. Each one has the same parts:
+Each one renders the definition's [layout](guide.md#layout), so it renders a definition without one too, as one step with every field. Each one has the same parts:
 
 - **`JsonFormView`** reads the definition once: the schema and initial input for Formisch's form, and the layout's steps. It renders the current step, Back and Next while there are steps, and Save on the last one. Next validates the whole form, and moves on only when `issuesOfStep` finds no issue on this step's fields, or focuses the first one. The step it moves to starts clean: `fieldPathsOf` gives its fields' paths, to clear the errors that validation set on them.
 - **`Layout`** renders each node of a step by its `type`: a section as a `<fieldset>`, a row as a 12-column CSS grid whose cells take their `span`, a slot with the content passed in `slots`, and a field by its `role`. A group and an array render their fields from the layout's `children`, not the field's.
@@ -22,7 +22,7 @@ Validation needs nothing more: the schema skips a hidden field, and submits what
 
 The `data-error`, `data-add`, `data-remove`, `data-next`, `data-back` and `data-span` attributes only mark elements for the tests. Leave them out.
 
-A row's CSS grid has 12 columns at every width here. On a narrow screen, give the cells the whole row with a media query, as the layout says nothing about screen sizes. The Vue and React adapters also restore a step's errors when the user comes back to it, revalidate a step that failed Next as the user fixes it, and treat a submit before the last step as Next: see their READMEs.
+A row's CSS grid has 12 columns at every width here. On a narrow screen, give the cells the whole row with a media query, as the layout says nothing about screen sizes. The Vue and React adapters also restore a step's errors when the user comes back to it, revalidate a step that failed Next as the user fixes it, and treat a submit before the last step as Next: see their guides.
 
 ## Preact
 

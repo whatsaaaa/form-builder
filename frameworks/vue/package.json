@@ -39,6 +39,7 @@
     "build": "tsdown",
     "prepack": "tsdown",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
     "lint:pkg": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only"
   },
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@formisch/vue": "^1.1.1",
+    "@vitest/coverage-v8": "^5.0.5",
     "@whatsaaaa/form-builder-affects": "workspace:^",
     "happy-dom": "^20.0.0",
     "publint": "^0.3.25",

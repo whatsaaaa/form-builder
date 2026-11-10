@@ -5,7 +5,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      reporter: ['text', 'html', 'json-summary'],
+      reporter: ['text', 'html', 'json-summary', 'lcov'],
       // `pnpm test:coverage` (run by CI) fails below these.
       thresholds: { statements: 95, branches: 95, functions: 95, lines: 95 },
     },

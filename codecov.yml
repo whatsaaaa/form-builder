@@ -1,0 +1,26 @@
+# One flag per package, for the coverage badge in each README. A package's coverage carries over
+# from the last upload of its flag.
+flag_management:
+  default_rules:
+    carryforward: true
+  individual_flags:
+    - name: schema
+      paths: [packages/schema/src/]
+    - name: affects
+      paths: [packages/affects/src/]
+    - name: vue
+      paths: [frameworks/vue/src/]
+    - name: react
+      paths: [frameworks/react/src/]
+
+coverage:
+  status:
+    # The coverage thresholds in each vitest.config.ts gate CI. Codecov's statuses only inform.
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+comment: false

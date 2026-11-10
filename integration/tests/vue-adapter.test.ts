@@ -1,4 +1,4 @@
-// The scenarios through @whatsaaaa/form-builder-vue, with components written the way its README
+// The scenarios through @whatsaaaa/form-builder-vue, with components written the way its guide
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
 import { Form } from '@formisch/vue'
 import { affects } from '@whatsaaaa/form-builder-affects'
