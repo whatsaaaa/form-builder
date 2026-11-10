@@ -29,7 +29,7 @@ Run `validate()` when you save a definition, and again before you render one you
 | `invalid_shape`       | a value of the wrong type, like a string where a list goes                                                |
 | `unsupported_version` | a `version` other than `"1"`                                                                              |
 | `unknown_key`         | a key that the definition, the field's type or the layout node doesn't take                               |
-| `unknown_type`        | a field type the builder doesn't know                                                                     |
+| `unknown_type`        | a field type the builder doesn't know, or a layout node type kept for a later version                     |
 | `missing_name`        | a field with a value but no `name`                                                                        |
 | `invalid_name`        | a name with `.`, `[`, `]`, or the name `*` or `__proto__`                                                 |
 | `duplicate_name`      | two fields with the same name next to each other                                                          |
@@ -71,7 +71,7 @@ The layout reports on `['layout']` and below, like `['layout', 'steps', 1, 'item
 - A path that names no field with a value, or reaches into the items of a list, is `unknown_field`.
 - A field placed twice is `duplicate_placement` on the second place, and one placed nowhere is `unplaced_field` on the list that misses it.
 - A span that is no whole number from 1 to 12, a `span` outside a row, and the spans of a row over 12 columns or that can't be shared evenly are `invalid_span`.
-- A field type with a value written in the layout is `invalid_shape`, and a layout node type kept for a later version, like `tabs`, is `unknown_type`.
+- A field type with a value written in the layout is `invalid_shape`. A layout node type kept for a later version, like `tabs` or `group`, is `unknown_type`, even when a field type with a value has that name.
 
 ## Conditions
 
