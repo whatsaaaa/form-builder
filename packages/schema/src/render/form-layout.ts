@@ -33,7 +33,8 @@ export interface LayoutStep {
 /** One node of a layout. Containers hold their items in `children`. */
 export type LayoutNode = LayoutField | LayoutSection | LayoutRow | LayoutSlot
 
-interface LayoutNodeBase {
+/** What every layout node has. */
+export interface LayoutNodeBase {
   /** Unique among its siblings, and the same for the life of the layout: a key for renderers. */
   readonly key: string
   /** How many of its row's 12 columns the node takes. 12 outside a row. */

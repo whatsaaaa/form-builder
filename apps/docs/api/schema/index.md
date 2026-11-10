@@ -13,9 +13,7 @@ The core package. It checks definitions, builds their Valibot schemas, and gives
 
 ## Definition
 
-- [getInitialInput](/api/schema/getInitialInput)
 - [isRequired](/api/schema/isRequired)
-- [walkFields](/api/schema/walkFields)
 
 ## Registries
 
@@ -36,7 +34,7 @@ The core package. It checks definitions, builds their Valibot schemas, and gives
 - [checkLayoutComponents](/api/schema/checkLayoutComponents)
 - [coerceInput](/api/schema/coerceInput)
 - [dotPathOf](/api/schema/dotPathOf)
-- [fieldPathsOf](/api/schema/fieldPathsOf)
+- [fieldPathsOfStep](/api/schema/fieldPathsOfStep)
 - [findField](/api/schema/findField)
 - [issuesOfStep](/api/schema/issuesOfStep)
 - [selectFields](/api/schema/selectFields)
@@ -54,6 +52,7 @@ The core package. It checks definitions, builds their Valibot schemas, and gives
 
 ## Types
 
+- [BuiltSchema](/api/schema/BuiltSchema)
 - [DefinitionIssue](/api/schema/DefinitionIssue)
 - [FieldNode](/api/schema/FieldNode)
 - [FieldTypeDef](/api/schema/FieldTypeDef)
@@ -62,7 +61,6 @@ The core package. It checks definitions, builds their Valibot schemas, and gives
 - [JsonField](/api/schema/JsonField)
 - [JsonForm](/api/schema/JsonForm)
 - [JsonFormRule](/api/schema/JsonFormRule)
-- [JsonFormSchema](/api/schema/JsonFormSchema)
 - [JsonLayout](/api/schema/JsonLayout)
 - [JsonRule](/api/schema/JsonRule)
 - [KindDef](/api/schema/KindDef)
@@ -71,7 +69,7 @@ The core package. It checks definitions, builds their Valibot schemas, and gives
 - [SchemaBuilderOptions](/api/schema/SchemaBuilderOptions)
 - [SchemaExtension](/api/schema/SchemaExtension)
 - [TypedForm](/api/schema/TypedForm)
-- [TypedJsonFormSchema](/api/schema/TypedJsonFormSchema)
+- [TypedBuiltSchema](/api/schema/TypedBuiltSchema)
 - [ValueKind](/api/schema/ValueKind)
 - [Visibility](/api/schema/Visibility)
 - [WalkedField](/api/schema/WalkedField)

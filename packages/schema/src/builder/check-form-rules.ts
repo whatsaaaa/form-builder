@@ -1,5 +1,5 @@
 import * as v from 'valibot'
-import type { JsonField, JsonFormRule } from '../definition/json-form-schema'
+import type { JsonField, JsonFormRule } from '../definition/json-form'
 import {
   type DefinitionIssue,
   type DefinitionPath,

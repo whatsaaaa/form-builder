@@ -1,7 +1,7 @@
 import type * as v from 'valibot'
 import type { AnyAction, AnyObjectSchema, AnySchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
-import type { JsonField, JsonRule } from '../definition/json-form-schema'
+import type { JsonField, JsonRule } from '../definition/json-form'
 import type { DefinitionPath } from '../errors/definition-error'
 
 export interface FieldTypeDef<TProps extends AnyObjectSchema = AnyObjectSchema> {
@@ -48,8 +48,8 @@ export interface FieldTypeMeta {
 }
 
 /**
- * Picks the kind from the field. Declared as a method so it stays bivariant, like `schema()`.
- * Internal: it isn't exported from the package, so it can change without a major release.
+ * Picks the kind from the field, for a `kind` or `itemKind` that depends on the props. Declared as
+ * a method so it stays bivariant, like `schema()`.
  */
 export type KindOf<TProps extends AnyObjectSchema = AnyObjectSchema> = {
   bivariant(field: FieldWithProps<TProps>): ValueKind

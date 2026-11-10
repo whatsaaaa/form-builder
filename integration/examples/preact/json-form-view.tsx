@@ -19,11 +19,11 @@ import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
-  fieldPathsOf,
+  fieldPathsOfStep,
   isRequired,
   issuesOfStep,
   type JsonForm,
-  type JsonFormSchema,
+  type BuiltSchema,
   type LayoutField,
   type LayoutNode,
   type LayoutStep,
@@ -42,7 +42,7 @@ type Slots = Record<string, ComponentChildren>
 
 interface JsonFormViewProps {
   json: JsonForm
-  onSubmit: SubmitHandler<JsonFormSchema>
+  onSubmit: SubmitHandler<BuiltSchema>
   slots?: Slots
 }
 
@@ -80,7 +80,7 @@ export function JsonFormView({ json, onSubmit, slots = {} }: JsonFormViewProps) 
     }
     if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOfStep(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
     setIndex(after)

@@ -1,5 +1,5 @@
-import type { JsonField } from '../definition/json-form-schema'
-import type { WalkedField } from '../definition/walk-fields'
+import type { JsonField } from '../definition/json-form'
+import type { WalkedField } from '../definition/walked-field'
 import type { DefinitionPath } from '../errors/definition-error'
 import type { ValueKind } from '../shared/value-kind'
 

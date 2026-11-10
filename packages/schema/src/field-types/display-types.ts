@@ -1,12 +1,10 @@
 import * as v from 'valibot'
-import type { DISPLAY_TYPES } from '../definition/built-in-types'
 import { defineFieldType } from './define-field-type'
 import type { FieldTypeDef } from './field-type-def'
 
 /**
  * Elements without a value. They need no name and add no output key. Their `text` can be an
- * i18n key: renderers resolve it with the same function they pass as `resolveMessage`. The keys
- * are exactly `DISPLAY_TYPES`, which the functions that need no builder read.
+ * i18n key: renderers resolve it with the same function they pass as `resolveMessage`.
  */
 export const displayTypes = {
   heading: defineFieldType({
@@ -28,4 +26,4 @@ export const displayTypes = {
     kind: 'none',
     meta: { label: 'Divider', description: 'A line between fields. It has no value' },
   },
-} satisfies Record<(typeof DISPLAY_TYPES)[number], FieldTypeDef>
+} satisfies Record<string, FieldTypeDef>

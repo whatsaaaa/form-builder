@@ -2,8 +2,8 @@ import * as v from 'valibot'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import {
   createSchemaBuilder,
-  type JsonFormSchema,
-  type TypedJsonFormSchema,
+  type BuiltSchema,
+  type TypedBuiltSchema,
 } from '@whatsaaaa/form-builder-schema'
 import { form } from '../helpers'
 
@@ -28,7 +28,7 @@ describe('build with your types', () => {
   it('types the input and output of the schema', () => {
     const schema = build<OrderInput>(order)
 
-    expectTypeOf(schema).toEqualTypeOf<TypedJsonFormSchema<OrderInput>>()
+    expectTypeOf(schema).toEqualTypeOf<TypedBuiltSchema<OrderInput>>()
     expectTypeOf<v.InferInput<typeof schema>>().toEqualTypeOf<{
       name: string
       address: { city?: string }
@@ -61,7 +61,7 @@ describe('build with your types', () => {
   it('stays untyped without your types', () => {
     const schema = build(order)
 
-    expectTypeOf(schema).toEqualTypeOf<JsonFormSchema>()
+    expectTypeOf(schema).toEqualTypeOf<BuiltSchema>()
     expectTypeOf<v.InferOutput<typeof schema>['anything']>().toBeUnknown()
   })
 })

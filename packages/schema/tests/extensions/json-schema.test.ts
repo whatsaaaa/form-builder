@@ -70,7 +70,8 @@ describe('toJsonSchema with extensions', () => {
   })
 
   it('is the default schema without extensions', () => {
-    expect(toJsonSchema(createSchemaBuilder())).toEqual(defaultSchema)
+    const { $id: _, ...generated } = defaultSchema
+    expect(toJsonSchema(createSchemaBuilder())).toEqual(generated)
   })
 
   it("warns about a definition it can't convert, and takes any value for it", () => {

@@ -1,11 +1,11 @@
-import type { JsonField } from '../definition/json-form-schema'
+import type { JsonField } from '../definition/json-form'
 import {
   type JsonLayoutRow,
   type JsonLayoutSection,
   type JsonLayoutStep,
   ROW_COLUMNS,
 } from '../definition/json-layout'
-import type { WalkedField } from '../definition/walk-fields'
+import type { WalkedField } from '../definition/walked-field'
 import {
   type DefinitionIssue,
   type DefinitionPath,
@@ -14,6 +14,7 @@ import {
 } from '../errors/definition-error'
 import { type FieldNode, fieldTree } from '../render/field-tree'
 import type { FormLayout, LayoutNode, LayoutStep } from '../render/form-layout'
+import { isReservedLayoutType } from '../shared/reserved-keys'
 import { lookup, type Registry } from './registry'
 import { checkField } from './validate-definition'
 
@@ -174,11 +175,11 @@ export function checkLayout(
     if (given.every((span) => span === undefined || isSpan(span))) {
       if (left < 0) {
         const message = `A row has ${ROW_COLUMNS} columns, and its spans add up to ${used}. Put the rest in another row`
-        report('invalid_shape', path, message)
+        report('invalid_span', path, message)
       } else if (shared && (share === 0 || left % shared)) {
         const items = shared === 1 ? '1 item' : `${shared} items`
         const message = `The spans leave ${left} of ${ROW_COLUMNS} columns to share evenly between ${items} without a span. Give them a span`
-        report('invalid_shape', path, message)
+        report('invalid_span', path, message)
       }
     }
     return given.map((span) => (isSpan(span) ? span : share))
@@ -234,10 +235,10 @@ export function checkLayout(
     if (!Object.hasOwn(raw, 'span')) return
     if (cell === undefined) {
       const message = '"span" is for an item of a row'
-      report('invalid_shape', [...path, 'span'], message)
+      report('invalid_span', [...path, 'span'], message)
     } else if (!isSpan(raw['span'])) {
       const message = `"span" is a whole number from 1 to ${ROW_COLUMNS}`
-      report('invalid_shape', [...path, 'span'], message)
+      report('invalid_span', [...path, 'span'], message)
     }
   }
 
@@ -341,6 +342,12 @@ export function checkLayout(
     if (typeof typeName !== 'string') {
       const message = 'A layout item object needs a "field", or a "type"'
       report('invalid_shape', path, message)
+      return undefined
+    }
+    // No display element's type can have a reserved name, even when a field type with a value has.
+    if (isReservedLayoutType(typeName)) {
+      const message = `Layout node type "${typeName}" is reserved for a later version`
+      report('unknown_type', [...path, 'type'], message)
       return undefined
     }
     const type = lookup(registry.fieldTypes, typeName)

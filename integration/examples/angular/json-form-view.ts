@@ -34,7 +34,7 @@ import {
   coerceInput,
   createSchemaBuilder,
   type FieldNode,
-  fieldPathsOf,
+  fieldPathsOfStep,
   isRequired,
   issuesOfStep,
   type JsonForm,
@@ -471,7 +471,7 @@ export class JsonFormView implements OnInit {
     const after = this.after()
     if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(this.steps[after] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOfStep(this.steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
     this.index.set(after)

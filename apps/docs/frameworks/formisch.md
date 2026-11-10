@@ -99,7 +99,7 @@ A form with steps is one Formisch form with one schema, so Next validates the wh
 <<< @/snippets/react/json-form-view.tsx#next
 
 1. `issuesOfStep(step, issues)` gives the issues on the step's fields, in layout order, each with its `field` and Formisch `path`. With any, it stays, and focuses the first field that has an element: a group or a list has none.
-2. That validation also set errors on the next step's fields. `fieldPathsOf(step, getInput(form))` gives the path of each field of a step, with every list item there is, to clear them with `setErrors`.
+2. That validation also set errors on the next step's fields. `fieldPathsOfStep(step, getInput(form))` gives the path of each field of a step, with every list item there is, to clear them with `setErrors`.
 3. Back never validates. Submit is the last step's, and Formisch validates the whole form again.
 
 The Vue and React adapters do more, like restoring a step's errors when the user comes back: see [multi-step forms](/frameworks/multi-step-forms).

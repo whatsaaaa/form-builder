@@ -597,6 +597,11 @@ describe('checking the layout', () => {
         at('items', 0),
       ],
       ['five cells without a span', ['name', 'email', 'tags', 'lines', 'billing'], at('items', 0)],
+    ])('reports %s as invalid_span', (_, items, path) => {
+      expect(row(...items)).toContainEqual({ code: 'invalid_span', path })
+    })
+
+    it.each<[string, unknown[], (string | number)[]]>([
       ['"*" as a cell', ['name', '*'], at('items', 0, 'items', 1)],
       ['an empty row', [], at('items', 0, 'items')],
     ])('reports %s', (_, items, path) => {
@@ -605,7 +610,7 @@ describe('checking the layout', () => {
 
     it('reports a span outside a row', () => {
       expect(codesAndPaths({ items: [{ field: 'name', span: 6 }, '*'] })).toEqual([
-        { code: 'invalid_shape', path: at('items', 0, 'span') },
+        { code: 'invalid_span', path: at('items', 0, 'span') },
       ])
     })
 

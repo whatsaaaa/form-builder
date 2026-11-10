@@ -3,6 +3,8 @@ import { paramsFor } from '../rules/rule-params'
 import {
   isReservedFieldKey,
   isReservedFormRuleKey,
+  isReservedLayoutKey,
+  isReservedLayoutType,
   isReservedRuleKey,
 } from '../shared/reserved-keys'
 import type { AnyObjectSchema } from '../shared/valibot-types'
@@ -33,9 +35,6 @@ export function checkRegistry(registry: Registry): void {
   checkExtensions(registry)
 }
 
-/** The keys of a layout's steps and sections, which an extension's layout props can't use. */
-const LAYOUT_KEYS = ['type', 'id', 'label', 'description', 'items', 'ui', 'span', 'field', 'name']
-
 /**
  * An extension's keys can't be reserved, a field type's props, or another extension's, so every
  * key of a field has one owner.
@@ -58,7 +57,7 @@ function checkExtensions(registry: Registry): void {
       claim(owners, `fields:${key}`, extension.name, `${at}: fieldProps`, key)
     }
     for (const key of Object.keys(extension.layoutProps?.entries ?? {})) {
-      if (LAYOUT_KEYS.includes(key)) {
+      if (isReservedLayoutKey(key)) {
         throw new TypeError(`${at}: layoutProps can't use the layout's key "${key}"`)
       }
       claim(owners, `layout:${key}`, extension.name, `${at}: layoutProps`, key)
@@ -81,6 +80,10 @@ function claim(
 
 function checkFieldType(name: string, type: FieldTypeDef, registry: Registry): void {
   const at = `Field type "${name}"`
+  // A display element can be written in a layout by its type, where the name would be a node's.
+  if (type.kind === 'none' && isReservedLayoutType(name)) {
+    throw new TypeError(`${at}: a display element can't use the layout node type "${name}"`)
+  }
   for (const kind of [type.kind, type.itemKind]) {
     if (typeof kind === 'string' && !lookup(registry.kinds, kind)) {
       throw new TypeError(`${at}: kind "${kind}" is not registered`)

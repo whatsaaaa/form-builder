@@ -1,10 +1,10 @@
 ---
-description: One field as walkFields gives it, with its paths and depth.
+description: One field as the builder's walkFields gives it, with its paths, depth and kind.
 ---
 
 # WalkedField
 
-One field, as [`walkFields`](/api/schema/walkFields) gives it.
+One field, as the builder's [`walkFields`](/api/schema/SchemaBuilder#walkfields) gives it.
 
 ## Definition
 
@@ -14,11 +14,11 @@ One field, as [`walkFields`](/api/schema/walkFields) gives it.
   - `dataPath` <code>readonly (string | number)[]</code>: where the value is, with `'*'` for each list index
   - `definitionPath` <code>[DefinitionPath](/api/schema/DefinitionIssue#definitionpath)</code>: where the field is in the definition
   - `depth` <code>number</code>: 0 for the form's own fields, 1 for the fields inside them, and so on
-  - `kind` <code>[ValueKind](/api/schema/ValueKind)</code>: optional, only from the builder's `walkFields`
+  - `kind` <code>[ValueKind](/api/schema/ValueKind)</code>: optional, left out for a field with issues
   - `itemKind` <code>[ValueKind](/api/schema/ValueKind)</code>: optional, the kind of the items, for kind `array`
 
 ## Related
 
 ### Functions
 
-- [walkFields](/api/schema/walkFields)
+- [SchemaBuilder.walkFields](/api/schema/SchemaBuilder#walkfields)

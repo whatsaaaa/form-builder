@@ -6,7 +6,7 @@ import {
   issuesOfStep,
   type JsonField,
   type JsonForm,
-  type JsonFormSchema,
+  type BuiltSchema,
 } from '@whatsaaaa/form-builder-schema'
 import { form } from '../helpers'
 import { hideWhen } from '../extensions/hide-when'
@@ -190,9 +190,9 @@ describe('the schema Formisch and JSON Schema converters read', () => {
   )
 
   it('keeps its type', () => {
-    expectTypeOf(schema).toEqualTypeOf<JsonFormSchema>()
+    expectTypeOf(schema).toEqualTypeOf<BuiltSchema>()
     expectTypeOf<
-      Extract<JsonFormSchema, { type: 'object' }>['message']
+      Extract<BuiltSchema, { type: 'object' }>['message']
     >().toEqualTypeOf<undefined>()
   })
 

@@ -16,7 +16,10 @@ describe('definition.schema.json', () => {
     const { description: _, ...made } = toJsonSchema(
       createSchemaBuilder({ extensions: [affects()] }),
     )
-    const { description: __, ...file } = committed
+    const { description: __, $id, ...file } = committed
+    expect($id).toBe(
+      'https://whatsaaaa.github.io/form-builder/schema/v1/affects/definition.schema.json',
+    )
     expect(file).toEqual(made)
   })
 

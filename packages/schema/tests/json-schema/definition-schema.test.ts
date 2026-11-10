@@ -11,9 +11,11 @@ const layout = (value: object) => ({ ...form({ name: 'a', type: 'text' }), layou
 describe('definition.schema.json', () => {
   const check = new Ajv({ allErrors: true }).compile(definitionSchema)
 
-  it('is the schema of the default registry', () => {
+  it('is the schema of the default registry, with its $id', () => {
     // When this fails, run `pnpm docs:gen` and commit what it writes.
-    expect(definitionSchema).toEqual(toJsonSchema(createSchemaBuilder()))
+    const { $id, ...generated } = definitionSchema
+    expect($id).toBe('https://whatsaaaa.github.io/form-builder/schema/v1/definition.schema.json')
+    expect(generated).toEqual(toJsonSchema(createSchemaBuilder()))
   })
 
   it.each<[string, Fixture]>([

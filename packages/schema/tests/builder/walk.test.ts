@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   createSchemaBuilder,
   defineFieldType,
-  getInitialInput,
   type JsonField,
   type JsonForm,
-  walkFields,
   type WalkedField,
 } from '@whatsaaaa/form-builder-schema'
 import { fixtures } from '../fixtures'
@@ -16,7 +14,7 @@ import { form } from '../helpers'
 const childField = v.custom<JsonField>(() => true)
 
 // Consumer containers, built the way the built-in group and array types are.
-const section = defineFieldType({
+const panel = defineFieldType({
   kind: 'object',
   container: true,
   props: v.object({ fields: v.array(childField) }),
@@ -30,7 +28,7 @@ const list = defineFieldType({
   schema: (field, ctx) => v.array(ctx.buildField(field.of, [...ctx.path, 'of'])),
 })
 
-const builder = createSchemaBuilder({ fieldTypes: { section, list } })
+const builder = createSchemaBuilder({ fieldTypes: { panel, list } })
 
 const walk = (json: JsonForm) =>
   [...builder.walkFields(json)].map(({ type, dataPath, definitionPath, depth }) => ({
@@ -40,22 +38,10 @@ const walk = (json: JsonForm) =>
     depth,
   }))
 
-// What the walkFields function yields too: everything but the kinds.
-const withoutKinds = (walked: WalkedField) =>
-  Object.fromEntries(Object.entries(walked).filter(([key]) => key !== 'kind' && key !== 'itemKind'))
-
 const kinds = (json: JsonForm) =>
   [...builder.walkFields(json)].map(({ type, kind, itemKind }) => ({ type, kind, itemKind }))
 
 describe("the builder's walkFields", () => {
-  it.each(Object.entries(fixtures))('yields what walkFields does for the %s fixture', (_, json) => {
-    const definition = json as JsonForm
-
-    expect([...builder.walkFields(definition)].map(withoutKinds)).toEqual([
-      ...walkFields(definition),
-    ])
-  })
-
   it.each(Object.entries(fixtures))('gives every field of the %s fixture a kind', (_, json) => {
     for (const { kind } of builder.walkFields(json as JsonForm)) expect(kind).toBeTypeOf('string')
   })
@@ -94,13 +80,6 @@ describe("the builder's walkFields", () => {
     ])
   })
 
-  it('has no kinds from the walkFields function', () => {
-    const [field] = walkFields(form({ name: 'a', type: 'number' }))
-
-    expect(field).not.toHaveProperty('kind')
-    expect(field).not.toHaveProperty('itemKind')
-  })
-
   it("gives a display element its parent's path, even with a name", () => {
     const json = form(
       { type: 'heading', name: 'email', text: 'Contact' },
@@ -117,14 +96,13 @@ describe("the builder's walkFields", () => {
     ]
 
     expect(paths(builder.walkFields(json))).toEqual(expected)
-    expect(paths(walkFields(json))).toEqual(expected)
   })
 
   it('walks into your own container types', () => {
     const json = form(
       {
         name: 'person',
-        type: 'section',
+        type: 'panel',
         fields: [
           { type: 'heading', text: 'Name' },
           { name: 'first', type: 'text' },
@@ -134,7 +112,7 @@ describe("the builder's walkFields", () => {
     )
 
     expect(walk(json)).toEqual([
-      { type: 'section', dataPath: ['person'], definitionPath: ['fields', 0], depth: 0 },
+      { type: 'panel', dataPath: ['person'], definitionPath: ['fields', 0], depth: 0 },
       {
         type: 'heading',
         dataPath: ['person'],
@@ -155,7 +133,7 @@ describe("the builder's walkFields", () => {
   it('yields a field with issues, but not the fields inside it', () => {
     const json = form(
       { name: 'a', type: 'nope' },
-      { name: 's', type: 'section', required: true, fields: [{ name: 'b', type: 'text' }] },
+      { name: 's', type: 'panel', required: true, fields: [{ name: 'b', type: 'text' }] },
     )
 
     expect(builder.validate(json).success).toBe(false)
@@ -174,20 +152,11 @@ describe("the builder's walkFields", () => {
 })
 
 describe("the builder's getInitialInput", () => {
-  it.each(Object.entries(fixtures))(
-    'gives what getInitialInput does for the %s fixture',
-    (_, json) => {
-      const definition = json as JsonForm
-
-      expect(builder.getInitialInput(definition)).toEqual(getInitialInput(definition))
-    },
-  )
-
   it('nests your own container types', () => {
     const json = form(
       {
         name: 'person',
-        type: 'section',
+        type: 'panel',
         fields: [
           { name: 'first', type: 'text', default: 'Ana' },
           { name: 'last', type: 'text' },

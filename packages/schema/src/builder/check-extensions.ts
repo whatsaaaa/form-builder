@@ -1,4 +1,4 @@
-import type { WalkedField } from '../definition/walk-fields'
+import type { WalkedField } from '../definition/walked-field'
 import {
   type DefinitionIssue,
   type DefinitionPath,

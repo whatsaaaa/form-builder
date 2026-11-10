@@ -10,10 +10,10 @@
     validate,
   } from '@formisch/svelte'
   import {
-    fieldPathsOf,
+    fieldPathsOfStep,
     issuesOfStep,
     type JsonForm,
-    type JsonFormSchema,
+    type BuiltSchema,
     type LayoutStep,
   } from '@whatsaaaa/form-builder-schema'
   import { type Snippet, untrack } from 'svelte'
@@ -26,7 +26,7 @@
     slots = {},
   }: {
     json: JsonForm
-    onsubmit: SubmitHandler<JsonFormSchema>
+    onsubmit: SubmitHandler<BuiltSchema>
     /** The content of the layout's slots, by name. */
     slots?: Record<string, Snippet>
   } = $props()
@@ -67,7 +67,7 @@
     }
     if (after === undefined) return
     // That validation set errors on the next step's fields too, which nobody saw.
-    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOfStep(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
     index = after

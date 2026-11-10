@@ -24,31 +24,39 @@ Run `validate()` when you save a definition, and again before you render one you
 
 ## Issue codes
 
-| Code                  | What it means                                                                    |
-| --------------------- | -------------------------------------------------------------------------------- |
-| `invalid_shape`       | a value of the wrong type, like a string where a list goes, or a bad layout span |
-| `unsupported_version` | a `version` other than `"1"`                                                     |
-| `unknown_key`         | a key that the definition, the field's type or the layout node doesn't take      |
-| `unknown_type`        | a field type the builder doesn't know                                            |
-| `missing_name`        | a field with a value but no `name`                                               |
-| `invalid_name`        | a name with `.`, `[`, `]`, or the name `*` or `__proto__`                        |
-| `duplicate_name`      | two fields with the same name next to each other                                 |
-| `invalid_props`       | a prop that the type's props schema rejects, like an empty `options` list        |
-| `invalid_default`     | a `default` that the field's own schema rejects, rules included                  |
-| `unknown_rule`        | a rule or form rule the builder doesn't know                                     |
-| `unknown_param`       | a param that the rule doesn't take                                               |
-| `invalid_params`      | a param of the wrong type, or a `regex` pattern that JavaScript rejects          |
-| `kind_mismatch`       | a rule that doesn't fit the field's kind, or form rule fields of different kinds |
-| `unknown_field`       | a path that names no field with a value                                          |
-| `duplicate_placement` | a field placed twice in the layout                                               |
-| `unplaced_field`      | a field placed nowhere in the layout                                             |
-| `duplicate_id`        | two layout nodes with the same `id`                                              |
-| `invalid_value`       | a value in a condition that the field can't hold                                 |
-| `cycle`               | conditions that depend on each other                                             |
+| Code                  | What it means                                                                                             |
+| --------------------- | --------------------------------------------------------------------------------------------------------- |
+| `invalid_shape`       | a value of the wrong type, like a string where a list goes                                                |
+| `unsupported_version` | a `version` other than `"1"`                                                                              |
+| `unknown_key`         | a key that the definition, the field's type or the layout node doesn't take                               |
+| `unknown_type`        | a field type the builder doesn't know                                                                     |
+| `missing_name`        | a field with a value but no `name`                                                                        |
+| `invalid_name`        | a name with `.`, `[`, `]`, or the name `*` or `__proto__`                                                 |
+| `duplicate_name`      | two fields with the same name next to each other                                                          |
+| `invalid_props`       | a prop that the type's props schema rejects, like an empty `options` list                                 |
+| `invalid_default`     | a `default` that the field's own schema rejects, rules included                                           |
+| `unknown_rule`        | a rule or form rule the builder doesn't know                                                              |
+| `unknown_param`       | a param that the rule doesn't take                                                                        |
+| `invalid_params`      | a param of the wrong type, or a `regex` pattern that JavaScript rejects                                   |
+| `kind_mismatch`       | a rule that doesn't fit the field's kind, or form rule fields of different kinds                          |
+| `unknown_field`       | a path that names no field with a value                                                                   |
+| `duplicate_placement` | a field placed twice in the layout                                                                        |
+| `unplaced_field`      | a field placed nowhere in the layout                                                                      |
+| `duplicate_id`        | two layout nodes with the same `id`                                                                       |
+| `invalid_span`        | a layout `span` that is no whole number from 1 to 12, or outside a row, or spans that don't fit their row |
+| `invalid_value`       | a value in a condition that the field can't hold                                                          |
+| `cycle`               | conditions that depend on each other                                                                      |
+
+### Codes are API, messages are not
+
+An issue's `code` and `path` are part of the public API, so you can rely on them, for example to point an editor at the key or to translate the issue. Its `message` is not: it can change in any release, and part of it comes from Valibot.
+
+- A minor version can add a code for a new kind of mistake. Handle codes you don't know, for example by showing the message.
+- Only a major version renames a code, or moves a mistake from one code to another.
 
 ## Fields
 
-- **Keys** on a field must be one of the keys every field takes, or a prop of its type. Put your renderer's settings under `ui`, which is never checked.
+- **Keys** on a field must be one of the keys every field takes, or a prop of its type. Put your renderer's settings under `ui`, which is never checked. The [reserved keys](/api/schema/reserved-keys) kept for later versions, like `hidden`, are `unknown_key` for now.
 - **Defaults** must pass the field's own schema, rules included. An empty default, like `""`, counts as none.
 - **Names** are one key of the value, so they can't hold the characters paths use.
 
@@ -62,7 +70,8 @@ The layout reports on `['layout']` and below, like `['layout', 'steps', 1, 'item
 
 - A path that names no field with a value, or reaches into the items of a list, is `unknown_field`.
 - A field placed twice is `duplicate_placement` on the second place, and one placed nowhere is `unplaced_field` on the list that misses it.
-- A span that is no whole number from 1 to 12, a `span` outside a row, the spans of a row over 12 columns or that can't be shared evenly, and a field type with a value written in the layout are `invalid_shape`.
+- A span that is no whole number from 1 to 12, a `span` outside a row, and the spans of a row over 12 columns or that can't be shared evenly are `invalid_span`.
+- A field type with a value written in the layout is `invalid_shape`, and a layout node type kept for a later version, like `tabs`, is `unknown_type`.
 
 ## Conditions
 

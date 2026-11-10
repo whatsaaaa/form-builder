@@ -7,7 +7,7 @@ import type { FieldPath } from './to-field-path'
  * layout order, a group or an array before its fields. For example, to clear a step's errors with
  * Formisch's `setErrors` when the user first gets to it.
  */
-export function fieldPathsOf(step: LayoutStep, input: unknown): FieldPath[] {
+export function fieldPathsOfStep(step: LayoutStep, input: unknown): FieldPath[] {
   return step.fields.flatMap((field) => expand(field.dataPath, input))
 }
 

@@ -1,13 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import {
-  createSchemaBuilder,
-  getInitialInput,
-  type JsonForm,
-  walkFields,
-} from '@whatsaaaa/form-builder-schema'
+import { createSchemaBuilder, type JsonForm } from '@whatsaaaa/form-builder-schema'
 import array from '../../../../fixtures/field-types/array.json'
 import group from '../../../../fixtures/field-types/group.json'
 import { form } from '../helpers'
+
+const { getInitialInput, walkFields } = createSchemaBuilder()
 
 // The two nested fixtures in one definition.
 const nested = { version: '1', fields: [...group.fields, ...array.fields] } as JsonForm
@@ -20,7 +17,7 @@ const walk = (json: JsonForm) =>
     depth,
   }))
 
-describe('walkFields', () => {
+describe("the builder's walkFields", () => {
   it('yields every field of a nested definition, parents first', () => {
     expect(walk(nested)).toEqual([
       { type: 'group', dataPath: ['address'], definitionPath: ['fields', 0], depth: 0 },
@@ -95,28 +92,14 @@ describe('walkFields', () => {
     ])
   })
 
-  it('walks into the built-in group and array types only', () => {
-    const json = form({ name: 's', type: 'section', fields: [{ name: 'a', type: 'text' }] })
-
-    expect(walk(json).map((field) => field.type)).toEqual(['section'])
-  })
-
   it('leaves out display elements, like the builder', () => {
     const json = form({ name: 'intro', type: 'heading', text: 'Hi', default: 'x' })
 
     expect(getInitialInput(json)).toEqual({})
-    expect(createSchemaBuilder().getInitialInput(json)).toEqual({})
-  })
-
-  it('reads a group or array without child fields as empty', () => {
-    const json = form({ name: 'g', type: 'group' }, { name: 'l', type: 'array' })
-
-    expect(walk(json).map((field) => field.type)).toEqual(['group', 'array'])
-    expect(getInitialInput(json)).toEqual({ g: {}, l: [] })
   })
 })
 
-describe('getInitialInput', () => {
+describe("the builder's getInitialInput", () => {
   it('nests defaults and gives [] for an array without a default', () => {
     expect(getInitialInput(nested)).toEqual({
       address: { country: 'rs' },

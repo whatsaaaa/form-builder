@@ -1,5 +1,5 @@
 import * as v from 'valibot'
-import type { JsonField } from '../definition/json-form-schema'
+import type { JsonField } from '../definition/json-form'
 
 // The builder checks child fields itself, at their own paths, so these take any value. They are
 // two named schemas so toJsonSchema() can tell them apart and point each at the right fields.

@@ -1,14 +1,14 @@
 // Public API. Everything a consumer can import is exported here and nowhere else.
 import type { SchemaExtension } from '@whatsaaaa/form-builder-schema'
 import { checkAffects } from './check/check-affects'
-import { affect, affectsProps, condition } from './definition/affect'
+import { affect, affectsProps, type AffectsPropsSchema, condition } from './definition/affect'
 
-export type { Affect, Condition, Effect, Scalar } from './definition/affect'
+export type { Affect, AffectsPropsSchema, Condition, Effect, Scalar } from './definition/affect'
 
 /** The extension `affects()` gives, with the type of the key it adds, for `defineForm()`. */
 export interface AffectsExtension extends SchemaExtension {
-  readonly fieldProps: typeof affectsProps
-  readonly layoutProps: typeof affectsProps
+  readonly fieldProps: AffectsPropsSchema
+  readonly layoutProps: AffectsPropsSchema
 }
 
 /**

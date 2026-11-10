@@ -8,9 +8,24 @@ The extension [`affects()`](/api/affects/affects) gives. It is a [`SchemaExtensi
 
 ```ts
 interface AffectsExtension extends SchemaExtension {
-  readonly fieldProps: typeof affectsProps
-  readonly layoutProps: typeof affectsProps
+  readonly fieldProps: AffectsPropsSchema
+  readonly layoutProps: AffectsPropsSchema
 }
+```
+
+## AffectsPropsSchema
+
+The Valibot schema of the key the package adds: an optional `affects`, a list of [`Affect`](/api/affects/Affect)s.
+
+```ts
+type AffectsPropsSchema = ObjectSchema<
+  {
+    readonly affects: OptionalSchema<
+      ArraySchema<LazySchema<GenericSchema<Affect>>>
+    >
+  },
+  undefined
+>
 ```
 
 ## Related

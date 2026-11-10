@@ -2,7 +2,7 @@ import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import {
   createSchemaBuilder,
-  fieldPathsOf,
+  fieldPathsOfStep,
   issuesOfStep,
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
@@ -109,12 +109,12 @@ describe('issuesOfStep', () => {
   })
 })
 
-describe('fieldPathsOf', () => {
+describe('fieldPathsOfStep', () => {
   it('gives every path of the step for this input, with each array item', () => {
     const input = { tags: ['a', 'b'], lines: [{}, { product: 'P' }] }
 
-    expect(fieldPathsOf(one!, input)).toEqual([['email'], ['name']])
-    expect(fieldPathsOf(two!, input)).toEqual([
+    expect(fieldPathsOfStep(one!, input)).toEqual([['email'], ['name']])
+    expect(fieldPathsOfStep(two!, input)).toEqual([
       ['lines'],
       ['lines', 0, 'product'],
       ['lines', 1, 'product'],
@@ -126,7 +126,7 @@ describe('fieldPathsOf', () => {
   })
 
   it('gives no item paths for an array the input has not', () => {
-    expect(fieldPathsOf(two!, {})).toEqual([['lines'], ['address', 'city'], ['tags']])
-    expect(fieldPathsOf(two!, undefined)).toEqual([['lines'], ['address', 'city'], ['tags']])
+    expect(fieldPathsOfStep(two!, {})).toEqual([['lines'], ['address', 'city'], ['tags']])
+    expect(fieldPathsOfStep(two!, undefined)).toEqual([['lines'], ['address', 'city'], ['tags']])
   })
 })

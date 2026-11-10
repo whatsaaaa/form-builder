@@ -10,9 +10,9 @@ import {
   type FieldNode,
   type FormLayout,
   type JsonForm,
-  type JsonFormSchema,
+  type BuiltSchema,
   type SchemaBuilder,
-  type TypedJsonFormSchema,
+  type TypedBuiltSchema,
   type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 import { useEffect, useMemo, useState } from 'react'
@@ -34,7 +34,7 @@ export interface UseJsonFormOptions {
 }
 
 /** What `useJsonForm` returns. Pass it to `<JsonFields>`. */
-export interface JsonFormInstance<TSchema extends FormSchema = JsonFormSchema> {
+export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
   /** The Formisch form: pass it to Formisch's `<Form of>`, or to any of its methods. */
   readonly form: FormStore<TSchema>
   readonly definition: JsonForm
@@ -78,7 +78,7 @@ export function useJsonForm(definition: JsonForm, options?: UseJsonFormOptions):
 export function useJsonForm<TInput extends object, TOutput extends object = TInput>(
   definition: JsonForm,
   options?: UseJsonFormOptions,
-): JsonFormInstance<TypedJsonFormSchema<TInput, TOutput>>
+): JsonFormInstance<TypedBuiltSchema<TInput, TOutput>>
 export function useJsonForm(
   definition: JsonForm,
   options: UseJsonFormOptions = {},
