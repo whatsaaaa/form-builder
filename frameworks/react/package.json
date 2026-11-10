@@ -65,7 +65,7 @@
   },
   "peerDependencies": {
     "@formisch/react": "^1.2.0",
-    "@whatsaaaa/form-builder-schema": "workspace:^0.15.0",
+    "@whatsaaaa/form-builder-schema": "workspace:^",
     "react": "^18.0.0 || ^19.0.0",
     "valibot": "^1.4.1"
   }

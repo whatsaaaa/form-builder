@@ -59,7 +59,7 @@
   },
   "peerDependencies": {
     "@formisch/vue": "^1.1.1",
-    "@whatsaaaa/form-builder-schema": "workspace:^0.15.0",
+    "@whatsaaaa/form-builder-schema": "workspace:^",
     "valibot": "^1.4.1",
     "vue": "^3.5.2"
   }
