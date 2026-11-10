@@ -167,6 +167,17 @@ describe('the other issues of a list of fields', () => {
       { path: 'age', message: 'Required' },
     ])
   })
+
+  // Valibot uses a schema's own message before the `message` of a parse's config, so that one
+  // never reaches the issues of a list's object. It still reaches the issues of the fields.
+  it("don't get the message from a parse's config", () => {
+    const parse = (input: unknown) =>
+      v.safeParse(schema, input, { message: 'config' }).issues?.map((issue) => issue.message)
+
+    expect(parse(null)).toEqual(['Invalid type: Expected Object but received null'])
+    expect(parse({ address: 1 })).toEqual(['Invalid type: Expected Object but received 1'])
+    expect(parse({ address: { city: 1 } })).toEqual(['config'])
+  })
 })
 
 describe('the schema Formisch and JSON Schema converters read', () => {
