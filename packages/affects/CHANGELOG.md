@@ -1,5 +1,16 @@
 # @whatsaaaa/form-builder-affects
 
+## 0.2.0
+
+### Minor Changes
+
+- [#49](https://github.com/whatsaaaa/form-builder/pull/49) [`b096dbd`](https://github.com/whatsaaaa/form-builder/commit/b096dbdec3bd9e3033a72d4b14e01cd36255971f) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `AffectsPropsSchema`, the type of the schema of the `affects` key that `AffectsExtension` has, is exported. `definition.schema.json` has an `$id`, and the docs site hosts it there, at https://whatsaaaa.github.io/form-builder/schema/v1/affects/definition.schema.json.
+
+### Patch Changes
+
+- Updated dependencies [[`b096dbd`](https://github.com/whatsaaaa/form-builder/commit/b096dbdec3bd9e3033a72d4b14e01cd36255971f)]:
+  - @whatsaaaa/form-builder-schema@0.17.0
+
 ## 0.1.3
 
 ### Patch Changes

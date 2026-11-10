@@ -1,5 +1,16 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.4.0
+
+### Minor Changes
+
+- [#49](https://github.com/whatsaaaa/form-builder/pull/49) [`b096dbd`](https://github.com/whatsaaaa/form-builder/commit/b096dbdec3bd9e3033a72d4b14e01cd36255971f) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - The schema types it re-exports follow the schema package's renames: `JsonFormSchema` is now `BuiltSchema`, and `TypedJsonFormSchema` is now `TypedBuiltSchema`.
+
+### Patch Changes
+
+- Updated dependencies [[`b096dbd`](https://github.com/whatsaaaa/form-builder/commit/b096dbdec3bd9e3033a72d4b14e01cd36255971f)]:
+  - @whatsaaaa/form-builder-schema@0.17.0
+
 ## 0.3.3
 
 ### Patch Changes
