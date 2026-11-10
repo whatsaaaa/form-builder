@@ -28,7 +28,7 @@ bun add @whatsaaaa/form-builder-vue @whatsaaaa/form-builder-schema @formisch/vue
 
 :::
 
-Vue 3.5, `@formisch/vue` 1.1 and Valibot 1.3 or later are required.
+Vue 3.5.2, `@formisch/vue` 1.1.1 and Valibot 1.4.1 or later are required. `@whatsaaaa/form-builder-schema` is a peer dependency, so install it too: the adapter and your code share its one copy, with the `createSchemaBuilder` and types your code imports.
 
 ## Usage
 

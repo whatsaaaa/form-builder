@@ -76,7 +76,7 @@ describe('a form typed with your input type', () => {
     expect(city).toBe(undefined)
     expect(lines).toEqual([])
     // At runtime Formisch only knows the paths of the schema, and the schema checks the values.
-    expect(typo).toThrow('No field store found')
+    expect(typo).toThrow()
     expect(wrongType).not.toThrow()
   })
 

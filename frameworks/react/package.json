@@ -44,9 +44,6 @@
     "lint:pkg": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only",
     "size": "size-limit"
   },
-  "dependencies": {
-    "@whatsaaaa/form-builder-schema": "workspace:^"
-  },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@formisch/react": "^1.2.0",
@@ -55,6 +52,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitest/coverage-v8": "^5.0.5",
     "@whatsaaaa/form-builder-affects": "workspace:^",
+    "@whatsaaaa/form-builder-schema": "workspace:^",
     "happy-dom": "^20.0.0",
     "publint": "^0.3.25",
     "react": "^19.3.1",
@@ -67,6 +65,7 @@
   },
   "peerDependencies": {
     "@formisch/react": "^1.2.0",
+    "@whatsaaaa/form-builder-schema": "workspace:^0.15.0",
     "react": "^18.0.0 || ^19.0.0",
     "valibot": "^1.4.1"
   }
