@@ -191,9 +191,7 @@ describe('the schema Formisch and JSON Schema converters read', () => {
 
   it('keeps its type', () => {
     expectTypeOf(schema).toEqualTypeOf<BuiltSchema>()
-    expectTypeOf<
-      Extract<BuiltSchema, { type: 'object' }>['message']
-    >().toEqualTypeOf<undefined>()
+    expectTypeOf<Extract<BuiltSchema, { type: 'object' }>['message']>().toEqualTypeOf<undefined>()
   })
 
   it('stays an object schema with the same entries and the same JSON Schema', () => {
