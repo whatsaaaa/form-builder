@@ -1,5 +1,18 @@
 # @whatsaaaa/form-builder-react
 
+## 0.3.0
+
+### Minor Changes
+
+- [#38](https://github.com/whatsaaaa/form-builder/pull/38) [`76eba28`](https://github.com/whatsaaaa/form-builder/commit/76eba28572eb58ea2d1b6eacef2a960f0771a355) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - Conditions: with a builder that has extensions, like `createSchemaBuilder({ extensions: [affects()] })`, `<JsonFields>` and `<JsonField>` leave out the fields, sections, rows and groups the conditions hide, `steps.list` leaves out the steps whose fields are all hidden, and Next and Back skip them. `useJsonForm` sets the fields `hideAndClear` clears blank with Formisch's `setInput`, wherever they render, and `jsonForm.visibility` is the state for your own renderers. The form renders again only when what is hidden changes, not on every keystroke. Without conditions, nothing changes.
+
+  Fixed: a Next button that turns into the submit button on the last step no longer submits the form as the user gets there, which showed the last step's errors at once in a browser.
+
+### Patch Changes
+
+- Updated dependencies [[`76eba28`](https://github.com/whatsaaaa/form-builder/commit/76eba28572eb58ea2d1b6eacef2a960f0771a355)]:
+  - @whatsaaaa/form-builder-schema@0.15.0
+
 ## 0.2.0
 
 ### Minor Changes
