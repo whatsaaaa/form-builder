@@ -8,12 +8,8 @@ From 1.0, the schema, Vue and React packages follow [semantic versioning](https:
 
 ## Packages
 
-| Package                           | Version | Promise                                                                                    |
-| --------------------------------- | ------- | ------------------------------------------------------------------------------------------ |
-| `@whatsaaaa/form-builder-schema`  | 1.x     | Semantic versioning, as on this page                                                       |
-| `@whatsaaaa/form-builder-vue`     | 1.x     | Semantic versioning, as on this page                                                       |
-| `@whatsaaaa/form-builder-react`   | 1.x     | Semantic versioning, as on this page                                                       |
-| `@whatsaaaa/form-builder-affects` | 0.x     | Before 1.0: a minor can break, a patch can't. It goes 1.0 once its conditions have settled |
+- **`@whatsaaaa/form-builder-schema`, `@whatsaaaa/form-builder-vue` and `@whatsaaaa/form-builder-react`** are 1.x, and follow semantic versioning as this page describes.
+- **`@whatsaaaa/form-builder-affects`** stays before 1.0: a minor can break, a patch can't. It goes 1.0 once its conditions have settled.
 
 The affects package plugs into the schema package's [extension contract](/guide/extensions#how-the-contract-grows), which is part of the schema package's 1.x API. So the affects package can change on its own, while extensions you write keep working with every schema 1.x.
 

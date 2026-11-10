@@ -12,20 +12,16 @@ The schema, Vue and React packages go to 1.0. The affects package stays before 1
 
 ## Renamed
 
-| Before                | Now                | Why                                                                                                                                                  |
-| --------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `JsonFormSchema`      | `BuiltSchema`      | It is the Valibot schema `build()` gives, not a JSON one: `JsonForm` is the definition, and `JsonSchema` the JSON Schema. `FormSchema` is Formisch's |
-| `TypedJsonFormSchema` | `TypedBuiltSchema` | The same, for the typed schema                                                                                                                       |
-| `fieldPathsOf`        | `fieldPathsOfStep` | It reads a step, like `issuesOfStep`, so the two step helpers are named alike                                                                        |
+- **`JsonFormSchema` is now `BuiltSchema`.** It is the Valibot schema `build()` gives, not a JSON one: `JsonForm` is the definition, and `JsonSchema` the JSON Schema. `FormSchema` is Formisch's.
+- **`TypedJsonFormSchema` is now `TypedBuiltSchema`**, the same for the typed schema.
+- **`fieldPathsOf` is now `fieldPathsOfStep`.** It reads a step, like `issuesOfStep`, so the two step helpers are named alike.
 
 The old names are gone, with no alias: rename them in your imports.
 
 ## Removed
 
-| Removed                 | Use instead                                   |
-| ----------------------- | --------------------------------------------- |
-| `getInitialInput(json)` | `createSchemaBuilder().getInitialInput(json)` |
-| `walkFields(json)`      | `createSchemaBuilder().walkFields(json)`      |
+- **`getInitialInput(json)`**: use `createSchemaBuilder().getInitialInput(json)`.
+- **`walkFields(json)`**: use `createSchemaBuilder().walkFields(json)`.
 
 The functions only knew the built-in `group` and `array` types, while the builder's methods of the same name read every container type the builder has, and give each field its kind. The builder's `getInitialInput` leaves out a field with issues, so check the definition with `validate()` first.
 

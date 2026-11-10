@@ -19,7 +19,7 @@ const definition = {
 } satisfies JsonForm
 
 // #region handler
-// The same options as the client's builder: extensions, field types, rules and messages.
+// The client's builder options: extensions, types, rules and messages.
 const builder = createSchemaBuilder({ extensions: [affects()] })
 const schema = builder.build(definition)
 
@@ -45,8 +45,8 @@ const output = v.parse(schema, {
   email: 'jane@example.com',
   birthDate: '2000-01-15',
 })
-// output.birthDate is a Date. JSON.stringify writes it as a timestamp, like
-// "2000-01-14T23:00:00.000Z", which a `date` rejects: send the input instead.
+// output.birthDate is a Date. JSON.stringify writes it as a timestamp,
+// like "2000-01-14T23:00:00.000Z", which a `date` rejects.
 const fromOutput = handleSignup(JSON.parse(JSON.stringify(output))) // 422
 const fromInput = handleSignup({
   email: 'jane@example.com',
@@ -55,8 +55,8 @@ const fromInput = handleSignup({
 // #endregion dates
 
 // #region files
-// In the browser: the form's input, from Formisch's getInput(form), as JSON in one
-// part, and each file in a part of its own.
+// In the browser: the form's input, from Formisch's getInput(form), as
+// JSON in one part, and each file in a part of its own.
 const formInput = {
   email: 'jane@example.com',
   cv: new File(['%PDF'], 'cv.pdf', { type: 'application/pdf' }),
@@ -70,7 +70,7 @@ const request = new Request('https://example.com/signup', {
   body,
 })
 
-// On the server: put the files back where the definition has them, then parse.
+// On the server: put the files back in place, then parse.
 const data = await request.formData()
 const input = {
   ...JSON.parse(String(data.get('input'))),
