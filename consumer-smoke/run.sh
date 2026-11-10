@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
 # Installs the packed packages into a new npm project, the way a user gets them from the registry,
-# then type-checks a consumer against their published types with skipLibCheck off, and runs it:
-# a server parse and a server render with each adapter.
+# then type-checks a consumer against their published types with skipLibCheck off, compiles it,
+# and runs it with each Node: an ES import with a server parse and a server render with each
+# adapter, and a CommonJS require() of each package.
 #
-# Usage: consumer-smoke/run.sh min|latest
+# Usage: consumer-smoke/run.sh min|latest [node...]
 #   min     the lowest TypeScript and peers the packages support
 #   latest  the latest of each
+#   node    the Node binaries to run the consumer with, node on the PATH by default
 set -euo pipefail
+
+mode=${1:-}
+nodes=("${@:2}")
+[ ${#nodes[@]} -gt 0 ] || nodes=(node)
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
-case "${1:-}" in
+case "$mode" in
   min)
     peers=(
       typescript@5.3.3
@@ -54,7 +60,7 @@ for package in packages/schema packages/affects frameworks/vue frameworks/react;
 done
 
 mkdir "$work/app"
-cp "$root"/consumer-smoke/*.ts "$root"/consumer-smoke/tsconfig.json "$work/app"
+cp "$root"/consumer-smoke/*.ts "$root"/consumer-smoke/*.cjs "$root"/consumer-smoke/tsconfig.json "$work/app"
 cd "$work/app"
 npm init --yes > /dev/null
 npm pkg set type=module
@@ -63,5 +69,9 @@ npm ls --depth=0
 
 npx tsc --version
 npx tsc -p .
-node react.ts
-node vue.ts
+for node in "${nodes[@]}"; do
+  "$node" --version
+  "$node" out/react.js
+  "$node" out/vue.js
+  "$node" require.cjs
+done

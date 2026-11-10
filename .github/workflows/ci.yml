@@ -149,14 +149,14 @@ jobs:
       - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} test
       - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} type-check
 
-  # The schema and affects tests on the older Node versions they support, as they run on servers.
-  # pnpm installs with Node 24, and the tests run on the matrix version.
+  # The schema and affects tests on each Node version Vitest supports, as they run on servers. pnpm
+  # installs with Node 24, and the tests run on the matrix version.
   node:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22]
+        node: [22, 24]
     name: node (${{ matrix.node }})
     steps:
       - uses: actions/checkout@v7
@@ -176,8 +176,9 @@ jobs:
         run: node node_modules/vitest/vitest.mjs run
 
   # The packed packages in a new npm project, with the lowest TypeScript and peers they support:
-  # a type-check of their published types with skipLibCheck off, and a server render with each
-  # adapter. latest-peers.yml runs it with the latest.
+  # a type-check of their published types with skipLibCheck off, then an ES import, a server render
+  # with each adapter and a CommonJS require() on Node 24 and on Node 20.19, the lowest Node that
+  # requires ES modules without a flag. latest-peers.yml runs it with the latest peers.
   consumer-smoke-min:
     runs-on: ubuntu-latest
     steps:
@@ -185,7 +186,11 @@ jobs:
       - uses: pnpm/action-setup@v6 # use the latest major
       - uses: actions/setup-node@v7
         with:
+          node-version: 20.19.0
+      - run: echo "NODE_20=$(command -v node)" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v7
+        with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: consumer-smoke/run.sh min
+      - run: consumer-smoke/run.sh min node "$NODE_20"

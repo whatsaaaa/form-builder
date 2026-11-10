@@ -50,7 +50,7 @@ frameworks/      thin adapters for Vue and React
 apps/            the playground and the docs site (a visual builder is planned)
 fixtures/        sample JSON forms every test suite shares
 integration/     tests that run the fixtures through Formisch's own bindings, and the renderers the docs show
-consumer-smoke/  the packed packages in a new npm project at the lowest or latest peers: `consumer-smoke/run.sh min`
+consumer-smoke/  the packed packages in a new npm project at the lowest or latest peers: `consumer-smoke/run.sh min [node...]`
 ```
 
 The JSON Schema of the definition format ships with the schema package as

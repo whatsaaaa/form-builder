@@ -3,7 +3,7 @@ import { Form } from '@formisch/vue'
 import { JsonFields, useJsonForm, type ValueFieldProps } from '@whatsaaaa/form-builder-vue'
 import { createSSRApp, defineComponent, type FunctionalComponent, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
-import { builder, checkServer, definition } from './definition.ts'
+import { builder, checkServer, definition } from './definition.js'
 
 const TextInput: FunctionalComponent<ValueFieldProps> = ({ field, input, inputProps, setInput }) =>
   h('label', [

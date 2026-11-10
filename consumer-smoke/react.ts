@@ -1,10 +1,9 @@
-// Server-renders the form with the React adapter, the way an SSR framework does. No JSX, so Node
-// runs this file as it is.
+// Server-renders the form with the React adapter, the way an SSR framework does, without JSX.
 import { Form } from '@formisch/react'
 import { JsonFields, useJsonForm, type ValueFieldProps } from '@whatsaaaa/form-builder-react'
 import { createElement as h } from 'react'
 import { renderToString } from 'react-dom/server'
-import { builder, checkServer, definition } from './definition.ts'
+import { builder, checkServer, definition } from './definition.js'
 
 function TextInput({ field, input, inputProps, setInput }: ValueFieldProps) {
   return h(

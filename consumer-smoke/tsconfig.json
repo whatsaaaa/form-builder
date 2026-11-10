@@ -7,10 +7,9 @@
     "types": ["node"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "strict": true,
     "skipLibCheck": false,
-    "noEmit": true
+    "outDir": "out"
   }
 }
