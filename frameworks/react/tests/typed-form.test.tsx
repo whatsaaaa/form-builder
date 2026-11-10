@@ -3,7 +3,7 @@ import {
   JsonField,
   JsonFields,
   type JsonFormInstance,
-  type TypedJsonFormSchema,
+  type TypedBuiltSchema,
   useJsonForm,
 } from '@whatsaaaa/form-builder-react'
 import { useEffect } from 'react'
@@ -34,7 +34,7 @@ interface OrderInput {
   lines: { quantity: number }[]
 }
 
-type OrderForm = JsonFormInstance<TypedJsonFormSchema<OrderInput>>
+type OrderForm = JsonFormInstance<TypedBuiltSchema<OrderInput>>
 
 /** The quantity of the first line, read with Formisch's own `useField` on a nested path. */
 function Quantity({ of }: { of: OrderForm }) {

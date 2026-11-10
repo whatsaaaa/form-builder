@@ -5,10 +5,10 @@ export type {
   FieldPath,
   FieldRole,
   FormLayout,
-  JsonFormSchema,
+  BuiltSchema,
   LayoutNode,
   LayoutStep,
-  TypedJsonFormSchema,
+  TypedBuiltSchema,
   VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
 export type {

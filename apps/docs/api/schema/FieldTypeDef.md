@@ -13,8 +13,8 @@ A field type, as [`defineFieldType`](/api/schema/defineFieldType) takes it.
 ## Definition
 
 - `FieldTypeDef`
-  - `kind` <code>[ValueKind](/api/schema/ValueKind) | ((field) =&gt; [ValueKind](/api/schema/ValueKind))</code>: the kind of its value, or a function of the field with its props parsed
-  - `itemKind` <code>[ValueKind](/api/schema/ValueKind) | ((field) =&gt; [ValueKind](/api/schema/ValueKind))</code>: optional, the kind of each item for kind `array`
+  - `kind` <code>[ValueKind](/api/schema/ValueKind) | [KindOf](/api/schema/FieldTypeDef#kindof)</code>: the kind of its value, or a function of the field with its props parsed
+  - `itemKind` <code>[ValueKind](/api/schema/ValueKind) | [KindOf](/api/schema/FieldTypeDef#kindof)</code>: optional, the kind of each item for kind `array`
   - `props` <code>TProps</code>: optional, the extra keys it takes
   - `schema` <code>(field: [FieldWithProps](/api/schema/FieldTypeDef#fieldwithprops), ctx: [BuildContext](/api/schema/FieldTypeDef#buildcontext)) =&gt; [AnySchema](/api/schema/FieldTypeDef#anyschema-anyaction-anyobjectschema)</code>: the schema of its value. Required unless its kind is `none`
   - `defaultRules` <code>readonly [JsonRule](/api/schema/JsonRule)[]</code>: optional, rules every field of the type gets
@@ -40,6 +40,14 @@ type FieldWithProps<TProps> = JsonField & InferOutput<TProps>
 ```
 
 A field with its type's props parsed and typed.
+
+## KindOf
+
+A `kind` or `itemKind` that depends on the props: a select with number options has kind `number`.
+
+```ts
+type KindOf<TProps> = (field: FieldWithProps<TProps>) => ValueKind
+```
 
 ## BuildContext
 

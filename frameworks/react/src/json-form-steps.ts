@@ -9,7 +9,7 @@ import {
 } from '@formisch/react'
 import {
   type FieldPath,
-  fieldPathsOf,
+  fieldPathsOfStep,
   type FormLayout,
   issuesOfStep,
   type LayoutStep,
@@ -136,7 +136,7 @@ export function useJsonFormSteps(
     function move(target: number) {
       leave()
       const errors = at.left.get(target)
-      for (const path of fieldPathsOf(all[target] as LayoutStep, getInput(form))) {
+      for (const path of fieldPathsOfStep(all[target] as LayoutStep, getInput(form))) {
         setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
       }
       at.index = target
@@ -145,7 +145,7 @@ export function useJsonFormSteps(
 
     /** Keeps the errors of the current step, for when the user comes back to it. */
     function leave() {
-      const paths = fieldPathsOf(all[at.index] as LayoutStep, getInput(form))
+      const paths = fieldPathsOfStep(all[at.index] as LayoutStep, getInput(form))
       const errors = paths.map((path): [string, Errors] => [
         JSON.stringify(path),
         getErrors(form, { path } as never),

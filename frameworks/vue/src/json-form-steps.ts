@@ -9,7 +9,7 @@ import {
 } from '@formisch/vue'
 import {
   type FieldPath,
-  fieldPathsOf,
+  fieldPathsOfStep,
   type FormLayout,
   issuesOfStep,
   type LayoutStep,
@@ -124,7 +124,7 @@ export function useJsonFormSteps(
   function move(target: number) {
     leave()
     const errors = left.get(target)
-    for (const path of fieldPathsOf(all[target] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOfStep(all[target] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
     }
     at.value = target
@@ -132,7 +132,7 @@ export function useJsonFormSteps(
 
   /** Keeps the errors of the current step, for when the user comes back to it. */
   function leave() {
-    const paths = fieldPathsOf(current.value, getInput(form))
+    const paths = fieldPathsOfStep(current.value, getInput(form))
     const errors = paths.map((path): [string, Errors] => [JSON.stringify(path), errorsAt(path)])
     left.set(at.value, new Map(errors))
   }

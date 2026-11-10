@@ -6,7 +6,7 @@ import {
   type JsonField,
   type JsonForm,
   type JsonFormRule,
-  type JsonFormSchema,
+  type BuiltSchema,
 } from '@whatsaaaa/form-builder-schema'
 import { timeZones, useTimeZone } from '../helpers'
 
@@ -328,8 +328,8 @@ describe('running form rules', () => {
   })
 
   it('puts the form rules in a pipe after the object schema', () => {
-    expectTypeOf(passwords).toEqualTypeOf<JsonFormSchema>()
-    const { pipe } = passwords as Extract<JsonFormSchema, { pipe: unknown }>
+    expectTypeOf(passwords).toEqualTypeOf<BuiltSchema>()
+    const { pipe } = passwords as Extract<BuiltSchema, { pipe: unknown }>
 
     expect(pipe.map((item) => item.type)).toEqual(['object', 'raw_check'])
     // A new object from the entries leaves the form rules out, unless it takes the pipe's checks.

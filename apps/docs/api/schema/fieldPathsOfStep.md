@@ -2,12 +2,12 @@
 description: The Formisch path of every field placed in a step, for an input.
 ---
 
-# fieldPathsOf
+# fieldPathsOfStep
 
 Gives the Formisch path of every field with a value placed in a step, for an input, with the fields of each list item there is.
 
 ```ts
-const paths = fieldPathsOf(step, input)
+const paths = fieldPathsOfStep(step, input)
 ```
 
 ## Parameters

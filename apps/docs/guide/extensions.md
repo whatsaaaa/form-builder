@@ -31,6 +31,17 @@ An extension is an object that matches the [`SchemaExtension`](/api/schema/Schem
 
 The builder does the rest: groups, lists, sections and steps hide what is in them, a hidden field reads as empty in other conditions, and loops are `cycle` issues.
 
+## How the contract grows
+
+The schema package keeps `SchemaExtension` and the types around it stable within a major version. A minor version can only add to them, so an extension written today keeps working:
+
+- **New optional members** on any of the interfaces. An extension never has to set one.
+- **New kinds of target** in `ctx.targets`, for new places in a definition. Skip the kinds you don't know: don't throw on them, and don't treat them as fields.
+- **New optional result fields** in `TargetConditions` and in what its `evaluate()` returns, for new effects. Leaving them out keeps today's meaning.
+- **New members on `ctx`**, and new issue codes for `ctx.issue()`.
+
+Removing or renaming a member, making one required, or changing what one means only happens in a major version. The extension's own keys, like `affects`, are versioned by its own package.
+
 ## Mistakes
 
-A key that an extension adds can't be a reserved key, a prop of a field type, or a key of another extension. Mistakes like these throw a `TypeError` from `createSchemaBuilder()`.
+A key that an extension adds can't be a [reserved key](/api/schema/reserved-keys), a prop of a field type, or a key of another extension. Mistakes like these throw a `TypeError` from `createSchemaBuilder()`.

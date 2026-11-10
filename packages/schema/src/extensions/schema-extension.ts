@@ -1,4 +1,4 @@
-import type { WalkedField } from '../definition/walk-fields'
+import type { WalkedField } from '../definition/walked-field'
 import type { DefinitionIssueCode, DefinitionPath } from '../errors/definition-error'
 import type { KindDef } from '../kinds/kind-def'
 import type { AnyObjectSchema, AnySchema } from '../shared/valibot-types'
@@ -8,6 +8,17 @@ import type { ValueKind } from '../shared/value-kind'
  * A feature from another package that reads keys of its own on fields, and on the layout's steps
  * and sections, like the `affects` of `@whatsaaaa/form-builder-affects`. Pass it to
  * `createSchemaBuilder({ extensions: [...] })`. Without it, its keys are unknown keys.
+ *
+ * How the contract can grow in a minor version, so an extension written today keeps working:
+ * - The interfaces here can get new optional members. An extension never has to set one.
+ * - `ExtensionTarget` can get new kinds of target, for new places in a definition. Skip the kinds
+ *   you don't know: never throw on them, or treat them as a field.
+ * - `TargetConditions` and the result of its `evaluate()` can get new optional members, for new
+ *   effects. Leaving them out keeps today's meaning.
+ * - `ExtensionContext` can get new members, and `issue()` new codes.
+ *
+ * Removing or renaming a member, making one required, or changing what one means, only happens
+ * in a major version.
  */
 export interface SchemaExtension {
   /** Names the extension in messages, e.g. `'affects'`. */

@@ -22,7 +22,7 @@ One field of a definition.
 
 ### Explanation
 
-These keys are the `RESERVED_FIELD_KEYS`: a field type's props can't use them. See [define your form](/guide/define-your-form#fields).
+These keys are among the [`RESERVED_FIELD_KEYS`](/api/schema/reserved-keys): a field type's props can't use them. See [define your form](/guide/define-your-form#fields).
 
 ## Related
 

@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whatsaaaa.github.io/form-builder/schema/v1/definition.schema.json",
   "title": "Form definition",
   "description": "A form for @whatsaaaa/form-builder-schema. Run validate() too: it also checks names, defaults, form rule paths and layout references.",
   "type": "object",

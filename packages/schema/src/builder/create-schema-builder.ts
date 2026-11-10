@@ -1,6 +1,6 @@
 import type * as v from 'valibot'
-import type { JsonField, JsonForm } from '../definition/json-form-schema'
-import type { WalkedField } from '../definition/walk-fields'
+import type { JsonField, JsonForm } from '../definition/json-form'
+import type { WalkedField } from '../definition/walked-field'
 import { DefinitionError, type ValidateResult } from '../errors/definition-error'
 import type { SchemaExtension } from '../extensions/schema-extension'
 import type { defaultFieldTypes } from '../field-types/default-field-types'
@@ -16,7 +16,7 @@ import type { ValueKind } from '../shared/value-kind'
 import { createVisibility, type Visibility } from '../visibility/visibility'
 import type { MessageContext, Messages } from './build-field-schema'
 import { checkRegistry } from './check-registry'
-import { compileDefinition, createCompiler, type JsonFormSchema } from './compile-definition'
+import { compileDefinition, createCompiler, type BuiltSchema } from './compile-definition'
 import { lookup, mergeRegistry } from './registry'
 import type { ExtensionProps, NoExtensionProps, TypedForm } from './typed-form'
 
@@ -59,7 +59,7 @@ export function createMessages(
  * The schema type of `build<TInput, TOutput>()`: your types, so Formisch's paths and values are
  * checked. An interface works too, which Formisch's own constraint wouldn't take as it is.
  */
-export type TypedJsonFormSchema<
+export type TypedBuiltSchema<
   TInput extends object,
   TOutput extends object = TInput,
 > = v.GenericSchema<Plain<TInput>, Plain<TOutput>>
@@ -81,7 +81,7 @@ export interface SchemaBuilder<
    * The definition's schema: an object schema, in a pipe with the form rules when it has any.
    * Throws one `DefinitionError` with every issue it has.
    */
-  build(json: JsonForm): JsonFormSchema
+  build(json: JsonForm): BuiltSchema
   /**
    * The same schema, typed by your input type, and output type when it differs, so Formisch's
    * paths and values are checked. The types are a promise you make: nothing checks them against
@@ -89,7 +89,7 @@ export interface SchemaBuilder<
    */
   build<TInput extends object, TOutput extends object = TInput>(
     json: JsonForm,
-  ): TypedJsonFormSchema<TInput, TOutput>
+  ): TypedBuiltSchema<TInput, TOutput>
   /** Every issue in the definition, in document order. Never throws on bad input. */
   validate(json: unknown): ValidateResult
   /**
@@ -101,16 +101,18 @@ export interface SchemaBuilder<
     definition: TypedForm<TFieldTypes, TRules, TFormRules, TExtensionProps>,
   ): TypedForm<TFieldTypes, TRules, TFormRules, TExtensionProps>
   /**
-   * Every field of the definition, at every depth, like the `walkFields` function, but it reads
-   * this builder's container types too. It never throws. A container with issues isn't built, so
-   * the fields inside it are left out: run `validate()` first when that matters.
+   * Every field of the definition, at every depth, in document order, your own container types
+   * included. A group or an array comes before its fields, and the fields of an array's items come
+   * once. It never throws. A container with issues isn't built, so the fields inside it are left
+   * out: run `validate()` first when that matters.
    */
   walkFields(json: JsonForm): Generator<WalkedField, void, undefined>
   /**
-   * Formisch's `initialInput`, like the `getInitialInput` function, but it reads this builder's
-   * container types too. A container of kind `object` gives an object, and one of kind `array`
-   * without a default gives `[]`. It never throws, and leaves out a field with issues, but a
-   * field whose only issue is its default still gets that default.
+   * Formisch's `initialInput`: each field's `default`, nested the way the value is, your own
+   * container types included. A container of kind `object` gives an object, and one of kind
+   * `array` without a default gives `[]`. Other fields without a default, and display elements,
+   * are left out. It never throws, and leaves out a field with issues, but a field whose only
+   * issue is its default still gets that default.
    */
   getInitialInput(json: JsonForm): Record<string, unknown>
   /**
@@ -211,7 +213,7 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     return issues.length ? { success: false, issues } : { success: true, issues: [] }
   }
 
-  function build(json: JsonForm): JsonFormSchema {
+  function build(json: JsonForm): BuiltSchema {
     const { issues, schema } = compileDefinition(json, registry, messages)
     if (issues.length) throw new DefinitionError(issues)
     return schema

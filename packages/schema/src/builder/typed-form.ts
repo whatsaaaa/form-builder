@@ -1,9 +1,9 @@
 import type * as v from 'valibot'
-import type { JsonField } from '../definition/json-form-schema'
-import type { LAYOUT_TYPES } from '../definition/json-layout'
+import type { JsonField } from '../definition/json-form'
 import type { FieldTypeDef } from '../field-types/field-type-def'
 import type { FormRuleDef } from '../rules/form-rule-def'
 import type { RuleDef } from '../rules/rule-def'
+import type { RESERVED_LAYOUT_TYPES } from '../shared/reserved-keys'
 
 // Types for writing a definition in TypeScript against one builder's registries. They only exist
 // at compile time: validate() still checks everything they can't, like duplicate names.
@@ -123,7 +123,7 @@ type TypedLayoutDisplay<
   TFieldTypes extends Record<string, FieldTypeDef>,
   TFieldProps extends object,
 > = {
-  [K in Exclude<keyof TFieldTypes & string, (typeof LAYOUT_TYPES)[number]>]: Simplify<
+  [K in Exclude<keyof TFieldTypes & string, (typeof RESERVED_LAYOUT_TYPES)[number]>]: Simplify<
     {
       type: K
       id?: string
@@ -135,7 +135,7 @@ type TypedLayoutDisplay<
     } & TFieldProps &
       PropsOf<TFieldTypes[K]>
   >
-}[Exclude<keyof TFieldTypes & string, (typeof LAYOUT_TYPES)[number]>]
+}[Exclude<keyof TFieldTypes & string, (typeof RESERVED_LAYOUT_TYPES)[number]>]
 
 /**
  * One item of a layout, with display elements typed by their props, and sections and display

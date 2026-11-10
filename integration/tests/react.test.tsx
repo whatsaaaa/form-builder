@@ -20,7 +20,7 @@ import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   createSchemaBuilder,
   type FieldNode,
-  fieldPathsOf,
+  fieldPathsOfStep,
   issuesOfStep,
   type JsonField,
   type JsonForm,
@@ -294,7 +294,7 @@ function JsonFormView(props: { json: JsonForm; onSubmit: (output: unknown) => vo
     }
     // That validation set errors on the next step's fields too, which nobody saw.
     if (after === undefined) return
-    for (const path of fieldPathsOf(steps[after] as LayoutStep, getInput(form))) {
+    for (const path of fieldPathsOfStep(steps[after] as LayoutStep, getInput(form))) {
       setErrors(form, { path, errors: null } as never)
     }
     setIndex(after)

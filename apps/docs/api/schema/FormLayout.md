@@ -26,7 +26,13 @@ A definition's layout, with every reference resolved, as the builder's [`getLayo
 type LayoutNode = LayoutField | LayoutSection | LayoutRow | LayoutSlot
 ```
 
-Every node has a `key`, unique among its siblings and stable, and a `span`, the columns it takes in its row, 12 outside one.
+Every node has the keys of `LayoutNodeBase`.
+
+## LayoutNodeBase
+
+- `LayoutNodeBase`
+  - `key` `string`: unique among its siblings, and stable: a key for renderers
+  - `span` `number`: the columns it takes in its row, 12 outside one
 
 ## LayoutField
 

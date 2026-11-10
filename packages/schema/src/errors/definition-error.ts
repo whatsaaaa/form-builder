@@ -3,7 +3,12 @@ import type * as v from 'valibot'
 /** Where something is in a definition, e.g. `['fields', 0, 'rules', 1]`. */
 export type DefinitionPath = readonly (string | number)[]
 
-/** Public API: adding a code is a minor change, renaming one is breaking. */
+/**
+ * What kind of mistake an issue is. Codes and paths are public API, messages are not: a message
+ * can change in any release. A minor version can add a code for a new kind of mistake, so handle
+ * codes you don't know, e.g. with a fallback. Only a major version renames a code, or moves a
+ * mistake from one code to another.
+ */
 export type DefinitionIssueCode =
   | 'invalid_shape'
   | 'unsupported_version'
@@ -22,6 +27,7 @@ export type DefinitionIssueCode =
   | 'duplicate_placement'
   | 'unplaced_field'
   | 'duplicate_id'
+  | 'invalid_span'
   | 'invalid_value'
   | 'cycle'
 

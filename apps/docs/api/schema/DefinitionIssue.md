@@ -34,11 +34,12 @@ type DefinitionIssueCode =
   | 'duplicate_placement'
   | 'unplaced_field'
   | 'duplicate_id'
+  | 'invalid_span'
   | 'invalid_value'
   | 'cycle'
 ```
 
-[Checking definitions](/guide/checking-definitions#issue-codes) explains each one.
+[Checking definitions](/guide/checking-definitions#issue-codes) explains each one. Codes and paths are API, messages are not, and a minor version can add a code: handle codes you don't know. See [codes are API](/guide/checking-definitions#codes-are-api-messages-are-not).
 
 ## DefinitionPath
 

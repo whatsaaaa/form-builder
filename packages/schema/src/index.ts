@@ -1,12 +1,13 @@
 // Public API. Everything a consumer can import is exported here and nowhere else.
 export { createBuildContext } from './builder/build-context'
 export { createSchemaBuilder } from './builder/create-schema-builder'
+export type { FormRuleAction } from './builder/form-rule-action'
 export type { MessageContext } from './builder/build-field-schema'
-export type { JsonFormSchema } from './builder/compile-definition'
+export type { FieldsSchema, BuiltSchema } from './builder/compile-definition'
 export type {
   SchemaBuilder,
   SchemaBuilderOptions,
-  TypedJsonFormSchema,
+  TypedBuiltSchema,
 } from './builder/create-schema-builder'
 export type {
   ExtensionProps,
@@ -18,9 +19,8 @@ export type {
   TypedLayoutItem,
   TypedRule,
 } from './builder/typed-form'
-export { getInitialInput } from './definition/initial-input'
 export { isRequired } from './definition/is-required'
-export type { JsonField, JsonForm, JsonFormRule, JsonRule } from './definition/json-form-schema'
+export type { JsonField, JsonForm, JsonFormRule, JsonRule } from './definition/json-form'
 export type {
   JsonLayout,
   JsonLayoutDisplay,
@@ -31,8 +31,7 @@ export type {
   JsonLayoutSlot,
   JsonLayoutStep,
 } from './definition/json-layout'
-export { walkFields } from './definition/walk-fields'
-export type { WalkedField } from './definition/walk-fields'
+export type { WalkedField } from './definition/walked-field'
 export { DefinitionError, formatPath } from './errors/definition-error'
 export type {
   DefinitionIssue,
@@ -56,13 +55,14 @@ export type {
   FieldTypeDef,
   FieldTypeMeta,
   FieldWithProps,
+  KindOf,
 } from './field-types/field-type-def'
 export { defaultKinds } from './kinds/default-kinds'
 export type { KindDef } from './kinds/kind-def'
 export { checkComponents } from './render/check-components'
 export { checkLayoutComponents } from './render/check-layout-components'
 export { coerceInput } from './render/coerce-input'
-export { fieldPathsOf } from './render/field-paths-of'
+export { fieldPathsOfStep } from './render/field-paths-of-step'
 export type { FieldNode, FieldRole } from './render/field-tree'
 export { allFields, dotPathOf, findField } from './render/find-field'
 export type { FindFieldOptions } from './render/find-field'
@@ -70,6 +70,7 @@ export type {
   FormLayout,
   LayoutField,
   LayoutNode,
+  LayoutNodeBase,
   LayoutRow,
   LayoutSection,
   LayoutSlot,
@@ -101,6 +102,8 @@ export { textRules } from './rules/text-rules'
 export {
   RESERVED_FIELD_KEYS,
   RESERVED_FORM_RULE_KEYS,
+  RESERVED_LAYOUT_KEYS,
+  RESERVED_LAYOUT_TYPES,
   RESERVED_RULE_KEYS,
 } from './shared/reserved-keys'
 export type { AnyAction, AnyObjectSchema, AnySchema } from './shared/valibot-types'

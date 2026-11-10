@@ -16,7 +16,7 @@ What [`createSchemaBuilder`](/api/schema/createSchemaBuilder) returns. Its metho
 ## Definition
 
 - `SchemaBuilder`
-  - `build` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; [JsonFormSchema](/api/schema/JsonFormSchema)</code>
+  - `build` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; [BuiltSchema](/api/schema/BuiltSchema)</code>
   - `validate` <code>(json: unknown) =&gt; [ValidateResult](/api/schema/DefinitionIssue#validateresult)</code>
   - `defineForm` <code>(definition: [TypedForm](/api/schema/TypedForm)) =&gt; [TypedForm](/api/schema/TypedForm)</code>
   - `getInitialInput` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; Record&lt;string, unknown&gt;</code>
@@ -41,7 +41,7 @@ const schema = builder.build(json)
 const schema = builder.build<TInput, TOutput>(json)
 ```
 
-Checks the definition and builds the Valibot schema of the whole form: an object schema with a key for each field, in a `v.pipe()` with one check that runs every form rule when it has any. Throws one [`DefinitionError`](/api/schema/DefinitionError) with every issue. With your input type, and your output type when it differs, the schema is typed as a [`TypedJsonFormSchema`](/api/schema/TypedJsonFormSchema). See [TypeScript](/guide/typescript#typing-the-form).
+Checks the definition and builds the Valibot schema of the whole form: an object schema with a key for each field, in a `v.pipe()` with one check that runs every form rule when it has any. Throws one [`DefinitionError`](/api/schema/DefinitionError) with every issue. With your input type, and your output type when it differs, the schema is typed as a [`TypedBuiltSchema`](/api/schema/TypedBuiltSchema). See [TypeScript](/guide/typescript#typing-the-form).
 
 ### validate
 
@@ -65,7 +65,7 @@ Types a definition written in TypeScript against the builder's registries and ex
 const input = builder.getInitialInput(json)
 ```
 
-Formisch's `initialInput`: each field's `default`, nested the way the value is. Like the [`getInitialInput`](/api/schema/getInitialInput) function, but it reads the builder's own container types too. It never throws, and leaves out a field with issues. A field that conditions clear when the form starts starts blank.
+Formisch's `initialInput`: each field's `default`, nested the way the value is, the builder's own container types included. A container of kind `object` gives an object, and one of kind `array` without a default gives `[]`. It never throws, and leaves out a field with issues. A field that conditions clear when the form starts starts blank.
 
 ### getItemInput
 
@@ -107,7 +107,7 @@ for (const field of builder.walkFields(json)) {
 }
 ```
 
-Every field of the definition, at every depth, in document order, as [`WalkedField`](/api/schema/WalkedField)s with their kinds. Like the [`walkFields`](/api/schema/walkFields) function, but it reads the builder's own container types too. It never throws, and a container with issues isn't walked into.
+Every field of the definition, at every depth, in document order, as [`WalkedField`](/api/schema/WalkedField)s with their kinds, the builder's own container types included. A group or a list comes before its fields, and the fields of a list's items come once. It never throws, and a container with issues isn't walked into.
 
 ### rulesForKind
 

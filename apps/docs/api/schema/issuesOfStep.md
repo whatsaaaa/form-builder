@@ -34,7 +34,7 @@ A form is validated as a whole, so its issues are on the fields of every step. T
 
 ### Functions
 
-- [fieldPathsOf](/api/schema/fieldPathsOf)
+- [fieldPathsOfStep](/api/schema/fieldPathsOfStep)
 
 ### Guides
 

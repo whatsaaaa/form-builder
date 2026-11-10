@@ -52,7 +52,7 @@ A type whose value holds other fields sets `container: true`, and builds them wi
 - The builder checks the child fields like any others, so their issues have their full path, and form rules, layouts and conditions reach them by their dot paths.
 - A container's value is never empty: a missing one becomes `{}` or `[]`, and its rules always run.
 - Renderers get it with the role `group` for kind `object`, or `array` for kind `array`, so it renders like a group or a list.
-- To read definitions with your own containers, use the builder's `getInitialInput()` and `walkFields()`. The functions of the same name only know the built-in `group` and `array`.
+- The builder's `getInitialInput()` and `walkFields()` read your own containers like the built-in `group` and `array`.
 
 ## Your own kinds
 

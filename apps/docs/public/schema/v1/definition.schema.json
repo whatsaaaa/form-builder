@@ -1,0 +1,7675 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://whatsaaaa.github.io/form-builder/schema/v1/definition.schema.json",
+  "title": "Form definition",
+  "description": "A form for @whatsaaaa/form-builder-schema. Run validate() too: it also checks names, defaults, form rule paths and layout references.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": "1"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/field"
+      }
+    },
+    "formRules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/formRule"
+      }
+    },
+    "layout": {
+      "$ref": "#/definitions/layout"
+    }
+  },
+  "required": [
+    "version",
+    "fields"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "field": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "text",
+            "textarea",
+            "email",
+            "password",
+            "url",
+            "tel",
+            "number",
+            "checkbox",
+            "date",
+            "time",
+            "datetime",
+            "select",
+            "radio",
+            "multiselect",
+            "file",
+            "heading",
+            "paragraph",
+            "divider",
+            "group",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "text"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.text"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "textarea"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.textarea"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "email"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.email"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "password"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.password"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "url"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.url"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "tel"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.tel"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "number"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.number"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "checkbox"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.checkbox"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "date"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.date"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "time"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.time"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "datetime"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.datetime"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "select"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.select"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "radio"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.radio"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "multiselect"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.multiselect"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "file"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.file"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "heading"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.heading"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "paragraph"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.paragraph"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "divider"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.divider"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "group"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.group"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "array"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/type.array"
+              }
+            ],
+            "required": [
+              "name"
+            ]
+          }
+        }
+      ]
+    },
+    "item": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "enum": [
+            "text",
+            "textarea",
+            "email",
+            "password",
+            "url",
+            "tel",
+            "number",
+            "checkbox",
+            "date",
+            "time",
+            "datetime",
+            "select",
+            "radio",
+            "multiselect",
+            "file",
+            "group",
+            "array"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "text"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.text"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "textarea"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.textarea"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "email"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.email"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "password"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.password"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "url"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.url"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "tel"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.tel"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "number"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "checkbox"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.checkbox"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "date"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "time"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.time"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "datetime"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.datetime"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "select"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.select"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "radio"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.radio"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "multiselect"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.multiselect"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "file"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.file"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "group"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.group"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "array"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/type.array"
+          }
+        }
+      ]
+    },
+    "formRule": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "enum": [
+            "sameAs",
+            "differentFrom",
+            "compare"
+          ]
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "sameAs"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "title": "Same as",
+            "description": "Equals another field, e.g. to confirm a password",
+            "properties": {
+              "rule": {
+                "const": "sameAs"
+              },
+              "field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string"
+              },
+              "other": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "field",
+              "message",
+              "other"
+            ],
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "differentFrom"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "title": "Different from",
+            "description": "Differs from another field, e.g. a new password",
+            "properties": {
+              "rule": {
+                "const": "differentFrom"
+              },
+              "field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string"
+              },
+              "other": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "field",
+              "message",
+              "other"
+            ],
+            "type": "object",
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "compare"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "title": "Compare",
+            "description": "Less or greater than another field, e.g. an end date after the start",
+            "properties": {
+              "rule": {
+                "const": "compare"
+              },
+              "field": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string"
+              },
+              "op": {
+                "enum": [
+                  "lt",
+                  "lte",
+                  "gt",
+                  "gte"
+                ],
+                "type": "string"
+              },
+              "other": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "rule",
+              "field",
+              "message",
+              "op",
+              "other"
+            ],
+            "type": "object",
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    "type.text": {
+      "title": "Text",
+      "description": "One line of text",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "text"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.string"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.textarea": {
+      "title": "Text area",
+      "description": "Several lines of text",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "textarea"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.string"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.email": {
+      "title": "Email",
+      "description": "An email address, checked by the email rule",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "email"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.string"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.password": {
+      "title": "Password",
+      "description": "Text hidden while typing",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "password"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.string"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.url": {
+      "title": "URL",
+      "description": "A web address, checked by the url rule",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "url"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.string"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.tel": {
+      "title": "Phone",
+      "description": "A phone number. Add a regex rule for its format",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "tel"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.string"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.number": {
+      "title": "Number",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "number"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.number"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.checkbox": {
+      "title": "Checkbox",
+      "description": "Yes or no. Required means it must be ticked",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "checkbox"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.boolean"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.date": {
+      "title": "Date",
+      "description": "An ISO date, such as 2026-10-28",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "date"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.date"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "output": {
+          "enum": [
+            "string",
+            "date"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.time": {
+      "title": "Time",
+      "description": "An ISO time, such as 14:30",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "time"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.date"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.datetime": {
+      "title": "Date and time",
+      "description": "A local ISO date and time, such as 2026-10-28T14:30",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "datetime"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.date"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "output": {
+          "enum": [
+            "string",
+            "date"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.select": {
+      "title": "Select",
+      "description": "One of the options, or any value while they load",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "select"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "label"
+            ]
+          },
+          "minItems": 1
+        },
+        "valueType": {
+          "enum": [
+            "string",
+            "number"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.radio": {
+      "title": "Radio buttons",
+      "description": "One of the options",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "radio"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "label"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "type": "object",
+      "required": [
+        "options"
+      ],
+      "additionalProperties": false
+    },
+    "type.multiselect": {
+      "title": "Multiselect",
+      "description": "Any number of the options",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "multiselect"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "label"
+            ]
+          },
+          "minItems": 1
+        }
+      },
+      "type": "object",
+      "required": [
+        "options"
+      ],
+      "additionalProperties": false
+    },
+    "type.file": {
+      "title": "File",
+      "description": "A file, or a list of files with multiple",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "file"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "multiple": {
+          "type": "boolean"
+        },
+        "accept": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.heading": {
+      "title": "Heading",
+      "description": "A title between fields. It has no value",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "heading"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "ui": {
+          "type": "object"
+        },
+        "text": {
+          "type": "string"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        }
+      },
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "type.paragraph": {
+      "title": "Paragraph",
+      "description": "Plain text between fields. It has no value",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "paragraph"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "ui": {
+          "type": "object"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "type.divider": {
+      "title": "Divider",
+      "description": "A line between fields. It has no value",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "const": "divider"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "type.group": {
+      "title": "Group",
+      "description": "An object with a key for each of its fields",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "group"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.object"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/field"
+          }
+        }
+      },
+      "type": "object",
+      "required": [
+        "fields"
+      ],
+      "additionalProperties": false
+    },
+    "type.array": {
+      "title": "List",
+      "description": "A list of single values with of, or of objects with fields",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^.[\\]]*$",
+          "not": {
+            "enum": [
+              "*",
+              "__proto__"
+            ]
+          }
+        },
+        "type": {
+          "const": "array"
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {},
+        "required": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rules.array"
+          }
+        },
+        "ui": {
+          "type": "object"
+        },
+        "of": {
+          "$ref": "#/definitions/item"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/field"
+          }
+        }
+      },
+      "type": "object",
+      "additionalProperties": false
+    },
+    "layout": {
+      "title": "Layout",
+      "description": "Where the fields go: \"items\" for one page, or \"steps\" for several.",
+      "type": "object",
+      "properties": {
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/layoutStep"
+          }
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "items"
+          ]
+        },
+        {
+          "required": [
+            "steps"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "layoutStep": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItems": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/layoutItem"
+      }
+    },
+    "rowItems": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/rowItem"
+      }
+    },
+    "layoutItem": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "$ref": "#/definitions/layoutItem.field"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "section",
+                "row",
+                "slot",
+                "heading",
+                "paragraph",
+                "divider"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "section"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/layoutItem.section"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "row"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/layoutItem.row"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "slot"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/layoutItem.slot"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Heading",
+                "description": "A title between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Paragraph",
+                "description": "Plain text between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Divider",
+                "description": "A line between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "layoutItem.field": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItem.section": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "section"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItem.row": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "row"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/rowItems"
+        },
+        "ui": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "layoutItem.slot": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "slot"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "not": {
+            "const": "*"
+          }
+        },
+        {
+          "$ref": "#/definitions/rowItem.field"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "section",
+                "row",
+                "slot",
+                "heading",
+                "paragraph",
+                "divider"
+              ]
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "section"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/rowItem.section"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "row"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/rowItem.row"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "slot"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "$ref": "#/definitions/rowItem.slot"
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Heading",
+                "description": "A title between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "heading"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 6
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Paragraph",
+                "description": "Plain text between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "paragraph"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  }
+                },
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "title": "Divider",
+                "description": "A line between fields. It has no value",
+                "properties": {
+                  "type": {
+                    "const": "divider"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "ui": {
+                    "type": "object"
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "span": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  }
+                },
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "rowItem.field": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "field"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem.section": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "section"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "$ref": "#/definitions/layoutItems"
+        },
+        "ui": {
+          "type": "object"
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem.row": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "row"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "$ref": "#/definitions/rowItems"
+        },
+        "ui": {
+          "type": "object"
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "type",
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "rowItem.slot": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "slot"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "span": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "rules.string": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "enum": [
+            "length",
+            "minLength",
+            "maxLength",
+            "notLength",
+            "graphemes",
+            "minGraphemes",
+            "maxGraphemes",
+            "notGraphemes",
+            "words",
+            "minWords",
+            "maxWords",
+            "notWords",
+            "bytes",
+            "minBytes",
+            "maxBytes",
+            "notBytes",
+            "regex",
+            "startsWith",
+            "endsWith",
+            "includes",
+            "excludes",
+            "email",
+            "rfcEmail",
+            "url",
+            "domain",
+            "slug",
+            "uuid",
+            "ulid",
+            "cuid2",
+            "nanoid",
+            "ip",
+            "ipv4",
+            "ipv6",
+            "mac",
+            "mac48",
+            "mac64",
+            "hexColor",
+            "hexadecimal",
+            "octal",
+            "decimal",
+            "digits",
+            "base64",
+            "bic",
+            "creditCard",
+            "imei",
+            "isbn",
+            "isrc",
+            "emoji",
+            "hash",
+            "isoDate",
+            "isoDateTime",
+            "isoTime",
+            "isoTimeSecond",
+            "isoTimestamp",
+            "isoWeek",
+            "value",
+            "notValue",
+            "trim",
+            "trimStart",
+            "trimEnd",
+            "toLowerCase",
+            "toUpperCase",
+            "normalize"
+          ]
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "length"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.length"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "graphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.graphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minGraphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minGraphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxGraphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxGraphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notGraphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notGraphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "words"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.words"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minWords"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minWords"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxWords"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxWords"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notWords"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notWords"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "bytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.bytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minBytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minBytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxBytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxBytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notBytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notBytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "regex"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.regex"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "startsWith"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.startsWith"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "endsWith"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.endsWith"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "includes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.includes.string"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "excludes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.excludes.string"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "email"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.email"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "rfcEmail"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.rfcEmail"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "url"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.url"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "domain"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.domain"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "slug"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.slug"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "uuid"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.uuid"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ulid"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ulid"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "cuid2"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.cuid2"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "nanoid"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.nanoid"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ip"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ip"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ipv4"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ipv4"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ipv6"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ipv6"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "mac"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.mac"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "mac48"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.mac48"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "mac64"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.mac64"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "hexColor"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.hexColor"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "hexadecimal"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.hexadecimal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "octal"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.octal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "decimal"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.decimal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "digits"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.digits"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "base64"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.base64"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "bic"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.bic"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "creditCard"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.creditCard"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "imei"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.imei"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isbn"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isbn"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isrc"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isrc"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "emoji"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.emoji"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "hash"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.hash"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoDate"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoDate"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoDateTime"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoDateTime"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTime"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTime"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTimeSecond"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTimeSecond"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTimestamp"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTimestamp"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoWeek"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoWeek"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "value"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.value.string"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notValue.string"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "trim"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.trim"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "trimStart"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.trimStart"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "trimEnd"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.trimEnd"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toLowerCase"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toLowerCase"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toUpperCase"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toUpperCase"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "normalize"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.normalize"
+          }
+        }
+      ]
+    },
+    "rules.number": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "enum": [
+            "minValue",
+            "maxValue",
+            "gtValue",
+            "ltValue",
+            "value",
+            "notValue",
+            "values",
+            "notValues",
+            "integer",
+            "safeInteger",
+            "finite",
+            "multipleOf",
+            "toMinValue",
+            "toMaxValue"
+          ]
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minValue.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxValue.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "gtValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.gtValue.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ltValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ltValue.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "value"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.value.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notValue.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "values"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.values.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValues"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notValues.number"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "integer"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.integer"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "safeInteger"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.safeInteger"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "finite"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.finite"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "multipleOf"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.multipleOf"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toMinValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toMinValue"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toMaxValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toMaxValue"
+          }
+        }
+      ]
+    },
+    "rules.boolean": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "enum": [
+            "value",
+            "notValue"
+          ]
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "value"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.value.boolean"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notValue.boolean"
+          }
+        }
+      ]
+    },
+    "rules.date": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "enum": [
+            "isoDate",
+            "isoDateTime",
+            "isoTime",
+            "isoTimeSecond",
+            "isoTimestamp",
+            "isoWeek",
+            "minValue",
+            "maxValue",
+            "gtValue",
+            "ltValue",
+            "value",
+            "notValue",
+            "values",
+            "notValues"
+          ]
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoDate"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoDate"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoDateTime"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoDateTime"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTime"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTime"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTimeSecond"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTimeSecond"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTimestamp"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTimestamp"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoWeek"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoWeek"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minValue.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxValue.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "gtValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.gtValue.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ltValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ltValue.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "value"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.value.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notValue.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "values"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.values.date"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValues"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notValues.date"
+          }
+        }
+      ]
+    },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "enum": [
+            "length",
+            "minLength",
+            "maxLength",
+            "notLength",
+            "graphemes",
+            "minGraphemes",
+            "maxGraphemes",
+            "notGraphemes",
+            "words",
+            "minWords",
+            "maxWords",
+            "notWords",
+            "bytes",
+            "minBytes",
+            "maxBytes",
+            "notBytes",
+            "regex",
+            "startsWith",
+            "endsWith",
+            "includes",
+            "excludes",
+            "email",
+            "rfcEmail",
+            "url",
+            "domain",
+            "slug",
+            "uuid",
+            "ulid",
+            "cuid2",
+            "nanoid",
+            "ip",
+            "ipv4",
+            "ipv6",
+            "mac",
+            "mac48",
+            "mac64",
+            "hexColor",
+            "hexadecimal",
+            "octal",
+            "decimal",
+            "digits",
+            "base64",
+            "bic",
+            "creditCard",
+            "imei",
+            "isbn",
+            "isrc",
+            "emoji",
+            "hash",
+            "isoDate",
+            "isoDateTime",
+            "isoTime",
+            "isoTimeSecond",
+            "isoTimestamp",
+            "isoWeek",
+            "minValue",
+            "maxValue",
+            "gtValue",
+            "ltValue",
+            "value",
+            "notValue",
+            "values",
+            "notValues",
+            "integer",
+            "safeInteger",
+            "finite",
+            "multipleOf",
+            "minSize",
+            "maxSize",
+            "size",
+            "notSize",
+            "mimeType",
+            "trim",
+            "trimStart",
+            "trimEnd",
+            "toLowerCase",
+            "toUpperCase",
+            "normalize",
+            "toMinValue",
+            "toMaxValue"
+          ]
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "length"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.length"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "graphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.graphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minGraphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minGraphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxGraphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxGraphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notGraphemes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notGraphemes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "words"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.words"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minWords"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minWords"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxWords"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxWords"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notWords"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notWords"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "bytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.bytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minBytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minBytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxBytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxBytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notBytes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notBytes"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "regex"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.regex"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "startsWith"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.startsWith"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "endsWith"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.endsWith"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "includes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.includes.string"
+              },
+              {
+                "$ref": "#/definitions/rule.includes.array"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "excludes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.excludes.string"
+              },
+              {
+                "$ref": "#/definitions/rule.excludes.array"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "email"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.email"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "rfcEmail"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.rfcEmail"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "url"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.url"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "domain"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.domain"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "slug"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.slug"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "uuid"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.uuid"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ulid"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ulid"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "cuid2"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.cuid2"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "nanoid"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.nanoid"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ip"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ip"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ipv4"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ipv4"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ipv6"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.ipv6"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "mac"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.mac"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "mac48"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.mac48"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "mac64"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.mac64"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "hexColor"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.hexColor"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "hexadecimal"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.hexadecimal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "octal"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.octal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "decimal"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.decimal"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "digits"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.digits"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "base64"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.base64"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "bic"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.bic"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "creditCard"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.creditCard"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "imei"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.imei"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isbn"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isbn"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isrc"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isrc"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "emoji"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.emoji"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "hash"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.hash"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoDate"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoDate"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoDateTime"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoDateTime"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTime"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTime"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTimeSecond"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTimeSecond"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoTimestamp"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoTimestamp"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "isoWeek"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.isoWeek"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.minValue.number"
+              },
+              {
+                "$ref": "#/definitions/rule.minValue.date"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.maxValue.number"
+              },
+              {
+                "$ref": "#/definitions/rule.maxValue.date"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "gtValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.gtValue.number"
+              },
+              {
+                "$ref": "#/definitions/rule.gtValue.date"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "ltValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.ltValue.number"
+              },
+              {
+                "$ref": "#/definitions/rule.ltValue.date"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "value"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.value.number"
+              },
+              {
+                "$ref": "#/definitions/rule.value.date"
+              },
+              {
+                "$ref": "#/definitions/rule.value.string"
+              },
+              {
+                "$ref": "#/definitions/rule.value.boolean"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.notValue.number"
+              },
+              {
+                "$ref": "#/definitions/rule.notValue.date"
+              },
+              {
+                "$ref": "#/definitions/rule.notValue.string"
+              },
+              {
+                "$ref": "#/definitions/rule.notValue.boolean"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "values"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.values.number"
+              },
+              {
+                "$ref": "#/definitions/rule.values.date"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notValues"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/rule.notValues.number"
+              },
+              {
+                "$ref": "#/definitions/rule.notValues.date"
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "integer"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.integer"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "safeInteger"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.safeInteger"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "finite"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.finite"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "multipleOf"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.multipleOf"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minSize"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minSize"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxSize"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxSize"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "size"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.size"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notSize"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notSize"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "mimeType"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.mimeType"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "trim"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.trim"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "trimStart"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.trimStart"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "trimEnd"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.trimEnd"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toLowerCase"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toLowerCase"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toUpperCase"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toUpperCase"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "normalize"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.normalize"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toMinValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toMinValue"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "toMaxValue"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.toMaxValue"
+          }
+        }
+      ]
+    },
+    "rules.object": {
+      "description": "No registered rule fits fields of this type",
+      "not": {}
+    },
+    "rules.array": {
+      "type": "object",
+      "properties": {
+        "rule": {
+          "enum": [
+            "length",
+            "minLength",
+            "maxLength",
+            "notLength",
+            "includes",
+            "excludes"
+          ]
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "length"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.length"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "minLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.minLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "maxLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.maxLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "notLength"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.notLength"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "includes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.includes.array"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rule": {
+                "const": "excludes"
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/rule.excludes.array"
+          }
+        }
+      ]
+    },
+    "rule.length": {
+      "title": "Exact length",
+      "properties": {
+        "rule": {
+          "const": "length"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.minLength": {
+      "title": "Minimum length",
+      "properties": {
+        "rule": {
+          "const": "minLength"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.maxLength": {
+      "title": "Maximum length",
+      "properties": {
+        "rule": {
+          "const": "maxLength"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notLength": {
+      "title": "Not this length",
+      "properties": {
+        "rule": {
+          "const": "notLength"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.graphemes": {
+      "title": "Exact characters",
+      "description": "Counts characters as people see them, so an emoji is one.",
+      "properties": {
+        "rule": {
+          "const": "graphemes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.minGraphemes": {
+      "title": "Minimum characters",
+      "description": "Counts characters as people see them, so an emoji is one.",
+      "properties": {
+        "rule": {
+          "const": "minGraphemes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.maxGraphemes": {
+      "title": "Maximum characters",
+      "description": "Counts characters as people see them, so an emoji is one.",
+      "properties": {
+        "rule": {
+          "const": "maxGraphemes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notGraphemes": {
+      "title": "Not this many characters",
+      "description": "Counts characters as people see them, so an emoji is one.",
+      "properties": {
+        "rule": {
+          "const": "notGraphemes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.words": {
+      "title": "Exact words",
+      "properties": {
+        "rule": {
+          "const": "words"
+        },
+        "message": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.minWords": {
+      "title": "Minimum words",
+      "properties": {
+        "rule": {
+          "const": "minWords"
+        },
+        "message": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.maxWords": {
+      "title": "Maximum words",
+      "properties": {
+        "rule": {
+          "const": "maxWords"
+        },
+        "message": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notWords": {
+      "title": "Not this many words",
+      "properties": {
+        "rule": {
+          "const": "notWords"
+        },
+        "message": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.bytes": {
+      "title": "Exact bytes",
+      "description": "Counts UTF-8 bytes, e.g. to fit a database column.",
+      "properties": {
+        "rule": {
+          "const": "bytes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.minBytes": {
+      "title": "Minimum bytes",
+      "description": "Counts UTF-8 bytes, e.g. to fit a database column.",
+      "properties": {
+        "rule": {
+          "const": "minBytes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.maxBytes": {
+      "title": "Maximum bytes",
+      "description": "Counts UTF-8 bytes, e.g. to fit a database column.",
+      "properties": {
+        "rule": {
+          "const": "maxBytes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notBytes": {
+      "title": "Not this many bytes",
+      "description": "Counts UTF-8 bytes, e.g. to fit a database column.",
+      "properties": {
+        "rule": {
+          "const": "notBytes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.regex": {
+      "title": "Matches pattern",
+      "description": "A JavaScript regular expression, without the slashes.",
+      "properties": {
+        "rule": {
+          "const": "regex"
+        },
+        "message": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "string",
+          "pattern": "^[dgimsuvy]*$"
+        }
+      },
+      "required": [
+        "rule",
+        "pattern"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.startsWith": {
+      "title": "Starts with",
+      "properties": {
+        "rule": {
+          "const": "startsWith"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.endsWith": {
+      "title": "Ends with",
+      "properties": {
+        "rule": {
+          "const": "endsWith"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.includes.string": {
+      "title": "Contains",
+      "properties": {
+        "rule": {
+          "const": "includes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.excludes.string": {
+      "title": "Does not contain",
+      "properties": {
+        "rule": {
+          "const": "excludes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.email": {
+      "title": "Email",
+      "properties": {
+        "rule": {
+          "const": "email"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.rfcEmail": {
+      "title": "Email (RFC 5322)",
+      "properties": {
+        "rule": {
+          "const": "rfcEmail"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.url": {
+      "title": "URL",
+      "properties": {
+        "rule": {
+          "const": "url"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.domain": {
+      "title": "Domain",
+      "properties": {
+        "rule": {
+          "const": "domain"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.slug": {
+      "title": "Slug",
+      "properties": {
+        "rule": {
+          "const": "slug"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.uuid": {
+      "title": "UUID",
+      "properties": {
+        "rule": {
+          "const": "uuid"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.ulid": {
+      "title": "ULID",
+      "properties": {
+        "rule": {
+          "const": "ulid"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.cuid2": {
+      "title": "CUID2",
+      "properties": {
+        "rule": {
+          "const": "cuid2"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.nanoid": {
+      "title": "Nano ID",
+      "properties": {
+        "rule": {
+          "const": "nanoid"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.ip": {
+      "title": "IP address",
+      "properties": {
+        "rule": {
+          "const": "ip"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.ipv4": {
+      "title": "IPv4 address",
+      "properties": {
+        "rule": {
+          "const": "ipv4"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.ipv6": {
+      "title": "IPv6 address",
+      "properties": {
+        "rule": {
+          "const": "ipv6"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.mac": {
+      "title": "MAC address",
+      "properties": {
+        "rule": {
+          "const": "mac"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.mac48": {
+      "title": "MAC-48 address",
+      "properties": {
+        "rule": {
+          "const": "mac48"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.mac64": {
+      "title": "MAC-64 address",
+      "properties": {
+        "rule": {
+          "const": "mac64"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.hexColor": {
+      "title": "Hex colour",
+      "properties": {
+        "rule": {
+          "const": "hexColor"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.hexadecimal": {
+      "title": "Hexadecimal",
+      "properties": {
+        "rule": {
+          "const": "hexadecimal"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.octal": {
+      "title": "Octal",
+      "properties": {
+        "rule": {
+          "const": "octal"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.decimal": {
+      "title": "Decimal number",
+      "properties": {
+        "rule": {
+          "const": "decimal"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.digits": {
+      "title": "Digits only",
+      "properties": {
+        "rule": {
+          "const": "digits"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.base64": {
+      "title": "Base64",
+      "properties": {
+        "rule": {
+          "const": "base64"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.bic": {
+      "title": "BIC (SWIFT code)",
+      "properties": {
+        "rule": {
+          "const": "bic"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.creditCard": {
+      "title": "Credit card number",
+      "properties": {
+        "rule": {
+          "const": "creditCard"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.imei": {
+      "title": "IMEI",
+      "properties": {
+        "rule": {
+          "const": "imei"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isbn": {
+      "title": "ISBN",
+      "properties": {
+        "rule": {
+          "const": "isbn"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isrc": {
+      "title": "ISRC",
+      "properties": {
+        "rule": {
+          "const": "isrc"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.emoji": {
+      "title": "Emoji",
+      "properties": {
+        "rule": {
+          "const": "emoji"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.hash": {
+      "title": "Hash",
+      "properties": {
+        "rule": {
+          "const": "hash"
+        },
+        "message": {
+          "type": "string"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "md4",
+              "md5",
+              "sha1",
+              "sha256",
+              "sha384",
+              "sha512",
+              "ripemd128",
+              "ripemd160",
+              "tiger128",
+              "tiger160",
+              "tiger192",
+              "crc32",
+              "crc32b",
+              "adler32"
+            ],
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "rule",
+        "types"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isoDate": {
+      "title": "ISO date",
+      "description": "Like 2026-10-28",
+      "properties": {
+        "rule": {
+          "const": "isoDate"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isoDateTime": {
+      "title": "ISO date and time",
+      "description": "Like 2026-10-28T14:30",
+      "properties": {
+        "rule": {
+          "const": "isoDateTime"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isoTime": {
+      "title": "ISO time",
+      "description": "Like 14:30",
+      "properties": {
+        "rule": {
+          "const": "isoTime"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isoTimeSecond": {
+      "title": "ISO time with seconds",
+      "description": "Like 14:30:15",
+      "properties": {
+        "rule": {
+          "const": "isoTimeSecond"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isoTimestamp": {
+      "title": "ISO timestamp",
+      "description": "Like 2026-10-28T14:30:15.000Z",
+      "properties": {
+        "rule": {
+          "const": "isoTimestamp"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.isoWeek": {
+      "title": "ISO week",
+      "description": "Like 2026-W44",
+      "properties": {
+        "rule": {
+          "const": "isoWeek"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.value.string": {
+      "title": "Equals",
+      "properties": {
+        "rule": {
+          "const": "value"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notValue.string": {
+      "title": "Does not equal",
+      "properties": {
+        "rule": {
+          "const": "notValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.trim": {
+      "title": "Trim",
+      "properties": {
+        "rule": {
+          "const": "trim"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.trimStart": {
+      "title": "Trim start",
+      "properties": {
+        "rule": {
+          "const": "trimStart"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.trimEnd": {
+      "title": "Trim end",
+      "properties": {
+        "rule": {
+          "const": "trimEnd"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.toLowerCase": {
+      "title": "Lowercase",
+      "properties": {
+        "rule": {
+          "const": "toLowerCase"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.toUpperCase": {
+      "title": "Uppercase",
+      "properties": {
+        "rule": {
+          "const": "toUpperCase"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.normalize": {
+      "title": "Unicode normalize",
+      "description": "Defaults to NFC.",
+      "properties": {
+        "rule": {
+          "const": "normalize"
+        },
+        "message": {
+          "type": "string"
+        },
+        "form": {
+          "enum": [
+            "NFC",
+            "NFD",
+            "NFKC",
+            "NFKD"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.minValue.number": {
+      "title": "Minimum",
+      "properties": {
+        "rule": {
+          "const": "minValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.maxValue.number": {
+      "title": "Maximum",
+      "properties": {
+        "rule": {
+          "const": "maxValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.gtValue.number": {
+      "title": "Greater than",
+      "properties": {
+        "rule": {
+          "const": "gtValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.ltValue.number": {
+      "title": "Less than",
+      "properties": {
+        "rule": {
+          "const": "ltValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.value.number": {
+      "title": "Equals",
+      "properties": {
+        "rule": {
+          "const": "value"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notValue.number": {
+      "title": "Does not equal",
+      "properties": {
+        "rule": {
+          "const": "notValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.values.number": {
+      "title": "One of",
+      "properties": {
+        "rule": {
+          "const": "values"
+        },
+        "message": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "rule",
+        "values"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notValues.number": {
+      "title": "None of",
+      "properties": {
+        "rule": {
+          "const": "notValues"
+        },
+        "message": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "rule",
+        "values"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.integer": {
+      "title": "Whole number",
+      "properties": {
+        "rule": {
+          "const": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.safeInteger": {
+      "title": "Safe whole number",
+      "properties": {
+        "rule": {
+          "const": "safeInteger"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.finite": {
+      "title": "Finite number",
+      "properties": {
+        "rule": {
+          "const": "finite"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.multipleOf": {
+      "title": "Multiple of",
+      "properties": {
+        "rule": {
+          "const": "multipleOf"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "not": {
+            "const": 0
+          }
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.toMinValue": {
+      "title": "Raise to minimum",
+      "description": "Replaces a smaller number with the minimum.",
+      "properties": {
+        "rule": {
+          "const": "toMinValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.toMaxValue": {
+      "title": "Lower to maximum",
+      "description": "Replaces a larger number with the maximum.",
+      "properties": {
+        "rule": {
+          "const": "toMaxValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.value.boolean": {
+      "title": "Equals",
+      "properties": {
+        "rule": {
+          "const": "value"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notValue.boolean": {
+      "title": "Does not equal",
+      "properties": {
+        "rule": {
+          "const": "notValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.minValue.date": {
+      "title": "Minimum",
+      "properties": {
+        "rule": {
+          "const": "minValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.maxValue.date": {
+      "title": "Maximum",
+      "properties": {
+        "rule": {
+          "const": "maxValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.gtValue.date": {
+      "title": "Greater than",
+      "properties": {
+        "rule": {
+          "const": "gtValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.ltValue.date": {
+      "title": "Less than",
+      "properties": {
+        "rule": {
+          "const": "ltValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.value.date": {
+      "title": "Equals",
+      "properties": {
+        "rule": {
+          "const": "value"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notValue.date": {
+      "title": "Does not equal",
+      "properties": {
+        "rule": {
+          "const": "notValue"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.values.date": {
+      "title": "One of",
+      "properties": {
+        "rule": {
+          "const": "values"
+        },
+        "message": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "rule",
+        "values"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notValues.date": {
+      "title": "None of",
+      "properties": {
+        "rule": {
+          "const": "notValues"
+        },
+        "message": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "rule",
+        "values"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.includes.array": {
+      "title": "Contains",
+      "properties": {
+        "rule": {
+          "const": "includes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.excludes.array": {
+      "title": "Does not contain",
+      "properties": {
+        "rule": {
+          "const": "excludes"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.minSize": {
+      "title": "Minimum size",
+      "description": "In bytes, e.g. 1048576 for 1 MiB.",
+      "properties": {
+        "rule": {
+          "const": "minSize"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.maxSize": {
+      "title": "Maximum size",
+      "description": "In bytes, e.g. 1048576 for 1 MiB.",
+      "properties": {
+        "rule": {
+          "const": "maxSize"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.size": {
+      "title": "Exact size",
+      "description": "In bytes, e.g. 1048576 for 1 MiB.",
+      "properties": {
+        "rule": {
+          "const": "size"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.notSize": {
+      "title": "Not this size",
+      "description": "In bytes, e.g. 1048576 for 1 MiB.",
+      "properties": {
+        "rule": {
+          "const": "notSize"
+        },
+        "message": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rule",
+        "value"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    },
+    "rule.mimeType": {
+      "title": "File type",
+      "properties": {
+        "rule": {
+          "const": "mimeType"
+        },
+        "message": {
+          "type": "string"
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[\\w.+-]+\\/[\\w.+-]+$"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "rule",
+        "types"
+      ],
+      "type": "object",
+      "additionalProperties": false
+    }
+  }
+}

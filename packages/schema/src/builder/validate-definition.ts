@@ -1,5 +1,5 @@
 import * as v from 'valibot'
-import type { JsonField, JsonRule } from '../definition/json-form-schema'
+import type { JsonField, JsonRule } from '../definition/json-form'
 import {
   type DefinitionIssue,
   type DefinitionPath,
@@ -11,7 +11,12 @@ import type { FieldTypeDef, KindOf } from '../field-types/field-type-def'
 import type { KindDef } from '../kinds/kind-def'
 import type { RuleDef } from '../rules/rule-def'
 import { paramsFor } from '../rules/rule-params'
-import { isReservedFieldKey, isReservedName, isReservedRuleKey } from '../shared/reserved-keys'
+import {
+  isFutureFieldKey,
+  isReservedFieldKey,
+  isReservedName,
+  isReservedRuleKey,
+} from '../shared/reserved-keys'
 import type { AnyObjectSchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 import { isExtensionFieldKey, lookup, type Registry } from './registry'
@@ -246,9 +251,10 @@ export function checkDefaultRules(
 }
 
 /**
- * Checks the props of a field: every key that isn't reserved, or an extension's, must be one of
- * its type's props, and together they must pass them. Returns the parsed props, or undefined when
- * they fail. The extensions check their own keys. `field` is the input itself: see `pickKeys`.
+ * Checks the props of a field: every key that this package or an extension doesn't read must be
+ * one of its type's props, and together they must pass them. Returns the parsed props, or
+ * undefined when they fail. The extensions check their own keys. `field` is the input itself: see
+ * `pickKeys`.
  */
 function checkProps(
   field: JsonField,
@@ -257,9 +263,17 @@ function checkProps(
   registry: Registry,
   issues: DefinitionIssue[],
 ): Record<string, unknown> | undefined {
-  const isOwnKey = (key: string) => isReservedFieldKey(key) || isExtensionFieldKey(registry, key)
+  // A key kept for a later version has no meaning yet, so it is unknown too.
+  const isOwnKey = (key: string) =>
+    (isReservedFieldKey(key) && !isFutureFieldKey(key)) || isExtensionFieldKey(registry, key)
   const input = pickKeys(field, type.props, isOwnKey, issues, (key) =>
-    issue('unknown_key', [...path, key], `Unknown key "${key}" on a "${field.type}" field`),
+    issue(
+      'unknown_key',
+      [...path, key],
+      isFutureFieldKey(key)
+        ? `Key "${key}" is reserved for a later version`
+        : `Unknown key "${key}" on a "${field.type}" field`,
+    ),
   )
   const parsed = v.safeParse(type.props ?? noKeys, input)
   if (parsed.success) return parsed.output

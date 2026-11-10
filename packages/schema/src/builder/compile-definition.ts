@@ -1,6 +1,6 @@
 import * as v from 'valibot'
-import type { JsonField } from '../definition/json-form-schema'
-import type { WalkedField } from '../definition/walk-fields'
+import type { JsonField } from '../definition/json-form'
+import type { WalkedField } from '../definition/walked-field'
 import {
   type DefinitionIssue,
   type DefinitionPath,
@@ -25,7 +25,7 @@ export interface CompileResult {
   /** Every issue in the definition, in document order. */
   issues: DefinitionIssue[]
   /** The form's schema. Only complete when there are no issues. */
-  schema: JsonFormSchema
+  schema: BuiltSchema
   /** Every field the compiler read, as `walkFields` yields them, your own containers included. */
   walked: WalkedField[]
   /** Formisch's `initialInput`, as `getInitialInput` gives it, your own containers included. */
@@ -47,7 +47,7 @@ export type FieldsSchema = v.ObjectSchema<v.ObjectEntries, undefined>
  * form rules when it has form rules. A new object from its `entries` leaves the form rules out, and
  * the conditions of the extensions, if any.
  */
-export type JsonFormSchema =
+export type BuiltSchema =
   | FieldsSchema
   | v.SchemaWithPipe<readonly [FieldsSchema, ...FormRuleAction[]]>
 
@@ -123,7 +123,7 @@ export function compileDefinition(
     const ctx = { field: rule.field, rule: rule.name, path: rule.path }
     return { rule, message: messages.resolve(rule.message, ctx) }
   })
-  const withRules: JsonFormSchema = withMessages.length
+  const withRules: BuiltSchema = withMessages.length
     ? v.pipe(fields, formRulesAction(withMessages))
     : fields
   if (!conditional) return { ...result, schema: withRules }

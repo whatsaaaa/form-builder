@@ -63,3 +63,6 @@ export const affect: v.GenericSchema<Affect> = v.strictObject({
 export const affectsProps = v.object({
   affects: v.optional(v.array(v.lazy(() => affect))),
 })
+
+/** The schema of the key the package adds, as `AffectsExtension` has it. */
+export type AffectsPropsSchema = typeof affectsProps

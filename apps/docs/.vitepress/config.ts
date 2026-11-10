@@ -36,6 +36,10 @@ const guide: DefaultTheme.SidebarItem[] = [
       { text: 'Extensions', link: '/guide/extensions' },
     ],
   },
+  {
+    text: 'Upgrading',
+    items: [{ text: 'Migrating to 1.0', link: '/guide/migrating-to-1.0' }],
+  },
 ]
 
 const frameworks: DefaultTheme.SidebarItem[] = [
@@ -74,7 +78,7 @@ const schemaApi: DefaultTheme.SidebarItem[] = [
   { text: 'Builder', items: link('schema', ['createSchemaBuilder', 'SchemaBuilder']) },
   {
     text: 'Definition',
-    items: link('schema', ['getInitialInput', 'isRequired', 'walkFields']),
+    items: link('schema', ['isRequired']),
   },
   {
     text: 'Registries',
@@ -100,7 +104,7 @@ const schemaApi: DefaultTheme.SidebarItem[] = [
       'checkLayoutComponents',
       'coerceInput',
       'dotPathOf',
-      'fieldPathsOf',
+      'fieldPathsOfStep',
       'findField',
       'issuesOfStep',
       'selectFields',
@@ -113,6 +117,7 @@ const schemaApi: DefaultTheme.SidebarItem[] = [
   {
     text: 'Types',
     items: link('schema', [
+      'BuiltSchema',
       'DefinitionIssue',
       'FieldNode',
       'FieldTypeDef',
@@ -121,7 +126,6 @@ const schemaApi: DefaultTheme.SidebarItem[] = [
       'JsonField',
       'JsonForm',
       'JsonFormRule',
-      'JsonFormSchema',
       'JsonLayout',
       'JsonRule',
       'KindDef',
@@ -129,8 +133,8 @@ const schemaApi: DefaultTheme.SidebarItem[] = [
       'RuleDef',
       'SchemaBuilderOptions',
       'SchemaExtension',
+      'TypedBuiltSchema',
       'TypedForm',
-      'TypedJsonFormSchema',
       'ValueKind',
       'Visibility',
       'WalkedField',
