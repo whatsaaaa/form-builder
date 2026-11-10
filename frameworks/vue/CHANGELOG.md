@@ -1,5 +1,13 @@
 # @whatsaaaa/form-builder-vue
 
+## 0.3.1
+
+### Patch Changes
+
+- [#41](https://github.com/whatsaaaa/form-builder/pull/41) [`e4a21b4`](https://github.com/whatsaaaa/form-builder/commit/e4a21b42ba6a12e8c5263b23b19cfcc91dac7ae5) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - A shorter README, with badges for the version, downloads, CI and coverage. The full guide moved to `docs/guide.md` in the repository, linked from the README.
+- Updated dependencies [[`e4a21b4`](https://github.com/whatsaaaa/form-builder/commit/e4a21b42ba6a12e8c5263b23b19cfcc91dac7ae5)]:
+  - @whatsaaaa/form-builder-schema@0.15.1
+
 ## 0.3.0
 
 ### Minor Changes
