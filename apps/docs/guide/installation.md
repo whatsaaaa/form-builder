@@ -6,6 +6,19 @@ description: How to add form-builder to your project, for Vue, React or any othe
 
 Below you will learn how to add form-builder to your project. Which packages you need depends on your framework.
 
+::: tip Release candidate
+1.0 is in release candidates on the `rc` dist-tag, while a plain install still gives 0.x. To try it, add `@rc` to each form-builder package you install:
+
+```sh
+pnpm add @whatsaaaa/form-builder-schema@rc valibot
+pnpm add @whatsaaaa/form-builder-vue@rc @formisch/vue     # Vue
+pnpm add @whatsaaaa/form-builder-react@rc @formisch/react # React
+pnpm add @whatsaaaa/form-builder-affects@rc               # Conditions
+```
+
+Read the [migration guide](/guide/migrating-to-1.0) and the [stability policy](/guide/stability) before you upgrade, and tell us how it goes in a [GitHub issue](https://github.com/whatsaaaa/form-builder/issues).
+:::
+
 ## TypeScript
 
 If you use TypeScript, enable strict mode in your `tsconfig.json`, so that every type is computed correctly.
