@@ -1,5 +1,12 @@
 # @whatsaaaa/form-builder-affects
 
+## 0.2.2-rc.0
+
+### Patch Changes
+
+- Updated dependencies [[`437962d`](https://github.com/whatsaaaa/form-builder/commit/437962da55433b2cde556580e85252b55f2e3325)]:
+  - @whatsaaaa/form-builder-schema@1.0.0-rc.0
+
 ## 0.2.1
 
 ### Patch Changes

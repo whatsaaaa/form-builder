@@ -1,6 +1,6 @@
 {
   "name": "@whatsaaaa/form-builder-affects",
-  "version": "0.2.1",
+  "version": "0.2.2-rc.0",
   "description": "Show, hide and clear the fields, sections and steps of JSON form definitions by conditions.",
   "keywords": [
     "conditional",
