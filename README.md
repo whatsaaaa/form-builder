@@ -68,8 +68,6 @@ Planned: `@whatsaaaa/form-builder-codegen`, a CLI that turns definitions into ty
 
 The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects package stays before 1.0 for now. See [stability](https://whatsaaaa.github.io/form-builder/guide/stability), [supported versions](https://whatsaaaa.github.io/form-builder/guide/support), and [migrating to 1.0](https://whatsaaaa.github.io/form-builder/guide/migrating-to-1.0).
 
-1.0 is in release candidates on the `rc` dist-tag, while a plain install still gives 0.x. To try it, add `@rc` to each form-builder package you install, for example `pnpm add @whatsaaaa/form-builder-schema@rc @whatsaaaa/form-builder-vue@rc`.
-
 ## Contributing
 
 Bug reports, ideas and pull requests are welcome. [CONTRIBUTING.md](./CONTRIBUTING.md) explains how to set up the repository, the commands, and how the packages are laid out.
