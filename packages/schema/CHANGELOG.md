@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-schema
 
+## 1.0.0-rc.0
+
+### Major Changes
+
+- [#55](https://github.com/whatsaaaa/form-builder/pull/55) [`437962d`](https://github.com/whatsaaaa/form-builder/commit/437962da55433b2cde556580e85252b55f2e3325) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - 1.0. From here the package follows semantic versioning: a patch fixes bugs, a minor adds, and only a major breaks. What that covers is in the stability policy, https://whatsaaaa.github.io/form-builder/guide/stability, and the versions of Valibot, Formisch and TypeScript it supports are in https://whatsaaaa.github.io/form-builder/guide/support. Definitions keep `version: "1"` for all of 1.x. Coming from 0.x, every change on the way to 1.0 and how to update is in https://whatsaaaa.github.io/form-builder/guide/migrating-to-1.0.
+
 ## 0.17.1
 
 ### Patch Changes
