@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-react
 
+## 1.0.0-rc.1
+
+### Minor Changes
+
+- [#58](https://github.com/whatsaaaa/form-builder/pull/58) [`7b8a4e4`](https://github.com/whatsaaaa/form-builder/commit/7b8a4e472dc1afe794ddb28b97a79fa23642c188) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `useJsonForm` takes `initialInput`: the values the form starts with, like a record to edit. They go over the definition's defaults, so a field without a key keeps its `default`, in groups and in the items of lists too, and a key that is there wins, so `undefined` starts a field blank. Pass the input of the old form to keep what the user typed when you build the form again with a new `key`, like for another language. With `useJsonForm<TInput>()` it is typed by your input type, with every key optional. `UseJsonFormOptions` has a type parameter for that, the form's schema, which defaults to `BuiltSchema`. Every rule is in https://whatsaaaa.github.io/form-builder/api/react/UseJsonFormOptions#initial-input.
+
 ## 1.0.0-rc.0
 
 ### Major Changes
