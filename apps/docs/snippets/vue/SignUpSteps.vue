@@ -2,6 +2,7 @@
 import { Form } from '@formisch/vue'
 import type { JsonForm } from '@whatsaaaa/form-builder-schema'
 import { JsonFields, useJsonForm } from '@whatsaaaa/form-builder-vue'
+import { useTemplateRef, watch } from 'vue'
 import { components } from './all-fields'
 import LayoutRow from './LayoutRow.vue'
 
@@ -11,6 +12,16 @@ const jsonForm = useJsonForm(definition, {
   components,
   layoutComponents: { row: LayoutRow },
 })
+
+// A new step moves the focus to its heading, so keyboard and screen
+// reader users notice it. `post` runs once the step has rendered, and
+// before the adapter focuses a field with an error.
+const heading = useTemplateRef('heading')
+watch(
+  () => jsonForm.steps.current,
+  () => heading.value?.focus(),
+  { flush: 'post' },
+)
 
 function save(output: unknown) {
   console.log(output)
@@ -28,6 +39,9 @@ function save(output: unknown) {
         {{ step.step.label }}
       </li>
     </ol>
+    <h2 ref="heading" tabindex="-1">
+      {{ jsonForm.steps.current.step.label }}
+    </h2>
     <JsonFields :of="jsonForm" />
     <button
       v-if="!jsonForm.steps.isFirst"
@@ -36,13 +50,9 @@ function save(output: unknown) {
     >
       Back
     </button>
-    <button
-      v-if="!jsonForm.steps.isLast"
-      type="button"
-      @click="jsonForm.steps.next()"
-    >
-      Next
+    <!-- A submit before the last step is a Next: Enter moves on. -->
+    <button type="submit">
+      {{ jsonForm.steps.isLast ? 'Sign up' : 'Next' }}
     </button>
-    <button v-else type="submit">Sign up</button>
   </Form>
 </template>

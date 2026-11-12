@@ -39,7 +39,7 @@ The adapters' `useJsonForm` takes the same types, so Formisch checks paths and v
 - It is the same schema, typed as [`TypedBuiltSchema`](/api/schema/TypedBuiltSchema). An interface works as the type, which Formisch's own constraint wouldn't take as it is.
 - **The types are a promise you make.** Nothing checks them against the definition, so keep the two in step.
 - **With conditions**, a field that can hide submits nothing while it is hidden, even a required one. Make it optional in the output type.
-- Paths that come from the definition, like a [`FieldNode`](/api/schema/FieldNode)'s, still need `as never` for Formisch, since TypeScript can't know them.
+- Paths that come from data, like a [`FieldNode`](/api/schema/FieldNode)'s, still need `as never` for Formisch, since TypeScript can't know them. For `focus` and `useField`, cast the path: `{ path: path as never }`. `setErrors`, `getErrors`, `setInput` and `getInput` pick the type of their config by the path, so cast the whole config: `setErrors(form, { path, errors } as never)`.
 
 ## Why the output isn't inferred
 

@@ -33,7 +33,7 @@ A field's schema runs its parts in this order:
 
 1. **Normalize rules**, like `trim` and `toLowerCase`, which change the value instead of checking it.
 2. **The required check.** With `trim`, a value of only spaces counts as empty.
-3. **The type's own rules**, like the `email` rule of an `email` field, then the field's rules, in order.
+3. **The type's own rules**, like the `email` rule of an `email` field, then the field's rules, in order. A rule of the field with the same name as one of the type's replaces it, so `{ "rule": "email", "message": "..." }` on an `email` field [sets the message](/guide/field-types#text) of that check.
 4. **The type's last step**, like turning an ISO string into a `Date` with `"output": "date"`.
 
 Rules never run on an empty value. A required field that is empty reports only the required message, and one that isn't required outputs `undefined`.

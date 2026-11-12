@@ -26,18 +26,29 @@ const schema = builder.build(definition)
 function handleSignup(body: unknown) {
   const result = v.safeParse(schema, body)
   if (!result.success) {
-    // { email: ['Please enter your email'] }, by the dot path of each field
     return {
       status: 422,
-      errors: v.flatten<typeof schema>(result.issues).nested,
+      // Each message with the path of its field: ['email'], or
+      // ['lines', 0, 'quantity'] for a field of a list's item.
+      issues: result.issues.map((issue) => ({
+        path: issue.path?.map((item) => item.key) ?? [],
+        message: issue.message,
+      })),
     }
   }
   return { status: 201, output: result.output }
 }
 // #endregion handler
 
+// #region lang
+// Valibot's messages in the language of one request.
+function handleSignupIn(lang: string, body: unknown) {
+  return v.safeParse(schema, body, { lang })
+}
+// #endregion lang
+
 // #region missing-key
-handleSignup({}) // 422, email: 'Please enter your email'
+handleSignup({}) // 422, 'Please enter your email' at ['email']
 // #endregion missing-key
 
 // #region dates
@@ -79,11 +90,20 @@ const input = {
 const withFile = handleSignup(input) // 201
 // #endregion files
 
+// A message for Valibot's email check in Serbian, the way @valibot/i18n
+// sets the messages of the languages it has.
+v.setSpecificMessage(v.email, 'Unesite ispravnu e-adresu', 'sr')
+const inSerbian = handleSignupIn('sr', { email: 'nope' })
+const inEnglish = handleSignupIn('en', { email: 'nope' })
+v.deleteSpecificMessage(v.email, 'sr')
+
 const missing = handleSignup({})
 if (
   missing.status !== 422 ||
-  JSON.stringify(missing.errors) !==
-    '{"email":["Please enter your email"]}' ||
+  JSON.stringify(missing.issues) !==
+    '[{"path":["email"],"message":"Please enter your email"}]' ||
+  inSerbian.issues?.[0]?.message !== 'Unesite ispravnu e-adresu' ||
+  inEnglish.issues?.[0]?.message !== 'Invalid email: Received "nope"' ||
   !(output.birthDate instanceof Date) ||
   fromOutput.status !== 422 ||
   fromInput.status !== 201 ||

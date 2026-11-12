@@ -22,7 +22,7 @@ const inputTypes: Record<string, string> = {
     <input
       v-bind="inputProps"
       :type="inputTypes[field.type] ?? 'text'"
-      :value="input ?? ''"
+      :value="String(input ?? '')"
       :placeholder="field.placeholder"
       :required="required"
       @input="setInput(($event.target as HTMLInputElement).value)"
