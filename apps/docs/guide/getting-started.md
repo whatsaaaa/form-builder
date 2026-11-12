@@ -4,7 +4,7 @@ description: Write a form definition, check it, and render it with the Vue or Re
 
 # Getting started
 
-Below you will write a definition for a small sign-up form, check it, and render it with the Vue or React adapter. If you haven't yet, [install](/guide/installation) the packages for your framework first.
+Below you will write a definition for a small sign-up form, check it, and render it with the Vue or React adapter. If you haven't yet, [install](/guide/installation) the packages for your framework first. Any Vue or React project works. To start a new one, `pnpm create vite` with the `vue-ts` or `react-ts` template is enough.
 
 ## Write a definition
 
@@ -18,7 +18,13 @@ A definition describes a form as JSON: its `version`, which is always `"1"` for 
       "name": "email",
       "type": "email",
       "label": "Email",
-      "required": true
+      "required": true,
+      "rules": [
+        {
+          "rule": "email",
+          "message": "Enter a valid email address"
+        }
+      ]
     },
     {
       "name": "password",
@@ -42,7 +48,7 @@ A definition describes a form as JSON: its `version`, which is always `"1"` for 
 }
 ```
 
-The `email` type checks that the value is an email address. `required` makes a field required, and `rules` adds checks of your own, each with an optional `message`. The [define your form](/guide/define-your-form) guide goes through every key.
+The `email` type checks that the value is an email address. `required` makes a field required, and `rules` adds checks of your own, each with an optional `message`. The `email` rule here adds no second check: it replaces the one the type runs on its own, to give it a message. The [define your form](/guide/define-your-form) guide goes through every key.
 
 ## Check it
 

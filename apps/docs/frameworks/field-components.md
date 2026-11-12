@@ -47,9 +47,19 @@ A value field gets the field from the definition, its state in Formisch, and a s
 
 - `field` is the field from the definition, with its `label`, `placeholder`, `options` and `ui`.
 - `path` is its Formisch path with real indexes, like `['lines', 0, 'quantity']`.
-- `input` is the field's current input, and `errors` its messages, or `null`.
-- `inputProps` are Formisch's element props: the field's name, a ref, and its focus, change and blur handlers. Bind them to the input element, so Formisch knows when the field is touched and can focus it after a failed submit.
+- `input` is the field's current input, and `errors` its messages, or `null`. `input` is `unknown`, so make it a string for an element's value, with `String(input ?? '')`.
+- `inputProps` are Formisch's element props: the field's name, a ref, and its focus, change and blur handlers. Bind them to the input element, so Formisch knows when the field is touched and can focus it after a failed submit. A field with several elements, like a radio, binds them to each one.
 - `required` is true when the definition makes the field required, like for an asterisk. The schema does the checking.
+
+A `textarea` takes the same props on a `<textarea>`:
+
+::: code-group
+
+<<< @/snippets/vue/TextareaInput.vue [Vue]
+
+<<< @/snippets/react/TextareaInput.tsx [React]
+
+:::
 
 ## Setting the value
 
@@ -65,6 +75,18 @@ A value field gets the field from the definition, its state in Formisch, and a s
 
 Anything else is set as it is, and the schema reports it if it doesn't fit. In React, your `onChange` after the spread of `inputProps` replaces Formisch's, and calls `setInput` instead. `setInput` stays the same function while the field is the same, so it is safe in the dependencies of an effect.
 
+## Checkboxes
+
+A `checkbox` holds `true` or `false`, so it reads and sets the element's `checked`, not its value:
+
+::: code-group
+
+<<< @/snippets/vue/CheckboxInput.vue [Vue]
+
+<<< @/snippets/react/CheckboxInput.tsx [React]
+
+:::
+
 ## Choices
 
 An element's value is always a string. To keep `2` a number and `false` a boolean, set the option's own value from `field.options`, and use each option's index as the element's value:
@@ -77,9 +99,27 @@ An element's value is always a string. To keep `2` a number and `false` a boolea
 
 :::
 
-- A radio sets its option's value when it is picked, and is checked while `input` is that value.
-- A multiselect's value is a list of option values. A checkbox for an option adds its value to the list, or takes it out.
-- A `select` without `options`, because they load from an API, is a text input. With `"valueType": "number"`, its kind is `number`, so `setInput` turns what is typed into a number.
+A `select` without `options`, because they load from an API, is a text input. With `"valueType": "number"`, its kind is `number`, so `setInput` turns what is typed into a number.
+
+A `radio` renders an element for each option. Each one sets its option's value when it is picked, and is checked while `input` is that value:
+
+::: code-group
+
+<<< @/snippets/vue/RadioInput.vue [Vue]
+
+<<< @/snippets/react/RadioInput.tsx [React]
+
+:::
+
+A `multiselect` holds a list of option values. As checkboxes, each one puts its option's value in the list, or takes it out:
+
+::: code-group
+
+<<< @/snippets/vue/CheckboxGroup.vue [Vue]
+
+<<< @/snippets/react/CheckboxGroup.tsx [React]
+
+:::
 
 ## Files
 

@@ -10,7 +10,12 @@ Every error a form shows is a message: a field's required message, a rule's `mes
 
 - **The required message** is the field's own, from `"required": { "message": "..." }`, or else the builder's `messages.required`, which defaults to `"Required"`.
 - **A rule's message** is its `message`. A rule without one reports Valibot's own message, like "Invalid length: Expected >=10 but received 5".
+- **The message of a type's own check**, like the `email` check of an `email` field, is Valibot's too. To set it, add the rule again with a `message`: it replaces the type's.
 - **A form rule's message** is its `message`, which it always has.
+
+Here, `home` sets the message of its email check, and `work` keeps Valibot's:
+
+<<< @/snippets/schema/type-messages.ts#message
 
 ## Translating your messages
 

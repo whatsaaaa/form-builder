@@ -50,7 +50,7 @@ A `FieldNode` has `field`, the field as the definition has it, and its `type`, `
 
 A node's `dataPath` has `'*'` for each list index: `['lines', '*', 'quantity']`. `toFieldPath(node.dataPath, indexes)` puts in the index of each item the field is in, outermost first, and gives the path Formisch takes: `['lines', 0, 'quantity']`. Pass the indexes down as you render the items of a list.
 
-The path comes from the definition at runtime, so Formisch's types can't check it: pass it `as never`.
+The path comes from the definition at runtime, so Formisch's types can't check it: pass it `as never`. `setErrors`, `getErrors`, `setInput` and `getInput` pick the type of their config by the path, so there the cast goes on the whole config: `setErrors(form, { path, errors } as never)`.
 
 ## Lists
 

@@ -16,6 +16,13 @@ pnpm add @whatsaaaa/form-builder-react@rc @formisch/react # React
 pnpm add @whatsaaaa/form-builder-affects@rc               # Conditions
 ```
 
+pnpm 11 and later hold back versions published in the last day. Right after a release candidate comes out, `@rc` then gives you an older version, or fails to unpack a `0.0.0-stage` placeholder. To get the newest one, exempt the packages in your `pnpm-workspace.yaml` before you install:
+
+```yaml
+minimumReleaseAgeExclude:
+  - '@whatsaaaa/form-builder-*'
+```
+
 Read the [migration guide](/guide/migrating-to-1.0) and the [stability policy](/guide/stability) before you upgrade, and tell us how it goes in a [GitHub issue](https://github.com/whatsaaaa/form-builder/issues).
 :::
 

@@ -61,7 +61,7 @@ defineProps<ValueFieldProps>()
     <input
       v-bind="inputProps"
       :type="kind === 'number' ? 'number' : 'text'"
-      :value="input ?? ''"
+      :value="String(input ?? '')"
       :required="required"
       @input="setInput(($event.target as HTMLInputElement).value)"
     />

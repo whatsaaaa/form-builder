@@ -78,7 +78,7 @@ The Vue and React adapters do all of this, and more:
 
 - A step shows the errors it had when the user left it.
 - A step that failed Next revalidates as the user fixes it, like a form after a failed submit.
-- A submit before the last step, like Enter in a text input, moves on like Next.
+- A submit before the last step, like Enter in a text input, moves on like Next. For Enter to submit, a form needs a submit button, so make Next [that button](/frameworks/multi-step-forms#rendering-steps).
 - A submit that fails because of an earlier step goes back to it.
 
 See [multi-step forms](/frameworks/multi-step-forms) for the adapters' `steps`, and [rendering with Formisch](/frameworks/formisch#steps) to build it yourself.

@@ -45,6 +45,17 @@ Anything more specific is a variant of one of these, or a type of your own. A st
 }
 ```
 
+The check of an `email` or `url` field reports Valibot's own message, like `Invalid email: Received "nope"`. To set it, add the rule again with a `message`. A rule of the field replaces the type's rule of the same name, so the value is checked once, and only your message is reported:
+
+```json
+{
+  "name": "email",
+  "type": "email",
+  "label": "Email",
+  "rules": [{ "rule": "email", "message": "Enter a valid email address" }]
+}
+```
+
 ## Numbers
 
 A `number` holds a number. An input element gives a string, like `"5"`, so renderers turn it into a number before they set it. The adapters do that for you.
