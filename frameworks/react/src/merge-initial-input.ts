@@ -1,4 +1,5 @@
-// Kept identical in frameworks/react and frameworks/vue, so both adapters merge by one rule.
+// The Vue and React adapters each have this, and must merge the same way, which the cases in
+// integration/tests/initial-input-cases.ts check on both.
 import type { FieldNode, JsonForm, SchemaBuilder } from '@whatsaaaa/form-builder-schema'
 
 /**

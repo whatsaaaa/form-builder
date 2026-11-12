@@ -1,6 +1,6 @@
 // The scenarios through @whatsaaaa/form-builder-react, with components written the way its guide
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
-import { Form } from '@formisch/react'
+import { Form, getInput } from '@formisch/react'
 import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   createSchemaBuilder,
@@ -22,9 +22,10 @@ import {
   useJsonForm,
   type ValueFieldProps,
 } from '@whatsaaaa/form-builder-react'
-import { act, type ReactNode } from 'react'
+import { act, type ReactNode, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { describe, onTestFinished } from 'vitest'
+import { runInitialInputCases } from './initial-input-cases'
 import { type RenderedForm, runScenarios } from './run-scenarios'
 
 // Tells React that tests wrap their updates in act().
@@ -289,4 +290,21 @@ function render(json: JsonForm): RenderedForm {
 
 describe('the fixtures in @formisch/react, through @whatsaaaa/form-builder-react', () => {
   runScenarios(render)
+})
+
+describe('initialInput in @whatsaaaa/form-builder-react', () => {
+  runInitialInputCases((json, initialInput) => {
+    const start: { input?: unknown } = {}
+    function Start() {
+      const { form } = useJsonForm(json, { builder, initialInput } as never)
+      useEffect(() => {
+        start.input = getInput(form)
+      })
+      return null
+    }
+    const root = createRoot(document.createElement('div'))
+    act(() => root.render(<Start />))
+    act(() => root.unmount())
+    return start.input
+  })
 })

@@ -1,6 +1,6 @@
 // The scenarios through @whatsaaaa/form-builder-vue, with components written the way its guide
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
-import { Form } from '@formisch/vue'
+import { Form, getInput } from '@formisch/vue'
 import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   createSchemaBuilder,
@@ -30,6 +30,7 @@ import {
   type PropType,
 } from 'vue'
 import { describe, onTestFinished } from 'vitest'
+import { runInitialInputCases } from './initial-input-cases'
 import { type RenderedForm, runScenarios } from './run-scenarios'
 
 type Option = { value: string | number | boolean; label: string }
@@ -300,4 +301,19 @@ function render(json: JsonForm): RenderedForm {
 
 describe('the fixtures in @formisch/vue, through @whatsaaaa/form-builder-vue', () => {
   runScenarios(render)
+})
+
+describe('initialInput in @whatsaaaa/form-builder-vue', () => {
+  runInitialInputCases((json, initialInput) => {
+    let input: unknown
+    const app = createApp({
+      setup() {
+        input = getInput(useJsonForm(json, { builder, initialInput } as never).form)
+        return () => null
+      },
+    })
+    app.mount(document.createElement('div'))
+    app.unmount()
+    return input
+  })
 })

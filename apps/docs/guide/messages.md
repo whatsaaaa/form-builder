@@ -45,6 +45,7 @@ A form built again is a new form. It starts empty, with the defaults of the defi
 - **The key builds the form again**, with the builder of the language. `useJsonForm` reads the builder and the initial input once.
 - **Every value comes along.** A field the user cleared stays blank and doesn't get its default back, because its key is there.
 - **The errors on show don't come along.** The new form validates as its modes say, and reports in the new language.
+- **What comes along is the new form's initial input.** The new form isn't dirty, and a reset goes back to these values. To reset to the record a form began with, or to know what changed since, keep that record yourself.
 - **A form with steps** starts on its first step again.
 
 With Formisch's own packages, pass the old form's input as the `initialInput` of the new form, in place of the builder's `getInitialInput()`.
