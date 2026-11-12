@@ -44,7 +44,7 @@ Call it with the server's answer, in the submit handler you give Formisch's `<Fo
 
 - **The cast goes on the whole config.** TypeScript can't check a path that comes from data. For `focus`, `{ path: path as never }` is enough. `setErrors` picks the type of its config by the path, so `setErrors(form, { path: path as never, errors })` doesn't compile. Cast the config instead: `{ path, errors } as never`.
 - **The messages stay until the form validates again.** After a submit, that is the user's next change, in any field: Formisch then shows what the schema finds, and a message only the server knows, like a taken email, is gone.
-- **In a form with [steps](/frameworks/multi-step-forms), the adapters clear them at once.** When a submit ends with errors on the form, the adapters validate it again to find the step the errors are on, and the schema finds none. There, show the server's messages in your own markup, like a list above the form, and take the user to a step with `steps.goTo()`.
+- **In a form with [steps](/frameworks/multi-step-forms), the adapters keep them too.** A message on a field of the step on show stays there. A message on a field of an earlier step takes the user back to that step, the earliest one that has a message, and focuses its first field with a message. This applies from `1.0.0-rc.2` of the adapters. In `1.0.0-rc.1`, the adapters clear the messages at once, because they validate the form again after the submit. There, show the server's messages in your own markup, like a list above the form, and take the user to a step with `steps.goTo()`.
 
 ## Languages
 

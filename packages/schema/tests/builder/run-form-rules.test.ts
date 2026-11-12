@@ -210,7 +210,7 @@ describe('running form rules', () => {
 
     const input = (a: string, b: string) => ({ shipping: { country: a }, billing: { country: b } })
     expect(issuesOf(schema, input('RS', 'RS'))).toEqual([])
-    expect(issuesOf(schema, input('RS', 'HR'))).toEqual([
+    expect(issuesOf(schema, input('RS', 'ME'))).toEqual([
       { path: ['billing', 'country'], message: 'We ship to your billing country only' },
     ])
   })
