@@ -63,6 +63,7 @@ describe('initialInput', () => {
     expect(startOf(profile, undefined)).toEqual(defaults)
     expect(startOf(profile, null)).toEqual(defaults)
     expect(startOf(profile, 'Ana')).toEqual(defaults)
+    expect(startOf(profile, ['Ana'])).toEqual(defaults)
   })
 
   it.each([...Object.entries(fixtures), ...Object.entries({ business, order, shipping, signUp })])(
@@ -134,6 +135,9 @@ describe('initialInput for a group', () => {
     })
     expect(startOf(json, { address: null })).toMatchObject({ address: { country: undefined } })
     expect(startOf(json, { address: 'Zagreb' })).toMatchObject({ address: { country: undefined } })
+    expect(startOf(json, { address: ['Zagreb'] })).toMatchObject({
+      address: { country: undefined },
+    })
   })
 
   it('merges groups at every depth, in your own container types too', () => {
@@ -205,9 +209,10 @@ describe('initialInput for a list', () => {
   })
 
   it('starts an item blank that is no object, and takes single values as they are', () => {
-    expect(startOf(json, { tags: ['a', undefined], lines: [undefined, 'Pen'] })).toEqual({
+    expect(startOf(json, { tags: ['a', undefined], lines: [undefined, 'Pen', ['Pen']] })).toEqual({
       tags: ['a', undefined],
       lines: [
+        { product: undefined, quantity: undefined },
         { product: undefined, quantity: undefined },
         { product: undefined, quantity: undefined },
       ],

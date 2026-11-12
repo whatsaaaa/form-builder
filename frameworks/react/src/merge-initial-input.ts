@@ -1,3 +1,4 @@
+// Kept identical in frameworks/react and frameworks/vue, so both adapters merge by one rule.
 import type { FieldNode, JsonForm, SchemaBuilder } from '@whatsaaaa/form-builder-schema'
 
 /**
@@ -59,4 +60,4 @@ function defaultOf(node: FieldNode): unknown {
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
+  typeof value === 'object' && value !== null && !Array.isArray(value)
