@@ -17,7 +17,7 @@ const path = toFieldPath(dataPath, indexes)
 
 ### Explanation
 
-`toFieldPath(['lines', '*', 'quantity'], [2])` is `['lines', 2, 'quantity']`. A path with more `'*'` than indexes is a mistake in the code, so it throws a `TypeError`. The path comes from the definition at runtime, so pass it to Formisch `as never`.
+`toFieldPath(['lines', '*', 'quantity'], [2])` is `['lines', 2, 'quantity']`. A path with more `'*'` than indexes is a mistake in the code, so it throws a `TypeError`. The path comes from the definition at runtime, so Formisch's types can't check it: [rendering with Formisch](/frameworks/formisch#paths) says where the `as never` goes.
 
 ## Returns
 
