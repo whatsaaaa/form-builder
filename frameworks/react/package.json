@@ -1,6 +1,6 @@
 {
   "name": "@whatsaaaa/form-builder-react",
-  "version": "1.0.0-rc.0",
+  "version": "1.0.0-rc.1",
   "description": "Render JSON form definitions with Formisch and your own React components.",
   "keywords": [
     "form",
