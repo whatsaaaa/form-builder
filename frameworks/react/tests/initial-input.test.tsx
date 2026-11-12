@@ -35,12 +35,12 @@ const profile = form(
 describe('initialInput', () => {
   it('starts the form with the values it gives', () => {
     const { root, jsonForm } = mountForm(profile, builtInComponents, {
-      initialInput: { name: 'Ana', country: 'HR', age: 30 },
+      initialInput: { name: 'Ana', country: 'ME', age: 30 },
     })
 
-    expect(getInput(jsonForm.form)).toEqual({ name: 'Ana', country: 'HR', age: 30 })
+    expect(getInput(jsonForm.form)).toEqual({ name: 'Ana', country: 'ME', age: 30 })
     expect(shownAt(root, 'name')).toBe('Ana')
-    expect(shownAt(root, 'country')).toBe('HR')
+    expect(shownAt(root, 'country')).toBe('ME')
     expect(shownAt(root, 'age')).toBe('30')
   })
 
@@ -119,11 +119,11 @@ describe('initialInput for a group', () => {
   const json = fixtures.group as JsonForm
 
   it('merges the fields it gives over the defaults of the others', () => {
-    expect(startOf(json, { address: { city: 'Zagreb' } })).toEqual({
-      address: { street: undefined, city: 'Zagreb', zip: undefined, country: 'rs' },
+    expect(startOf(json, { address: { city: 'Belgrade' } })).toEqual({
+      address: { street: undefined, city: 'Belgrade', zip: undefined, country: 'rs' },
     })
-    expect(startOf(json, { address: { country: 'hr' } })).toMatchObject({
-      address: { country: 'hr' },
+    expect(startOf(json, { address: { country: 'me' } })).toMatchObject({
+      address: { country: 'me' },
     })
     expect(startOf(json, { address: { country: undefined } })).toMatchObject({
       address: { country: undefined },
@@ -137,8 +137,10 @@ describe('initialInput for a group', () => {
       address: { ...blank.address, country: undefined },
     })
     expect(startOf(json, { address: null })).toMatchObject({ address: { country: undefined } })
-    expect(startOf(json, { address: 'Zagreb' })).toMatchObject({ address: { country: undefined } })
-    expect(startOf(json, { address: ['Zagreb'] })).toMatchObject({
+    expect(startOf(json, { address: 'Belgrade' })).toMatchObject({
+      address: { country: undefined },
+    })
+    expect(startOf(json, { address: ['Belgrade'] })).toMatchObject({
       address: { country: undefined },
     })
   })
@@ -254,7 +256,7 @@ describe('initialInput for a list', () => {
       },
     )
     const people = [
-      { name: 'Ana', address: { city: 'Zagreb' }, phones: [{ number: '1' }] },
+      { name: 'Ana', address: { city: 'Belgrade' }, phones: [{ number: '1' }] },
       { name: 'Mia', phones: [{ number: '2' }, { kind: 'home', number: '3' }] },
     ]
 
@@ -262,7 +264,7 @@ describe('initialInput for a list', () => {
       people: [
         {
           name: 'Ana',
-          address: { city: 'Zagreb', country: 'rs' },
+          address: { city: 'Belgrade', country: 'rs' },
           phones: [{ kind: 'mobile', number: '1' }],
         },
         {
@@ -283,7 +285,7 @@ describe('initialInput with conditions', () => {
   const builder = createSchemaBuilder({ extensions: [affects()] })
 
   it('starts a field blank that its conditions clear for the input', () => {
-    const address = { street: 'Ilica 1', zip: '10000', city: 'Zagreb', country: 'HR' }
+    const address = { street: 'Knez Mihailova 1', zip: '11000', city: 'Belgrade', country: 'RS' }
 
     expect(startOf(shipping as JsonForm, { shipping: address }, { builder })).toMatchObject({
       sameAsBilling: true,
@@ -292,15 +294,15 @@ describe('initialInput with conditions', () => {
   })
 
   it('shows a field with its value that the input shows', () => {
-    const address = { street: 'Ilica 1', zip: '10000', city: 'Zagreb' }
+    const address = { street: 'Knez Mihailova 1', zip: '11000', city: 'Belgrade' }
     const { root, jsonForm } = mountForm(shipping as JsonForm, builtInComponents, {
       builder,
-      initialInput: { sameAsBilling: false, shipping: address, confirmZip: '10000' },
+      initialInput: { sameAsBilling: false, shipping: address, confirmZip: '11000' },
     })
 
     expect(getInput(jsonForm.form)).toMatchObject({ shipping: { ...address, country: 'DE' } })
-    expect(shownAt(root, 'shipping.street')).toBe('Ilica 1')
-    expect(shownAt(root, 'confirmZip')).toBe('10000')
+    expect(shownAt(root, 'shipping.street')).toBe('Knez Mihailova 1')
+    expect(shownAt(root, 'confirmZip')).toBe('11000')
   })
 
   it('clears the fields of each item of a list by its own fields', () => {

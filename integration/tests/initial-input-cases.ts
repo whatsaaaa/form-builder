@@ -11,7 +11,7 @@ const profile: JsonForm = {
   ],
 }
 
-const address = { street: 'Ilica 1', zip: '10000', city: 'Zagreb' }
+const address = { street: 'Knez Mihailova 1', zip: '11000', city: 'Belgrade' }
 
 /**
  * What a form starts with for the `initialInput` of `useJsonForm`, as its API page says. A blank
@@ -34,8 +34,8 @@ const cases: InitialInputCase[] = [
   {
     name: 'takes a value over the default of its field',
     json: profile,
-    initialInput: { name: 'Ana', country: 'HR', age: 30 },
-    starts: { name: 'Ana', country: 'HR', age: 30 },
+    initialInput: { name: 'Ana', country: 'ME', age: 30 },
+    starts: { name: 'Ana', country: 'ME', age: 30 },
   },
   {
     name: 'starts a field blank whose key is there without a value',
@@ -52,10 +52,10 @@ const cases: InitialInputCase[] = [
   {
     name: 'merges the fields of a group over the defaults of the others',
     json: fixtures.group,
-    initialInput: { address: { city: 'Zagreb' } },
-    starts: { address: { city: 'Zagreb', country: 'rs' } },
+    initialInput: { address: { city: 'Belgrade' } },
+    starts: { address: { city: 'Belgrade', country: 'rs' } },
   },
-  ...[undefined, null, 'Zagreb', ['Zagreb']].map((given) => ({
+  ...[undefined, null, 'Belgrade', ['Belgrade']].map((given) => ({
     name: `starts the fields of a group blank that is given ${JSON.stringify(given)}`,
     json: fixtures.group,
     initialInput: { address: given },
@@ -94,12 +94,12 @@ const cases: InitialInputCase[] = [
   {
     name: 'keeps the value of a field that the input shows',
     json: fixtures['affects/shipping'],
-    initialInput: { sameAsBilling: false, shipping: address, confirmZip: '10000' },
+    initialInput: { sameAsBilling: false, shipping: address, confirmZip: '11000' },
     starts: {
       billing: {},
       sameAsBilling: false,
       shipping: { ...address, country: 'DE' },
-      confirmZip: '10000',
+      confirmZip: '11000',
     },
   },
 ]

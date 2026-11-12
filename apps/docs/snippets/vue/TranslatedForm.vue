@@ -20,7 +20,7 @@ const jsonForm = useJsonForm(props.definition, {
   // What the user typed in the form of the other language.
   initialInput: props.initialInput,
 })
-const other = props.locale === 'en' ? 'hr' : 'en'
+const other = props.locale === 'en' ? 'sr-Latn' : 'en'
 
 function save(output: unknown) {
   console.log(output)
@@ -34,7 +34,7 @@ function save(output: unknown) {
       type="button"
       @click="emit('locale', other, getInput(jsonForm.form))"
     >
-      {{ other === 'hr' ? 'Hrvatski' : 'English' }}
+      {{ other === 'en' ? 'English' : 'Srpski' }}
     </button>
     <JsonFields :of="jsonForm" />
     <button type="submit">Order</button>

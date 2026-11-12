@@ -1,11 +1,14 @@
 import { createSchemaBuilder } from '@whatsaaaa/form-builder-schema'
 
 // #region builders
-export type Locale = 'en' | 'hr'
+export type Locale = 'en' | 'sr-Latn'
 
 const translations: Record<Locale, Record<string, string>> = {
   en: { 'form.required': 'Required', 'signup.email': 'Email' },
-  hr: { 'form.required': 'Obavezno polje', 'signup.email': 'E-pošta' },
+  'sr-Latn': {
+    'form.required': 'Obavezno polje',
+    'signup.email': 'E-pošta',
+  },
 }
 
 const builderFor = (locale: Locale) =>
@@ -15,5 +18,8 @@ const builderFor = (locale: Locale) =>
   })
 
 // One builder per language, made once.
-export const builders = { en: builderFor('en'), hr: builderFor('hr') }
+export const builders = {
+  en: builderFor('en'),
+  'sr-Latn': builderFor('sr-Latn'),
+}
 // #endregion builders

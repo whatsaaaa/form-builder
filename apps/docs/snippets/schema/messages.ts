@@ -5,7 +5,7 @@ import * as v from 'valibot'
 const translations: Record<string, string> = {
   'form.required': 'Obavezno polje',
   'signup.email': 'E-pošta',
-  'signup.password.short': 'Najmanje 10 znakova',
+  'signup.password.short': 'Najmanje 10 karaktera',
 }
 
 const builder = createSchemaBuilder({
@@ -32,10 +32,10 @@ const schema = builder.build({
 })
 
 const result = v.safeParse(schema, { email: '', password: 'short' })
-// The issues' messages: 'Obavezno polje' for email, 'Najmanje 10 znakova' for password.
+// The issues' messages: 'Obavezno polje' for email, 'Najmanje 10 karaktera' for password.
 // #endregion build
 
 const messages = result.issues?.map((issue) => issue.message)
-if (messages?.join() !== 'Obavezno polje,Najmanje 10 znakova') {
+if (messages?.join() !== 'Obavezno polje,Najmanje 10 karaktera') {
   throw new Error(`Unexpected messages: ${messages?.join()}`)
 }

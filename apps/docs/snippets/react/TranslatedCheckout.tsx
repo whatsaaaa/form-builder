@@ -22,7 +22,7 @@ function TranslatedForm(props: TranslatedFormProps) {
     // What the user typed in the form of the other language.
     initialInput: props.initialInput,
   })
-  const other = props.locale === 'en' ? 'hr' : 'en'
+  const other = props.locale === 'en' ? 'sr-Latn' : 'en'
 
   return (
     <Form of={jsonForm.form} onSubmit={(output) => console.log(output)}>
@@ -31,7 +31,7 @@ function TranslatedForm(props: TranslatedFormProps) {
         type="button"
         onClick={() => props.onLocale(other, getInput(jsonForm.form))}
       >
-        {other === 'hr' ? 'Hrvatski' : 'English'}
+        {other === 'en' ? 'English' : 'Srpski'}
       </button>
       <JsonFields of={jsonForm} />
       <button type="submit">Order</button>
