@@ -24,6 +24,32 @@ The schema then reports the translated messages:
 
 The second argument of `resolveMessage` is a [`MessageContext`](/api/schema/MessageContext): the `field` the text belongs to, the `rule` for a rule's message, and the `path` of the field in the definition. Build one builder per language, or read the current language inside `resolveMessage`. A builder resolves the messages when it builds the schema, so build the form again when the language changes.
 
+### Changing the language
+
+Make one builder per language, once:
+
+<<< @/snippets/schema/locales.ts#builders
+
+A form built again is a new form. It starts empty, with the defaults of the definition, and what the user typed is gone unless you pass it on. In the Vue and React adapters, read the input of the old form with Formisch's `getInput`, and give it to the new one as the `initialInput` of `useJsonForm` ([Vue](/api/vue/UseJsonFormOptions#initial-input), [React](/api/react/UseJsonFormOptions#initial-input)):
+
+::: code-group
+
+<<< @/snippets/vue/TranslatedForm.vue [Vue: TranslatedForm.vue]
+
+<<< @/snippets/vue/TranslatedCheckout.vue [Vue: TranslatedCheckout.vue]
+
+<<< @/snippets/react/TranslatedCheckout.tsx#switch [React]
+
+:::
+
+- **The key builds the form again**, with the builder of the language. `useJsonForm` reads the builder and the initial input once.
+- **Every value comes along.** A field the user cleared stays blank and doesn't get its default back, because its key is there.
+- **The errors on show don't come along.** The new form validates as its modes say, and reports in the new language.
+- **What comes along is the new form's initial input.** The new form isn't dirty, and a reset goes back to these values. To reset to the record a form began with, or to know what changed since, keep that record yourself.
+- **A form with steps** starts on its first step again.
+
+With Formisch's own packages, pass the old form's input as the `initialInput` of the new form, in place of the builder's `getInitialInput()`.
+
 ## Translating Valibot's messages
 
 A rule without a `message` reports Valibot's own, so Valibot's [i18n package](https://valibot.dev/guides/internationalization/) translates it, with no setup here. Import the languages you need and set the language with Valibot's `setGlobalConfig`.

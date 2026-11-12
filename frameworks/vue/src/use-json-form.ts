@@ -1,4 +1,5 @@
 import {
+  type FormConfig,
   type FormSchema,
   type FormStore,
   getInput,
@@ -19,10 +20,21 @@ import {
 import { computed, watch } from 'vue'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type JsonFormSteps, useJsonFormSteps } from './json-form-steps'
+import { mergeInitialInput } from './merge-initial-input'
 
-export interface UseJsonFormOptions {
+/** The options of `useJsonForm`. `TSchema` is the form's schema, which types `initialInput`. */
+export interface UseJsonFormOptions<TSchema extends FormSchema = BuiltSchema> {
   /** Builds the schema and knows your own types and rules. Defaults to `createSchemaBuilder()`. */
   builder?: SchemaBuilder
+  /**
+   * The values the form starts with, like a record to edit, or the input of the form this one
+   * replaces. They go over the definition's defaults: a field without a key keeps its `default`,
+   * and a key that is there wins with any value, so `undefined` starts the field blank. The fields
+   * of a group are merged the same way. A list is taken whole, each item over what a new item
+   * starts with. A key that is no field is ignored, and a field its conditions clear starts blank.
+   * Typed like Formisch's own `initialInput`: your input type, with every key optional.
+   */
+  initialInput?: FormConfig<TSchema>['initialInput']
   /** Your component for each field type, so `<JsonFields>` and `<JsonField>` don't need them. */
   components?: FieldComponents
   /** Your component for each layout type the definition's `layout` uses, like `section`. */
@@ -61,11 +73,12 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
 export type AnyJsonFormInstance = JsonFormInstance<FormSchema>
 
 /**
- * A Formisch form for a definition, with its schema and initial input from the builder. A
- * definition with issues throws the builder's `DefinitionError`, so run `validate()` first when it
- * comes from outside your code. The definition is read once: give the form a new `:key` to use
- * another one. With conditions, it clears the fields they clear as soon as they do, with
- * Formisch's `setInput`, wherever the fields are rendered.
+ * A Formisch form for a definition, with its schema and initial input from the builder, and the
+ * `initialInput` of the options over it. A definition with issues throws the builder's
+ * `DefinitionError`, so run `validate()` first when it comes from outside your code. The
+ * definition and the initial input are read once: give the form a new `:key` to use another one.
+ * With conditions, it clears the fields they clear as soon as they do, with Formisch's `setInput`,
+ * wherever the fields are rendered.
  */
 export function useJsonForm(definition: JsonForm, options?: UseJsonFormOptions): JsonFormInstance
 /**
@@ -74,7 +87,7 @@ export function useJsonForm(definition: JsonForm, options?: UseJsonFormOptions):
  */
 export function useJsonForm<TInput extends object, TOutput extends object = TInput>(
   definition: JsonForm,
-  options?: UseJsonFormOptions,
+  options?: UseJsonFormOptions<TypedBuiltSchema<TInput, TOutput>>,
 ): JsonFormInstance<TypedBuiltSchema<TInput, TOutput>>
 export function useJsonForm(
   definition: JsonForm,
@@ -83,7 +96,7 @@ export function useJsonForm(
   const builder = options.builder ?? createSchemaBuilder()
   const form = useForm({
     schema: builder.build(definition),
-    initialInput: builder.getInitialInput(definition),
+    initialInput: mergeInitialInput(builder, definition, options.initialInput),
     validate: options.validate,
     revalidate: options.revalidate,
   })

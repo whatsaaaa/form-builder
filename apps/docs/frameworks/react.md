@@ -39,17 +39,30 @@ React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required. `
 - `jsonForm.form` is a normal Formisch form, so every Formisch method works on it, like `reset` and `setInput`.
 - The form element, the submit button and anything around them are yours.
 - A definition with issues throws the builder's `DefinitionError` while rendering, so an error boundary can catch it. Run [`validate()`](/guide/checking-definitions) first when the definition comes from outside your code.
-- Like Formisch's `useForm`, `useJsonForm` reads the definition on the first render. To show another one, give the component that calls it a new `key`: `<SignUpForm key={id} definition={definition} />`.
+- Like Formisch's `useForm`, `useJsonForm` reads the definition on the first render. To show another one, give the component that calls it a new `key`: `<SignUpForm key={id} definition={definition} />`. That makes a new form, without what the user typed: pass [`initialInput`](#initial-input) to start it with values.
 
 ## Options
 
-`useJsonForm` takes the builder, your components, and Formisch's validation modes:
+`useJsonForm` takes the builder, the values the form starts with, your components, and Formisch's validation modes:
 
 <<< @/snippets/react/options.ts#options
 
-`builder`, `validate` and `revalidate` are read on the first render, with the definition, so make the builder once, outside the component. `components` and `layoutComponents` are read on every render. They can also go to `<JsonFields>` and `<JsonField>` as props, which win over the options.
+`builder`, `initialInput`, `validate` and `revalidate` are read on the first render, with the definition, so make the builder once, outside the component. `components` and `layoutComponents` are read on every render. They can also go to `<JsonFields>` and `<JsonField>` as props, which win over the options.
 
 Pass a builder when your definitions use your own types, rules or messages, or the [conditions](/guide/conditions) of the affects package.
+
+## Initial input
+
+A form starts with the defaults of its definition. To start it with other values, like a record to edit, pass them as `initialInput`:
+
+<<< @/snippets/react/EditCustomer.tsx
+
+- **It goes over the defaults.** A field it has no key for keeps its `default`, in groups and in the items of lists too. A key that is there wins, so `undefined` starts a field blank.
+- **It is read once**, with the definition. To edit another record, give the component a new `key`, like the record's id.
+- **It is the form's initial input**, so Formisch's `reset` goes back to it, and `isDirty` compares with it.
+- **It keeps what the user typed** when you build the form again, like for [another language](/guide/messages#changing-the-language): pass the old form's input.
+
+[`UseJsonFormOptions`](/api/react/UseJsonFormOptions#initial-input) has every rule: groups, lists, conditions and the types.
 
 ## Not included
 
