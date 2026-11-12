@@ -50,6 +50,9 @@ export interface JsonFormSteps {
 /** A field's error messages in Formisch, or null. */
 type Errors = [string, ...string[]] | null
 
+/** A field of a step with its Formisch path, like an issue of `issuesOfStep` has them. */
+type StepField = Pick<StepIssue, 'field' | 'path'>
+
 /** What a field tells the steps it was through, by Formisch's name for the validation mode. */
 export type FieldEvent = Exclude<ValidationMode, 'initial' | 'submit'>
 
@@ -140,8 +143,22 @@ export function useJsonFormSteps(
 
   const errorsAt = (path: FieldPath): Errors => getErrors(form, { path } as never)
 
+  /**
+   * The fields of a step with errors in the form now, in layout order, with those of each array
+   * item. Unlike a new validation, it leaves the errors the form has.
+   */
+  function errorsOfStep(step: LayoutStep): StepField[] {
+    const input = getInput(form)
+    // The paths of one field at a time, so that each comes with its field.
+    return step.fields.flatMap((field) =>
+      fieldPathsOfStep({ ...step, fields: [field] }, input)
+        .filter(errorsAt)
+        .map((path) => ({ field, path })),
+    )
+  }
+
   /** Stays on, or goes to, the step at `target`, with its issues shown. */
-  async function stop(target: number, found: readonly StepIssue[]) {
+  async function stop(target: number, found: readonly StepField[]) {
     failed.add(target)
     if (target !== at.value) leave()
     at.value = target
@@ -185,16 +202,15 @@ export function useJsonFormSteps(
     })
 
     // A submit that fails because of a step before the last, e.g. on a form rule, goes back to it.
+    // The submit left its errors on the fields, the schema's or those its handler set, like a
+    // server's: validating again to find the step would clear the handler's.
     watch(
       () => form.isSubmitting,
       async (submitting, was) => {
         if (submitting || !was || form.isValid) return
-        const { issues } = await validate(form)
-        const shown = list.value
-        const first = shown.find((step) => issuesOfStep(step, issues).length)
-        const target = first ? all.indexOf(first) : -1
-        if (first && shown.indexOf(first) < index.value) {
-          await stop(target, issuesOfStep(first, issues))
+        for (const step of list.value.slice(0, index.value)) {
+          const found = errorsOfStep(step)
+          if (found.length) return stop(all.indexOf(step), found)
         }
       },
     )

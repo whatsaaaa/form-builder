@@ -1,6 +1,6 @@
 // The scenarios through @whatsaaaa/form-builder-react, with components written the way its guide
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
-import { Form, getInput } from '@formisch/react'
+import { focus, Form, type FormStore, getInput, setErrors } from '@formisch/react'
 import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   createSchemaBuilder,
@@ -27,6 +27,7 @@ import { createRoot } from 'react-dom/client'
 import { describe, onTestFinished } from 'vitest'
 import { runInitialInputCases } from './initial-input-cases'
 import { type RenderedForm, runScenarios } from './run-scenarios'
+import { runServerErrorsCases, type ServerIssue } from './server-errors-cases'
 
 // Tells React that tests wrap their updates in act().
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -242,11 +243,30 @@ const slots = {
   ),
 }
 
-function JsonFormView(props: { json: JsonForm; onSubmit: (output: unknown) => void }) {
+/**
+ * What an app does when its server rejects the input: once the answer is there, each field gets
+ * its message with Formisch's `setErrors`, and the first one the focus.
+ */
+async function showServerIssues(form: FormStore, issues: readonly ServerIssue[]) {
+  await new Promise((resolve) => setTimeout(resolve))
+  // The paths are data, so the schema's types can't check them.
+  for (const { path, message } of issues) setErrors(form, { path, errors: [message] } as never)
+  focus(form, { path: issues[0]?.path as never })
+}
+
+function JsonFormView(props: {
+  json: JsonForm
+  rejects: readonly ServerIssue[]
+  onSubmit: (output: unknown) => void
+}) {
   const jsonForm = useJsonForm(props.json, { builder, components, layoutComponents })
-  const { steps } = jsonForm
+  const { form, steps } = jsonForm
+  const { rejects, onSubmit } = props
   return (
-    <Form of={jsonForm.form} onSubmit={props.onSubmit}>
+    <Form
+      of={form}
+      onSubmit={(output) => (rejects.length ? showServerIssues(form, rejects) : onSubmit(output))}
+    >
       <JsonFields of={jsonForm} slots={slots} />
       {!steps.isFirst && (
         <button type="button" data-back="" onClick={steps.back}>
@@ -262,13 +282,15 @@ function JsonFormView(props: { json: JsonForm; onSubmit: (output: unknown) => vo
   )
 }
 
-function render(json: JsonForm): RenderedForm {
+function render(json: JsonForm, rejects: readonly ServerIssue[] = []): RenderedForm {
   const root = document.createElement('div')
   document.body.append(root)
   const submitted: unknown[] = []
   const reactRoot = createRoot(root)
   act(() =>
-    reactRoot.render(<JsonFormView json={json} onSubmit={(output) => submitted.push(output)} />),
+    reactRoot.render(
+      <JsonFormView json={json} rejects={rejects} onSubmit={(output) => submitted.push(output)} />,
+    ),
   )
   onTestFinished(() => {
     act(() => reactRoot.unmount())
@@ -290,6 +312,10 @@ function render(json: JsonForm): RenderedForm {
 
 describe('the fixtures in @formisch/react, through @whatsaaaa/form-builder-react', () => {
   runScenarios(render)
+})
+
+describe("a server's errors in a form with steps, in @whatsaaaa/form-builder-react", () => {
+  runServerErrorsCases(render)
 })
 
 describe('initialInput in @whatsaaaa/form-builder-react', () => {

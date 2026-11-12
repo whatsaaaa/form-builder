@@ -1,7 +1,7 @@
 import type { JsonForm } from '@whatsaaaa/form-builder-schema'
 import { expect, it } from 'vitest'
 import { fixtures } from './fixtures'
-import { type DotPath, type FileSpec, scenarios, type Step } from './scenarios'
+import { type DotPath, type FileSpec, type Scenario, scenarios, type Step } from './scenarios'
 
 /**
  * A fixture rendered by a binding's test, the way an app renders a form. The renderer marks its
@@ -30,25 +30,30 @@ export function runScenarios(render: (json: JsonForm) => RenderedForm | Promise<
   it.each(scenarios)('$fixture: $name', async (scenario) => {
     const form = await render(fixtures[scenario.fixture])
     for (const step of scenario.steps) await form.update(() => perform(form.root, step))
-
-    expect(errorsIn(form.root)).toEqual(scenario.errors ?? {})
-    expect(form.submitted).toEqual(scenario.output ? [scenario.output] : [])
-    for (const [path, value] of Object.entries(scenario.values ?? {})) {
-      expect(controlAt(form.root, path).value, path).toBe(value)
-    }
-    if (scenario.shown) expect(shownIn(form.root)).toEqual(scenario.shown)
-    for (const [path, span] of Object.entries(scenario.spans ?? {})) {
-      const cell = controlAt(form.root, path).closest<HTMLElement>('[data-span]')
-      expect(cell?.dataset['span'], path).toBe(String(span))
-    }
-    if (scenario.slots) {
-      const slots = [...form.root.querySelectorAll<HTMLElement>('[data-slot]')]
-      expect(slots.map((slot) => slot.dataset['slot'])).toEqual(scenario.slots)
-    }
+    expectEnd(form, scenario)
   })
 }
 
-function perform(root: HTMLElement, step: Step): void {
+/** Checks what `form` shows and submitted against what `scenario` says it must at the end. */
+export function expectEnd(form: RenderedForm, scenario: Omit<Scenario, 'fixture'>): void {
+  expect(errorsIn(form.root)).toEqual(scenario.errors ?? {})
+  expect(form.submitted).toEqual(scenario.output ? [scenario.output] : [])
+  for (const [path, value] of Object.entries(scenario.values ?? {})) {
+    expect(controlAt(form.root, path).value, path).toBe(value)
+  }
+  if (scenario.shown) expect(shownIn(form.root)).toEqual(scenario.shown)
+  for (const [path, span] of Object.entries(scenario.spans ?? {})) {
+    const cell = controlAt(form.root, path).closest<HTMLElement>('[data-span]')
+    expect(cell?.dataset['span'], path).toBe(String(span))
+  }
+  if (scenario.slots) {
+    const slots = [...form.root.querySelectorAll<HTMLElement>('[data-slot]')]
+    expect(slots.map((slot) => slot.dataset['slot'])).toEqual(scenario.slots)
+  }
+}
+
+/** Does `step` in the form in `root`, the way a person would. */
+export function perform(root: HTMLElement, step: Step): void {
   switch (step.do) {
     case 'fill':
       return fill(controlAt(root, step.path) as HTMLInputElement | HTMLTextAreaElement, step.text)
@@ -87,7 +92,8 @@ const controlsAt = (root: HTMLElement, path: DotPath) =>
     (element) => element.name === nameOf(path),
   )
 
-function controlAt(root: HTMLElement, path: DotPath): Control {
+/** The input, select or textarea of the field at `path`. */
+export function controlAt(root: HTMLElement, path: DotPath): Control {
   const [control] = controlsAt(root, path)
   if (!control) throw new Error(`No input at ${path}`)
   return control

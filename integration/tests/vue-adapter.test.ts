@@ -1,6 +1,6 @@
 // The scenarios through @whatsaaaa/form-builder-vue, with components written the way its guide
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
-import { Form, getInput } from '@formisch/vue'
+import { focus, Form, type FormStore, getInput, setErrors } from '@formisch/vue'
 import { affects } from '@whatsaaaa/form-builder-affects'
 import {
   createSchemaBuilder,
@@ -32,6 +32,7 @@ import {
 import { describe, onTestFinished } from 'vitest'
 import { runInitialInputCases } from './initial-input-cases'
 import { type RenderedForm, runScenarios } from './run-scenarios'
+import { runServerErrorsCases, type ServerIssue } from './server-errors-cases'
 
 type Option = { value: string | number | boolean; label: string }
 
@@ -241,7 +242,18 @@ const Row = defineComponent({
 
 const layoutComponents: LayoutComponents = { section: Section, row: Row }
 
-function render(json: JsonForm): RenderedForm {
+/**
+ * What an app does when its server rejects the input: once the answer is there, each field gets
+ * its message with Formisch's `setErrors`, and the first one the focus.
+ */
+async function showServerIssues(form: FormStore, issues: readonly ServerIssue[]) {
+  await new Promise((resolve) => setTimeout(resolve))
+  // The paths are data, so the schema's types can't check them.
+  for (const { path, message } of issues) setErrors(form, { path, errors: [message] } as never)
+  focus(form, { path: issues[0]?.path as never })
+}
+
+function render(json: JsonForm, rejects: readonly ServerIssue[] = []): RenderedForm {
   const root = document.createElement('div')
   document.body.append(root)
   const submitted: unknown[] = []
@@ -253,7 +265,11 @@ function render(json: JsonForm): RenderedForm {
         return () =>
           h(
             Form as Component,
-            { of: jsonForm.form, onSubmit: (output: unknown) => submitted.push(output) },
+            {
+              of: jsonForm.form,
+              onSubmit: (output: unknown) =>
+                rejects.length ? showServerIssues(jsonForm.form, rejects) : submitted.push(output),
+            },
             {
               default: () => [
                 h(
@@ -301,6 +317,10 @@ function render(json: JsonForm): RenderedForm {
 
 describe('the fixtures in @formisch/vue, through @whatsaaaa/form-builder-vue', () => {
   runScenarios(render)
+})
+
+describe("a server's errors in a form with steps, in @whatsaaaa/form-builder-vue", () => {
+  runServerErrorsCases(render)
 })
 
 describe('initialInput in @whatsaaaa/form-builder-vue', () => {
