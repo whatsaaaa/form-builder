@@ -11,10 +11,15 @@ import { layoutComponents } from './layout'
 // Built once, outside the component: the builder is read on the first render.
 const builder = createSchemaBuilder({ extensions: [affects()] })
 
-export function useOrderForm(definition: JsonForm) {
+export function useOrderForm(
+  definition: JsonForm,
+  order?: Record<string, unknown>,
+) {
   const jsonForm = useJsonForm(definition, {
     // Your own types, rules, messages and extensions. Defaults to createSchemaBuilder().
     builder,
+    // The values the form starts with, over the definition's defaults.
+    initialInput: order,
     // Your component for each field type.
     components,
     // Your component for each layout type.

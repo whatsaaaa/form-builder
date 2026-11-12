@@ -8,11 +8,16 @@ import { components } from './all-fields'
 import LayoutRow from './LayoutRow.vue'
 import LayoutSection from './LayoutSection.vue'
 
-export function useOrderForm(definition: JsonForm) {
+export function useOrderForm(
+  definition: JsonForm,
+  order?: Record<string, unknown>,
+) {
   // #region options
   const jsonForm = useJsonForm(definition, {
     // Your own types, rules, messages and extensions. Defaults to createSchemaBuilder().
     builder: createSchemaBuilder({ extensions: [affects()] }),
+    // The values the form starts with, over the definition's defaults.
+    initialInput: order,
     // Your component for each field type.
     components,
     // Your component for each layout type.
