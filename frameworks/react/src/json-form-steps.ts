@@ -50,6 +50,9 @@ export interface JsonFormSteps {
 /** A field's error messages in Formisch, or null. */
 type Errors = [string, ...string[]] | null
 
+/** A field of a step with its Formisch path, like an issue of `issuesOfStep` has them. */
+type StepField = Pick<StepIssue, 'field' | 'path'>
+
 /** What a field tells the steps it was through, by Formisch's name for the validation mode. */
 export type FieldEvent = Exclude<ValidationMode, 'initial' | 'submit'>
 
@@ -154,8 +157,22 @@ export function useJsonFormSteps(
       at.left.set(at.index, new Map(errors))
     }
 
+    /**
+     * The fields of a step with errors in the form now, in layout order, with those of each array
+     * item. Unlike a new validation, it leaves the errors the form has.
+     */
+    function errorsOfStep(step: LayoutStep): StepField[] {
+      const input = getInput(form)
+      // The paths of one field at a time, so that each comes with its field.
+      return step.fields.flatMap((field) =>
+        fieldPathsOfStep({ ...step, fields: [field] }, input)
+          .filter((path) => getErrors(form, { path } as never))
+          .map((path) => ({ field, path })),
+      )
+    }
+
     /** Stays on, or goes to, the step at `target`, with its issues shown. */
-    function stop(target: number, found: readonly StepIssue[]) {
+    function stop(target: number, found: readonly StepField[]) {
       at.failed.add(target)
       // A group or an array has no element: the first field that has one gets the focus.
       const path = found.find((issue) => issue.field.role === 'value')?.path
@@ -176,13 +193,16 @@ export function useJsonFormSteps(
       if (event === (at.modes.revalidate ?? 'input')) void validate(form)
     }
 
-    /** After a failed submit: back to the first step before this one with issues, if any. */
-    async function afterSubmit() {
-      const { issues } = await validate(form)
+    /**
+     * After a failed submit: back to the first step before this one with errors, if any. The submit
+     * left them on the fields, the schema's or those its handler set, like a server's: validating
+     * again to find the step would clear the handler's.
+     */
+    function afterSubmit() {
       const list = shown()
-      const step = list.find((each) => issuesOfStep(each, issues).length)
-      if (step && list.indexOf(step) < position(list)) {
-        stop(all.indexOf(step), issuesOfStep(step, issues))
+      for (const step of list.slice(0, position(list))) {
+        const found = errorsOfStep(step)
+        if (found.length) return stop(all.indexOf(step), found)
       }
     }
 
@@ -236,7 +256,7 @@ export function useJsonFormSteps(
   useEffect(() => {
     if (!state.current.submitting || submitting) return
     state.current.submitting = false
-    if (!form.isValid) void methods.afterSubmit()
+    if (!form.isValid) methods.afterSubmit()
   })
 
   return useMemo(() => {

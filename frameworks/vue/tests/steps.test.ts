@@ -1,4 +1,4 @@
-import { Form, getErrors, submit as requestSubmit } from '@formisch/vue'
+import { Form, type FormStore, getErrors, setErrors, submit as requestSubmit } from '@formisch/vue'
 import type { JsonForm, JsonLayout } from '@whatsaaaa/form-builder-schema'
 import {
   JsonFields,
@@ -8,7 +8,7 @@ import {
 } from '@whatsaaaa/form-builder-vue'
 import { type Component, defineComponent, h } from 'vue'
 import { describe, expect, it } from 'vitest'
-import { builtInComponents, layoutComponents } from './components'
+import { arrays, builtInComponents, layoutComponents } from './components'
 import { errorAt, mount, settle, type, withSetup } from './helpers'
 
 const fields: JsonForm['fields'] = [
@@ -41,8 +41,15 @@ const json = (extra: Partial<JsonForm> = {}): JsonForm => ({
   ...extra,
 })
 
-/** Mounts the form with `<JsonFields>` for the current step, the way an app uses steps. */
-function mountSteps(definition: JsonForm = json(), options: UseJsonFormOptions = {}) {
+/**
+ * Mounts the form with `<JsonFields>` for the current step, the way an app uses steps. Without an
+ * `onSubmit` of the app's own, the outputs it submits are in `submitted`.
+ */
+function mountSteps(
+  definition: JsonForm = json(),
+  options: UseJsonFormOptions = {},
+  onSubmit?: (form: FormStore) => unknown,
+) {
   const submitted: unknown[] = []
   const jsonForm = withSetup(() =>
     useJsonForm(definition, { components: builtInComponents, layoutComponents, ...options }),
@@ -52,7 +59,11 @@ function mountSteps(definition: JsonForm = json(), options: UseJsonFormOptions =
       setup: () => () =>
         h(
           Form as Component,
-          { of: jsonForm.form, onSubmit: (output: unknown) => submitted.push(output) },
+          {
+            of: jsonForm.form,
+            onSubmit: (output: unknown) =>
+              onSubmit ? onSubmit(jsonForm.form) : submitted.push(output),
+          },
           {
             default: () => [
               h('p', { 'data-step': '' }, jsonForm.steps.current.step.label),
@@ -83,6 +94,36 @@ async function fillFirstStep(root: HTMLElement, jsonForm: JsonFormInstance) {
   type(root, 'email', 'ana@example.com')
   type(root, 'name', 'Ana')
   expect(await next(jsonForm)).toBe(true)
+}
+
+/** Fills every step with what the schema takes, up to the last one. */
+async function fillEveryStep(root: HTMLElement, jsonForm: JsonFormInstance) {
+  type(root, 'email', 'milica@example.com')
+  type(root, 'name', 'Milica')
+  expect(await next(jsonForm)).toBe(true)
+  type(root, 'city', 'Beograd')
+  arrays.get('lines')?.add()
+  await settle()
+  type(root, 'lines.0.product', 'Olovka')
+  expect(await next(jsonForm)).toBe(true)
+  type(root, 'code', 'NS-21000')
+}
+
+/**
+ * A submit handler like an app's for a server that rejects what the schema took: it waits for the
+ * answer, and sets each message on its field with Formisch's `setErrors`.
+ */
+const rejecting =
+  (...issues: [path: (string | number)[], message: string][]) =>
+  async (form: FormStore) => {
+    await new Promise((resolve) => setTimeout(resolve))
+    for (const [path, message] of issues) setErrors(form, { path, errors: [message] } as never)
+  }
+
+/** Submits, and waits until the server has answered and the steps have gone where they go. */
+async function submitAndSettle(jsonForm: JsonFormInstance) {
+  requestSubmit(jsonForm.form)
+  for (let i = 0; i < 4; i++) await settle()
 }
 
 describe('steps', () => {
@@ -373,6 +414,75 @@ describe('steps', () => {
     expect(submitted).toEqual([])
     expect(stepOf(root)).toBe('Two')
     expect(errorAt(root, 'city')).toBe('Required')
+  })
+
+  it('keeps the errors the submit handler sets on a field of the last step', async () => {
+    const { root, jsonForm } = mountSteps(
+      json(),
+      {},
+      rejecting([['code'], 'This code is already used']),
+    )
+    await fillEveryStep(root, jsonForm)
+
+    await submitAndSettle(jsonForm)
+    expect(stepOf(root)).toBe('Code')
+    expect(errorAt(root, 'code')).toBe('This code is already used')
+
+    // The user's next edit validates the form again, as in a form without steps.
+    type(root, 'code', 'NS-21001')
+    await settle()
+    expect(errorAt(root, 'code')).toBeNull()
+  })
+
+  it('goes back to the step of a field the submit handler sets errors on', async () => {
+    const { root, jsonForm } = mountSteps(
+      json(),
+      {},
+      rejecting(
+        [['email'], 'This email is already registered'],
+        [['code'], 'This code is already used'],
+      ),
+    )
+    await fillEveryStep(root, jsonForm)
+
+    await submitAndSettle(jsonForm)
+    expect(stepOf(root)).toBe('You')
+    expect([errorAt(root, 'name'), errorAt(root, 'email')]).toEqual([
+      null,
+      'This email is already registered',
+    ])
+    expect(document.activeElement).toBe(root.querySelector('[data-path="email"] input'))
+
+    // The last step shows what it had when the form left it.
+    expect(await next(jsonForm)).toBe(true)
+    expect(await next(jsonForm)).toBe(true)
+    expect(errorAt(root, 'code')).toBe('This code is already used')
+  })
+
+  it('focuses the first field with an element that the submit handler sets errors on', async () => {
+    const { root, jsonForm } = mountSteps(
+      json(),
+      {},
+      rejecting([['lines'], 'Two lines at least'], [['lines', 0, 'product'], 'Sold out']),
+    )
+    await fillEveryStep(root, jsonForm)
+
+    await submitAndSettle(jsonForm)
+    expect(stepOf(root)).toBe('Where')
+    expect(root.textContent).toContain('Two lines at least')
+    expect(errorAt(root, 'lines.0.product')).toBe('Sold out')
+    expect(document.activeElement).toBe(root.querySelector('[data-path="lines.0.product"] input'))
+  })
+
+  it('keeps the error of a submit handler that throws', async () => {
+    const { root, jsonForm } = mountSteps(json(), {}, () => {
+      throw new Error('The server is down')
+    })
+    await fillEveryStep(root, jsonForm)
+
+    await submitAndSettle(jsonForm)
+    expect(stepOf(root)).toBe('Code')
+    expect(getErrors(jsonForm.form)).toEqual(['The server is down'])
   })
 
   it('renders the step `step` names', () => {

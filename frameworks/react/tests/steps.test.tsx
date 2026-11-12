@@ -1,4 +1,10 @@
-import { Form, getErrors, submit as requestSubmit } from '@formisch/react'
+import {
+  Form,
+  type FormStore,
+  getErrors,
+  setErrors,
+  submit as requestSubmit,
+} from '@formisch/react'
 import type { JsonForm, JsonLayout } from '@whatsaaaa/form-builder-schema'
 import {
   JsonFields,
@@ -44,9 +50,14 @@ const json = (extra: Partial<JsonForm> = {}): JsonForm => ({
 
 /**
  * Mounts the form with `<JsonFields>` for the current step, the way an app uses steps. `current()`
- * gives what `useJsonForm` returned on the last render.
+ * gives what `useJsonForm` returned on the last render. Without an `onSubmit` of the app's own, the
+ * outputs it submits are in `submitted`.
  */
-function mountSteps(definition: JsonForm = json(), options: UseJsonFormOptions = {}) {
+function mountSteps(
+  definition: JsonForm = json(),
+  options: UseJsonFormOptions = {},
+  onSubmit?: (form: FormStore) => unknown,
+) {
   const submitted: unknown[] = []
   const latest: { current?: JsonFormInstance } = {}
   function App() {
@@ -59,7 +70,10 @@ function mountSteps(definition: JsonForm = json(), options: UseJsonFormOptions =
       latest.current = jsonForm
     })
     return (
-      <Form of={jsonForm.form} onSubmit={(output) => void submitted.push(output)}>
+      <Form
+        of={jsonForm.form}
+        onSubmit={(output) => (onSubmit ? onSubmit(jsonForm.form) : void submitted.push(output))}
+      >
         <p data-step="">{jsonForm.steps.current.step.label}</p>
         <JsonFields of={jsonForm} />
       </Form>
@@ -94,6 +108,35 @@ async function fillFirstStep(root: HTMLElement, current: () => JsonFormInstance)
   type(root, 'email', 'ana@example.com')
   type(root, 'name', 'Ana')
   expect(await run(current, (steps) => steps.next())).toBe(true)
+}
+
+/** Fills every step with what the schema takes, up to the last one. */
+async function fillEveryStep(root: HTMLElement, current: () => JsonFormInstance) {
+  type(root, 'email', 'milica@example.com')
+  type(root, 'name', 'Milica')
+  expect(await run(current, (steps) => steps.next())).toBe(true)
+  type(root, 'city', 'Beograd')
+  await update(() => arrays.get('lines')?.add())
+  type(root, 'lines.0.product', 'Olovka')
+  expect(await run(current, (steps) => steps.next())).toBe(true)
+  type(root, 'code', 'NS-21000')
+}
+
+/**
+ * A submit handler like an app's for a server that rejects what the schema took: it waits for the
+ * answer, and sets each message on its field with Formisch's `setErrors`.
+ */
+const rejecting =
+  (...issues: [path: (string | number)[], message: string][]) =>
+  async (form: FormStore) => {
+    await new Promise((resolve) => setTimeout(resolve))
+    for (const [path, message] of issues) setErrors(form, { path, errors: [message] } as never)
+  }
+
+/** Submits, and waits until the server has answered and the steps have gone where they go. */
+async function submitAndSettle(current: () => JsonFormInstance) {
+  await update(() => requestSubmit(current().form))
+  for (let i = 0; i < 3; i++) await settle()
 }
 
 describe('steps', () => {
@@ -381,5 +424,74 @@ describe('steps', () => {
     expect(stepOf(root)).toBe('One')
     expect(errorAt(root, 'password')).toBe('Passwords differ')
     expect(document.activeElement).toBe(root.querySelector('[data-path="password"] input'))
+  })
+
+  it('keeps the errors the submit handler sets on a field of the last step', async () => {
+    const { root, current } = mountSteps(
+      json(),
+      {},
+      rejecting([['code'], 'This code is already used']),
+    )
+    await fillEveryStep(root, current)
+
+    await submitAndSettle(current)
+    expect(stepOf(root)).toBe('Code')
+    expect(errorAt(root, 'code')).toBe('This code is already used')
+
+    // The user's next edit validates the form again, as in a form without steps.
+    type(root, 'code', 'NS-21001')
+    await settle()
+    expect(errorAt(root, 'code')).toBeNull()
+  })
+
+  it('goes back to the step of a field the submit handler sets errors on', async () => {
+    const { root, current } = mountSteps(
+      json(),
+      {},
+      rejecting(
+        [['email'], 'This email is already registered'],
+        [['code'], 'This code is already used'],
+      ),
+    )
+    await fillEveryStep(root, current)
+
+    await submitAndSettle(current)
+    expect(stepOf(root)).toBe('You')
+    expect([errorAt(root, 'name'), errorAt(root, 'email')]).toEqual([
+      null,
+      'This email is already registered',
+    ])
+    expect(document.activeElement).toBe(root.querySelector('[data-path="email"] input'))
+
+    // The last step shows what it had when the form left it.
+    expect(await run(current, (steps) => steps.next())).toBe(true)
+    expect(await run(current, (steps) => steps.next())).toBe(true)
+    expect(errorAt(root, 'code')).toBe('This code is already used')
+  })
+
+  it('focuses the first field with an element that the submit handler sets errors on', async () => {
+    const { root, current } = mountSteps(
+      json(),
+      {},
+      rejecting([['lines'], 'Two lines at least'], [['lines', 0, 'product'], 'Sold out']),
+    )
+    await fillEveryStep(root, current)
+
+    await submitAndSettle(current)
+    expect(stepOf(root)).toBe('Where')
+    expect(root.textContent).toContain('Two lines at least')
+    expect(errorAt(root, 'lines.0.product')).toBe('Sold out')
+    expect(document.activeElement).toBe(root.querySelector('[data-path="lines.0.product"] input'))
+  })
+
+  it('keeps the error of a submit handler that throws', async () => {
+    const { root, current } = mountSteps(json(), {}, () => {
+      throw new Error('The server is down')
+    })
+    await fillEveryStep(root, current)
+
+    await submitAndSettle(current)
+    expect(stepOf(root)).toBe('Code')
+    expect(getErrors(current().form)).toEqual(['The server is down'])
   })
 })

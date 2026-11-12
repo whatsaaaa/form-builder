@@ -47,7 +47,7 @@ export interface Scenario {
   slots?: string[]
 }
 
-const fill = (path: DotPath, text: string): Step => ({ do: 'fill', path, text })
+export const fill = (path: DotPath, text: string): Step => ({ do: 'fill', path, text })
 const check = (path: DotPath, option?: string): Step => ({ do: 'check', path, option })
 const choose = (path: DotPath, ...options: string[]): Step => ({ do: 'choose', path, options })
 const upload = (path: DotPath, ...files: [name: string, type: string, size: number][]): Step => ({
@@ -55,10 +55,10 @@ const upload = (path: DotPath, ...files: [name: string, type: string, size: numb
   path,
   files: files.map(([name, type, size]) => ({ name, type, size })),
 })
-const add = (path: DotPath): Step => ({ do: 'add', path })
+export const add = (path: DotPath): Step => ({ do: 'add', path })
 const remove = (path: DotPath, index: number): Step => ({ do: 'remove', path, index })
-const submit: Step = { do: 'submit' }
-const next: Step = { do: 'next' }
+export const submit: Step = { do: 'submit' }
+export const next: Step = { do: 'next' }
 const back: Step = { do: 'back' }
 
 /** A file the form submitted, picked with `upload`. */
