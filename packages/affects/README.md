@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/whatsaaaa/form-builder/main/.github/assets/readme-header.svg" alt="form-builder - forms from JSON, validated by Formisch" width="100%">
+
 # @whatsaaaa/form-builder-affects
 
 Show, hide and clear the fields, sections and steps of JSON form definitions by conditions.
