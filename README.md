@@ -1,3 +1,5 @@
+<img src=".github/assets/readme-header.svg" alt="form-builder - forms from JSON, validated by Formisch" width="100%">
+
 # form-builder
 
 Describe forms in JSON and get validated [Formisch](https://formisch.dev) forms out.

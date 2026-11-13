@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/whatsaaaa/form-builder/main/.github/assets/readme-header.png" alt="form-builder - forms from JSON, validated by Formisch" width="100%">
+
 # @whatsaaaa/form-builder-schema
 
 Build Formisch-ready [Valibot](https://valibot.dev) schemas from JSON form definitions.

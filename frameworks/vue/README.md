@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/whatsaaaa/form-builder/main/.github/assets/readme-header.png" alt="form-builder - forms from JSON, validated by Formisch" width="100%">
+
 # @whatsaaaa/form-builder-vue
 
 Render JSON form definitions with [Formisch](https://formisch.dev) and your own Vue components.
