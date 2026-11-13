@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/whatsaaaa/form-builder/main/.github/assets/readme-header.png" alt="form-builder - forms from JSON, validated by Formisch" width="100%">
+<img src="https://raw.githubusercontent.com/whatsaaaa/form-builder/main/.github/assets/readme-header.svg" alt="form-builder - forms from JSON, validated by Formisch" width="100%">
 
 # @whatsaaaa/form-builder-react
 

@@ -78,4 +78,4 @@ Bug reports, ideas and pull requests are welcome. [CONTRIBUTING.md](./CONTRIBUTI
 
 ## License
 
-[MIT](./LICENSE). Built on [Formisch](https://formisch.dev) and [Valibot](https://valibot.dev).
+[MIT](./LICENSE). Built on [Formisch](https://formisch.dev) and [Valibot](https://valibot.dev). The README header in `.github/assets/` is Whatsaaaa artwork and is excluded from the MIT License: it is all rights reserved, as the [license](./LICENSE) explains.
