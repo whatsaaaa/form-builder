@@ -48,7 +48,7 @@ packageExtensions:
       '@types/react':
         optional: true
 
-# The design system's releases go into the docs theme as soon as they're published, before pnpm's
-# minimum release age has passed.
+# The docs theme's design-system release was installed before it was a day old, pnpm's minimum
+# release age.
 minimumReleaseAgeExclude:
-  - '@whatsaaaa/design-system'
+  - '@whatsaaaa/design-system@0.6.1'
