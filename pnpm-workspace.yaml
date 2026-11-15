@@ -47,3 +47,8 @@ packageExtensions:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+# The design system's releases go into the docs theme as soon as they're published, before pnpm's
+# minimum release age has passed.
+minimumReleaseAgeExclude:
+  - '@whatsaaaa/design-system'

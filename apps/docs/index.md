@@ -6,9 +6,6 @@ hero:
   name: form-builder
   text: Forms from JSON
   tagline: Describe forms in JSON and get validated Formisch forms out.
-  image:
-    src: /logo.svg
-    alt: form-builder
   actions:
     - theme: brand
       text: Get started
