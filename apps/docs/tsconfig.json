@@ -1,5 +1,6 @@
 // TSConfig for the code that runs in Node.js: the VitePress config, the generator and the tests.
-// The snippets the pages show have a project each in snippets/.
+// The theme, which runs in the browser, has its own project in .vitepress/theme, and the snippets
+// the pages show have a project each in snippets/.
 {
   "extends": "@tsconfig/node24/tsconfig.json",
   "include": [".vitepress/config.ts", "scripts", "tests"],

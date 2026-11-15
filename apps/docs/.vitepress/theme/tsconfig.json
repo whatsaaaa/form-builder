@@ -1,0 +1,18 @@
+// The theme, which runs in the browser. Its own project keeps the Node.js target of the config's
+// out of it, which the esbuild in VitePress's Vite doesn't know.
+{
+  "include": ["."],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "types": [],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}

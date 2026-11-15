@@ -1,4 +1,5 @@
-import { defineConfig, type DefaultTheme } from 'vitepress'
+import { type ThemeConfig, whatsaaaaConfig } from '@whatsaaaa/design-system/vitepress/config'
+import { defineConfigWithTheme, type DefaultTheme } from 'vitepress'
 
 // GitHub Pages serves the site at https://whatsaaaa.github.io/form-builder/
 const base = '/form-builder/'
@@ -184,23 +185,26 @@ const packages = [
 ]
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default defineConfigWithTheme<ThemeConfig>({
+  // The Whatsaaaa design system's docs theme, in .vitepress/theme, and the config it needs
+  extends: whatsaaaaConfig(),
   title: 'form-builder',
   description: 'Describe forms in JSON and get validated Formisch forms out.',
   base,
   cleanUrls: true,
   lastUpdated: true,
 
-  // The SVG for browsers that take one, and PNG renders of it for the others and for home screens.
+  // The SVG for browsers that take one, and bitmaps of it for the others and for home screens.
   head: [
     ['link', { rel: 'icon', href: `${base}favicon.ico`, sizes: '32x32' }],
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}logo.svg` }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
     ['link', { rel: 'apple-touch-icon', href: `${base}apple-touch-icon.png` }],
   ],
 
   // https://vitepress.dev/reference/default-theme-config
   themeConfig: {
-    logo: '/logo.svg',
+    // form-builder's mark from the design system's identity kit, drawn at 32 px
+    logo: { dark: '/mark-on-dark.svg', light: '/mark-on-light.svg' },
 
     nav: [
       { text: 'Guide', link: '/guide/', activeMatch: '/guide/' },
@@ -226,5 +230,8 @@ export default defineConfig({
     search: {
       provider: 'local',
     },
+
+    // GitHub Pages deploys the site from main
+    whatsaaaa: { branch: 'main' },
   },
 })
