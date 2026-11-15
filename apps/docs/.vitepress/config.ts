@@ -194,7 +194,7 @@ export default defineConfigWithTheme<ThemeConfig>({
   cleanUrls: true,
   lastUpdated: true,
 
-  // The SVG for browsers that take one, and PNG renders of it for the others and for home screens.
+  // The SVG for browsers that take one, and bitmaps of it for the others and for home screens.
   head: [
     ['link', { rel: 'icon', href: `${base}favicon.ico`, sizes: '32x32' }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
