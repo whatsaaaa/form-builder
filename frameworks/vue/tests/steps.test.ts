@@ -266,6 +266,26 @@ describe('steps', () => {
     expect(root.textContent).toContain('Add a line')
   })
 
+  it('starts again on jsonForm.reset(), at the first step, with no errors kept', async () => {
+    const { root, jsonForm } = mountSteps()
+    await fillFirstStep(root, jsonForm)
+    expect(await next(jsonForm)).toBe(false)
+    jsonForm.steps.back()
+    await settle()
+    expect(await next(jsonForm)).toBe(true)
+    expect(errorAt(root, 'city')).toBe('Required')
+
+    jsonForm.reset()
+    await settle()
+    expect(stepOf(root)).toBe('You')
+    await fillFirstStep(root, jsonForm)
+    // As the first time the user gets to it, and without revalidating as they type.
+    expect(errorAt(root, 'city')).toBeNull()
+    type(root, 'city', 'x')
+    await settle()
+    expect(getErrors(jsonForm.form, { path: ['lines'] } as never)).toBeNull()
+  })
+
   it('goes to a step: back freely, forward through each step on the way', async () => {
     const { root, jsonForm } = mountSteps()
 

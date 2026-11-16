@@ -20,7 +20,7 @@ The steps of a form, from its layout. A form without `steps` in its layout has o
 
 ### Explanation
 
-See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate. With [fills](/frameworks/vue#fills), moving forward waits until no fill is pending, so it validates the values they set, not the blanks they replace, and moves among the steps on show once they are set: Next goes to a step they show after the current one, and Go to doesn't reach a step they hide. A step the user goes to while it waits wins, and it resolves to `false`.
+See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate. With [fills](/frameworks/vue#fills), moving forward waits until no fill is pending, so it validates the values they set, not the blanks they replace, and moves among the steps on show once they are set: Next goes to a step they show after the current one, and Go to doesn't reach a step they hide. A step the user goes to while it waits wins, as does a reset, and it resolves to `false`. [`jsonForm.reset()`](/api/vue/JsonFormInstance) goes back to the first step, and keeps no errors of the steps the user left, or of a Next that failed.
 
 ## Example
 

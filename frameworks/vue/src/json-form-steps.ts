@@ -33,11 +33,11 @@ export interface JsonFormSteps {
   readonly isFirst: boolean
   readonly isLast: boolean
   /**
-   * Waits for the fills that are pending, then validates the whole form, and moves to the next step,
-   * the one after this among the steps on show once the fills set their values, when the fields of
-   * this one have no issues. Otherwise it stays, and focuses the first field with an issue, in
-   * layout order. Resolves to whether it moved: a step the user goes to while it waits wins, and it
-   * resolves to false.
+   * Waits for the fills that are pending, then validates the whole form, and moves to the next
+   * step, the one after this among the steps on show once the fills set their values, when the
+   * fields of this one have no issues. Otherwise it stays, and focuses the first field with an
+   * issue, in layout order. Resolves to whether it moved: a step the user goes to, or a reset,
+   * while it waits wins, and it resolves to false.
    */
   next(): Promise<boolean>
   /** Moves to the step before, without validating. */
@@ -73,6 +73,7 @@ export const fieldEventsOf = (form: FormStore): FieldEvents | undefined => field
  * revalidates as the user fixes it, a submit before the last step moves on like Next, and a submit
  * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped,
  * and moving forward waits until `fills` are settled, so it validates the values they set.
+ * `restart()` goes back to the first step as the form opened, for a reset.
  */
 export function useJsonFormSteps(
   form: FormStore,
@@ -83,7 +84,7 @@ export function useJsonFormSteps(
   },
   visibility: { readonly value: VisibilityState },
   fills: { settled(): Promise<void> },
-): JsonFormSteps {
+): { steps: JsonFormSteps; restart(): void } {
   const all = layout.steps
   // The current step, by its index in `all`, as are the steps of the maps and sets below.
   const at = ref(0)
@@ -97,6 +98,8 @@ export function useJsonFormSteps(
   const left = new Map<number, Map<string, Errors>>()
   // The steps that failed Next, and haven't passed since.
   const failed = new Set<number>()
+  // How many times the current step was set, so that a Next that waited knows of a move meanwhile.
+  let moves = 0
 
   async function goTo(target: number): Promise<boolean> {
     const shown = list.value
@@ -116,7 +119,7 @@ export function useJsonFormSteps(
    * validates every step on the way, stopping at the first with issues.
    */
   async function forward(target: () => number): Promise<boolean> {
-    const here = at.value
+    const before = moves
     // Next goes on once the task that called it is over. A click runs its default action after its
     // handlers, and Vue can render in between: a Next button that turns into the submit button on
     // the last step would then submit the form as the user gets there.
@@ -127,10 +130,11 @@ export function useJsonFormSteps(
     const shown = list.value
     const from = index.value
     const end = target()
-    // A step the user went to while it waited wins, and a step the fills hid isn't reached.
-    if (at.value !== here || end <= from || end >= shown.length) return false
+    // A step the user went to while it waited wins, as does a reset, and a step the fills hid
+    // isn't reached.
+    if (moves !== before || end <= from || end >= shown.length) return false
     const { issues } = await validate(form)
-    if (at.value !== here) return false
+    if (moves !== before) return false
     for (const step of shown.slice(from, end)) {
       const found = issuesOfStep(step, issues)
       if (found.length) {
@@ -155,6 +159,15 @@ export function useJsonFormSteps(
       setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
     }
     at.value = target
+    moves++
+  }
+
+  /** Goes back to the first step, with no step left or failed yet, as the form opened. */
+  function restart() {
+    left.clear()
+    failed.clear()
+    at.value = 0
+    moves++
   }
 
   /** Keeps the errors of the current step, for when the user comes back to it. */
@@ -185,6 +198,7 @@ export function useJsonFormSteps(
     failed.add(target)
     if (target !== at.value) leave()
     at.value = target
+    moves++
     await nextTick()
     // A group or an array has no element: the first field that has one gets the focus.
     const first = found.find((issue) => issue.field.role === 'value')
@@ -214,7 +228,7 @@ export function useJsonFormSteps(
     goTo,
   }
   if (all.length > 1) watchSteps()
-  return steps
+  return { steps, restart }
 
   function watchSteps() {
     fieldEvents.set(form, (event) => {

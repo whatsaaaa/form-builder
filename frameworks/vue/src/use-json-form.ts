@@ -91,7 +91,9 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
    * edited since. A new `initialInput` goes over the definition's defaults, like the option's, and
    * its fields and triggers are left alone as the form starts. Formisch's own `reset` leaves the
    * fills comparing the fields with what the last fill set, as edits: with `keepInput`, which
-   * keeps the input, that is right, so use it to clear the touched state and the errors.
+   * keeps the input, that is right, so use it to clear the touched state and the errors. The steps
+   * start again too: the form goes back to the first step, and keeps no errors of the steps the
+   * user left, or of a Next that failed.
    */
   reset(config?: Omit<ResetFormConfig<TSchema>, 'keepInput'>): void
 }
@@ -145,6 +147,7 @@ export function useJsonForm(
     )
   }
   const fills = useFills(form, builder, definition, options)
+  const { steps, restart } = useJsonFormSteps(form, layout, options, state, fills)
   return {
     form,
     definition,
@@ -153,7 +156,7 @@ export function useJsonForm(
     layoutComponents: options.layoutComponents,
     fields: builder.getFieldTree(definition),
     layout,
-    steps: useJsonFormSteps(form, layout, options, state, fills),
+    steps,
     get visibility() {
       return state.value
     },
@@ -169,6 +172,7 @@ export function useJsonForm(
         reset(form, config)
         fills.reset()
       }
+      restart()
     },
   }
 }

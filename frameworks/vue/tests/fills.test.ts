@@ -661,6 +661,23 @@ describe('the steps of a form with fills', () => {
     expect(jsonForm.steps.current.step.id).toBe('profile')
   })
 
+  it('drop a Next that waits when the form is reset', async () => {
+    const { builder, profiles } = sourceBuilder()
+    const { jsonForm } = mountFills(
+      { ...profileSource, layout },
+      { builder, initialInput: { firstName: 'Ana', lastName: 'Ilić' } },
+    )
+    await set('profile', 'a')
+
+    const moved = jsonForm.steps.next()
+    await settle()
+    await settle()
+    jsonForm.reset()
+    expect(profiles[0]?.signal.aborted).toBe(true)
+    expect(await moved).toBe(false)
+    expect(jsonForm.steps.current.step.id).toBe('profile')
+  })
+
   it("don't wait on Back", async () => {
     const { builder, profiles } = sourceBuilder()
     const { jsonForm } = mountFills(

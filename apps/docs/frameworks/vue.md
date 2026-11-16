@@ -36,7 +36,7 @@ Vue 3.5.2, `@formisch/vue` 1.1.1 and Valibot 1.4.1 or later are required. `@what
 
 <<< @/snippets/vue/SignUpForm.vue
 
-- `jsonForm.form` is a normal Formisch form, so every Formisch method works on it, like `setInput`. Reset it with `jsonForm.reset()`, which takes the options of Formisch's `reset` for the whole form but `keepInput`, and starts the [fills](#fills) again. Its `initialInput` goes over the definition's defaults, like [the option's](#initial-input).
+- `jsonForm.form` is a normal Formisch form, so every Formisch method works on it, like `setInput`. Reset it with `jsonForm.reset()`, which takes the options of Formisch's `reset` for the whole form but `keepInput`, and starts the [fills](#fills) again. Its `initialInput` goes over the definition's defaults, like [the option's](#initial-input), and the form goes back to its first step, with no errors kept from the steps the user left.
 - The form element, the submit button and anything around them are yours.
 - A definition with issues throws the builder's `DefinitionError`. Run [`validate()`](/guide/checking-definitions) first when the definition comes from outside your code.
 - The definition is read once, when the component sets up. To show another one, give the component that calls `useJsonForm` a new `:key`. That makes a new form, without what the user typed: pass [`initialInput`](#initial-input) to start it with values.
