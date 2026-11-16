@@ -217,6 +217,37 @@ export default defineConfigWithTheme<ThemeConfig>({
     ['link', { rel: 'apple-touch-icon', href: `${base}apple-touch-icon.png` }],
   ],
 
+  markdown: {
+    // The link VitePress 1 puts in a heading, labelled with the heading's text as VitePress 2 does.
+    // VitePress 1 labels it with the heading's Markdown, so a custom anchor, `## Title {#id}`, is
+    // read out with it.
+    anchor: {
+      permalink: (slug, _, state, index) => {
+        const heading = state.tokens[index + 1].children ?? []
+        const title = heading
+          .filter((token) => token.type === 'text' || token.type === 'code_inline')
+          .map((token) => token.content)
+          .join('')
+          .trim()
+        heading.push(
+          Object.assign(new state.Token('text', '', 0), { content: ' ' }),
+          Object.assign(new state.Token('link_open', 'a', 1), {
+            attrs: [
+              ['class', 'header-anchor'],
+              ['href', `#${slug}`],
+              ['aria-label', `Permalink to "${title}"`],
+            ],
+          }),
+          Object.assign(new state.Token('html_inline', '', 0), {
+            content: '&ZeroWidthSpace;',
+            meta: { isPermalinkSymbol: true },
+          }),
+          new state.Token('link_close', 'a', -1),
+        )
+      },
+    },
+  },
+
   // https://vitepress.dev/reference/default-theme-config
   themeConfig: {
     // form-builder's mark from the design system's identity kit, drawn at 32 px

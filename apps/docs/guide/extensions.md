@@ -32,9 +32,7 @@ An extension is an object that matches the [`SchemaExtension`](/api/schema/Schem
 
 The builder does the rest: groups, lists, sections and steps hide what is in them, a hidden field reads as empty in other conditions, and loops are `cycle` issues.
 
-<span id="fills"></span>
-
-## Adding fills from an extension
+## Adding fills from an extension {#fills}
 
 This section shows how an extension adds fills. To use fills in a form, see the [fills package](/api/fills/fills). How a running fill behaves, below, holds for every fill.
 
