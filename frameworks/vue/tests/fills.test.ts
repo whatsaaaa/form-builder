@@ -1,4 +1,4 @@
-import { Form, getInput, isDirty, setInput } from '@formisch/vue'
+import { Form, getInput, isDirty, reset, setInput } from '@formisch/vue'
 import { affects } from '@whatsaaaa/form-builder-affects'
 import { type FillSource, fills } from '@whatsaaaa/form-builder-fills'
 import {
@@ -442,6 +442,31 @@ describe('a fill with a source', () => {
     expect(profiles.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
     expect(getInput(jsonForm.form)).toEqual({ profile: 'a', ...marko, address: {} })
     expect(isDirty(jsonForm.form)).toBe(false)
+  })
+
+  it("keeps the user's edits on Formisch's reset with keepInput, which jsonForm.reset() doesn't take", async () => {
+    const { builder, profiles } = sourceBuilder()
+    const json = structuredClone(profileSource) as JsonForm
+    ;(json.fields[0] as { default?: string }).default = 'a'
+    const { root, jsonForm } = mountFills(json, { builder })
+    profiles[0]?.resolve(marko)
+    await settle()
+    type(root, 'firstName', 'Marta')
+    await settle()
+
+    reset(jsonForm.form, { keepInput: true })
+    await settle()
+    expect(profiles).toHaveLength(1)
+    expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Marta' })
+
+    await set('profile', 'b')
+    profiles[1]?.resolve(jelena)
+    await settle()
+    expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Marta', lastName: 'Jovanović' })
+
+    // The type error is a test too: `pnpm type-check` fails when the line compiles.
+    // @ts-expect-error keepInput is for Formisch's own reset
+    void (() => jsonForm.reset({ keepInput: true }))
   })
 
   it("keeps a record a reset gives while its default's values are on their way", async () => {
