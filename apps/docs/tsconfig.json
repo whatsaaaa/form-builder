@@ -2,7 +2,7 @@
 // The theme, which runs in the browser, has its own project in .vitepress/theme, and the snippets
 // the pages show have a project each in snippets/.
 {
-  "extends": "@tsconfig/node24/tsconfig.json",
+  "extends": "@tsconfig/node26/tsconfig.json",
   "include": [".vitepress/config.ts", "scripts", "tests"],
   "compilerOptions": {
     "module": "preserve",

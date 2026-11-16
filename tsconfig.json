@@ -1,7 +1,7 @@
 // TSConfig for workspace-level config files (e.g. eslint.config.ts).
 // Each workspace package has its own tsconfig and is type-checked separately.
 {
-  "extends": "@tsconfig/node24/tsconfig.json",
+  "extends": "@tsconfig/node26/tsconfig.json",
   "include": ["*.config.*"],
   "compilerOptions": {
     "module": "preserve",
