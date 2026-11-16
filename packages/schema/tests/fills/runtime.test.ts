@@ -705,6 +705,68 @@ describe('the form as it starts', () => {
     expect(builder.getInitialInput(json)).toEqual({ anonymous: true, address: {} })
   })
 
+  it('blanks a trigger the values clear, with its fields, whatever the order of the fields', () => {
+    const plan = (more: Partial<JsonField> = {}) =>
+      ({
+        name: 'plan',
+        type: 'select',
+        options: [{ value: 'pro', label: 'Pro' }],
+        ...more,
+        hideWhen: { field: 'student', clear: true },
+        prefill: { map: { pro: { seats: 10 } } },
+      }) as JsonField
+    const profile = (more: Partial<JsonField> = {}) =>
+      ({
+        name: 'profile',
+        type: 'select',
+        options,
+        ...more,
+        prefill: { map: { a: { student: true } } },
+      }) as JsonField
+    const seats: JsonField = { name: 'seats', type: 'number' }
+    const student: JsonField = { name: 'student', type: 'checkbox' }
+    const json = (first: JsonField, second: JsonField): JsonForm => ({
+      version: '1',
+      fields: [first, seats, second, student],
+    })
+    const expected = { profile: 'a', student: true }
+    const pro = plan({ default: 'pro' })
+    const a = profile({ default: 'a' })
+    expect(builder.getInitialInput(json(pro, a))).toEqual(expected)
+    expect(builder.getInitialInput(json(a, pro))).toEqual(expected)
+    // As in an open form where the user picks the same values.
+    const open = openForm(builder, json(plan(), profile()), { clearLater: true })
+    open.type('plan', 'pro')
+    open.type('profile', 'a')
+    open.clear()
+    expect(open.input).toEqual(expected)
+    // A field the app gives keeps its value.
+    const given = { seats: 3 }
+    const fills = builder.getFills(json(pro, a))
+    expect(fills.initialInput({ plan: 'pro', profile: 'a', seats: 3 }, given)).toEqual({
+      ...expected,
+      seats: 3,
+    })
+  })
+
+  it('starts blank with a trigger whose own values clear it', () => {
+    const json: JsonForm = {
+      version: '1',
+      fields: [
+        {
+          name: 'profile',
+          type: 'select',
+          options,
+          default: 'a',
+          hideWhen: { field: 'company', equals: true, clear: true },
+          prefill: { map: { a: { company: true } } },
+        },
+        { name: 'company', type: 'checkbox' },
+      ],
+    } as never
+    expect(builder.getInitialInput(json)).toEqual({})
+  })
+
   it('runs a source once the form starts, as the input it starts with', async () => {
     const { calls, source } = handSource()
     const sources = createSchemaBuilder({ extensions: [prefill({ profiles: source })] })

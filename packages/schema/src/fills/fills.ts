@@ -21,7 +21,8 @@ export interface Fills {
   /**
    * The input a form starts with: `input`, the defaults with the app's initial input over them,
    * with the values of each static fill, like a map, whose trigger starts from the definition with
-   * a value. They leave alone the fields `given`, the app's initial input, has a key for. It
+   * a value. They leave alone the fields `given`, the app's initial input, has a key for. A trigger
+   * the conditions clear for those values is blank, with every field its fills set. It
    * throws what the static fills' `values()` throw, and a TypeError when they give a promise, or no
    * object of values. Apply the conditions' `clear()` after it. The builder's `getInitialInput()`
    * does all of it already.
@@ -204,7 +205,9 @@ function same(a: unknown, b: unknown): boolean {
 /**
  * The input a form starts with, with the values of each static fill whose trigger starts from the
  * definition with a value. A fill after one that sets its trigger reads that value. Nothing is
- * edited yet, so they set every field `given` has no key for.
+ * edited yet, so they set every field `given` has no key for. A trigger those values leave blank,
+ * or that its conditions clear for them, is blank, with every field its fills set, as in an open
+ * form.
  */
 function fillInitialInput<T>(
   plan: FillPlan,
@@ -213,6 +216,8 @@ function fillInitialInput<T>(
   given: unknown,
 ): T {
   let current: unknown = input
+  // The triggers whose fills set their values.
+  const filled = new Set<FillField>()
   for (const fill of plan.fills) {
     if (!fill.target.static || isGiven(given, fill.trigger.path)) continue
     const value = triggerValue(fill.trigger, current, clearedIn(engine, current))
@@ -231,8 +236,26 @@ function fillInitialInput<T>(
         current = setAt(current, field.path, fit(rawOf(values, field), field).input)
       }
     }
+    filled.add(fill.trigger)
   }
-  return current as T
+  // Blanking one can clear another, so it goes on until none is left. Each is blanked once.
+  for (;;) {
+    const isCleared = clearedIn(engine, current)
+    const emptied = [...filled].filter(
+      (trigger) => triggerValue(trigger, current, isCleared) === undefined,
+    )
+    if (!emptied.length) return current as T
+    for (const trigger of emptied) {
+      filled.delete(trigger)
+      current = setAt(current, trigger.path, blankOf(trigger))
+      for (const fill of plan.fills) {
+        if (fill.trigger !== trigger) continue
+        for (const field of fill.fields) {
+          if (!isGiven(given, field.path)) current = setAt(current, field.path, blankOf(field))
+        }
+      }
+    }
+  }
 }
 
 /** A fill that waits for its values. */
