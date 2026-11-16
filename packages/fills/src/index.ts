@@ -5,7 +5,7 @@ import { fillSchema, fillsPropsOf, type FillsPropsSchema } from './definition/fi
 import type { FillSource } from './values/values'
 
 export type { Fill, FillMapValue, FillOverwrite, FillsPropsSchema } from './definition/fill'
-export type { FillSource, FillSourceContext, FillValues } from './values/values'
+export type { FillSource, FillSourceContext } from './values/values'
 
 /**
  * The extension `fills()` gives, with the type of the key it adds, for `defineForm()`. `TSource`

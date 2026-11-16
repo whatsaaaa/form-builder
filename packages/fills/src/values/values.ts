@@ -6,12 +6,6 @@ import type {
 } from '@whatsaaaa/form-builder-schema'
 import type { FillMapValue } from '../definition/fill'
 
-/**
- * The values of a fill's fields, by dot path, like `{ firstName: 'Marko', 'address.city': 'Beograd' }`.
- * A field left out, or given null, is set blank.
- */
-export type FillValues = Readonly<Record<string, unknown>>
-
 /** What a source gets with the value of the trigger. */
 export interface FillSourceContext extends FillContext {
   /** The trigger's dot path, like `'profile'`, for a source that several fields use. */
@@ -36,7 +30,7 @@ export function mapValues(
 ): TargetFill['values'] {
   return (value) => {
     const key = String(value)
-    return Object.hasOwn(map, key) ? (map[key] as FillValues) : null
+    return Object.hasOwn(map, key) ? map[key] : null
   }
 }
 

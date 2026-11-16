@@ -30,7 +30,7 @@ import { createSchemaBuilder, type JsonForm } from '@whatsaaaa/form-builder-sche
 
 // Any function works: the values can come from a server, a store or a constant.
 const profiles: FillSource = async (value, { signal }) => {
-  const response = await fetch(`/api/profiles/${value}`, { signal })
+  const response = await fetch(`/api/profiles/${encodeURIComponent(value)}`, { signal })
   if (!response.ok) throw new Error(`Profile ${value}: HTTP ${response.status}`)
   return response.json() // like { firstName: 'Marko', lastName: 'Petrović', 'address.city': 'Beograd' }
 }
