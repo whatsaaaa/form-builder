@@ -34,15 +34,17 @@ export interface JsonFormSteps {
   readonly isLast: boolean
   /**
    * Validates the whole form, and moves to the next step when the fields of this one have no
-   * issues. Otherwise it stays, and focuses the first field with an issue, in layout order.
-   * Resolves to whether it moved.
+   * issues. Otherwise it stays, and focuses the first field with an issue, in layout order. With
+   * fills, it waits for the pending ones first, so it validates the values they set. Resolves to
+   * whether it moved.
    */
   next(): Promise<boolean>
   /** Moves to the step before, without validating. */
   back(): void
   /**
-   * Moves to the step at `index`. Back is free, and forward validates every step on the way, like
-   * `next()`, and stops at the first with issues. Resolves to whether it got there.
+   * Moves to the step at `index`. Back is free, and forward waits for pending fills and validates
+   * every step on the way, like `next()`, and stops at the first with issues. Resolves to whether
+   * it got there.
    */
   goTo(index: number): Promise<boolean>
 }
@@ -73,14 +75,16 @@ interface Modes {
  * The steps of `layout`, for `useJsonForm`. With more than one, a step shows the errors it had
  * when the user left it, and none the first time they get to it, a step that failed Next
  * revalidates as the user fixes it, a submit before the last step moves on like Next, and a submit
- * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped.
- * Like Formisch's `useForm`, it reads the validation modes on the first render.
+ * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped,
+ * and moving forward waits for `settled()`, the pending fills. Like Formisch's `useForm`, it reads
+ * the validation modes on the first render.
  */
 export function useJsonFormSteps(
   form: FormStore,
   layout: FormLayout,
   modes: Modes,
   visibility: VisibilityState,
+  settled: () => Promise<void>,
 ): JsonFormSteps {
   const all = layout.steps
   // The current step, by its index in `all`, as are the steps in `state` below.
@@ -119,6 +123,8 @@ export function useJsonFormSteps(
       // handlers, and React can render in between: a Next button that turns into the submit button on
       // the last step would then submit the form as the user gets there.
       await afterTask()
+      // The values of pending fills are validated once they are there, not the blanks before.
+      await settled()
       const { issues } = await validate(form)
       for (const step of list.slice(position(list), target)) {
         const found = issuesOfStep(step, issues)
@@ -217,7 +223,7 @@ export function useJsonFormSteps(
       if (before) move(all.indexOf(before))
     }
     return { goTo, next, back, isLast, events, afterSubmit }
-  }, [form, all, visibility])
+  }, [form, all, visibility, settled])
 
   // The field a step was stopped on, once the step has rendered.
   useEffect(() => {

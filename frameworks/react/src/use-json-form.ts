@@ -9,6 +9,8 @@ import {
 import {
   createSchemaBuilder,
   type FieldNode,
+  type FillErrorInfo,
+  type FillsState,
   type FormLayout,
   type JsonForm,
   type BuiltSchema,
@@ -20,6 +22,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type JsonFormSteps, useJsonFormSteps } from './json-form-steps'
 import { mergeInitialInput } from './merge-initial-input'
+import { useFills } from './use-fills'
 import { useVisibility } from './use-visibility'
 
 /** The options of `useJsonForm`. `TSchema` is the form's schema, which types `initialInput`. */
@@ -43,6 +46,12 @@ export interface UseJsonFormOptions<TSchema extends FormSchema = BuiltSchema> {
   validate?: ValidationMode
   /** When a field is validated again after that, as in Formisch. */
   revalidate?: Exclude<ValidationMode, 'initial'>
+  /**
+   * Called with each error of the definition's fills, like the `fills` of
+   * `@whatsaaaa/form-builder-fills`: what a source threw, or a TypeError for values that don't fit,
+   * with the trigger and its value. Without it, the error is thrown like an uncaught one.
+   */
+  onFillError?(error: unknown, info: FillErrorInfo): void
 }
 
 /** What `useJsonForm` returns. Pass it to `<JsonFields>`. */
@@ -68,6 +77,12 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
    * re-renders for that, not for every keystroke. Without conditions, it hides nothing.
    */
   readonly visibility: VisibilityState
+  /**
+   * What the definition's fills are waiting for now: `pending` lists the triggers whose values
+   * haven't come yet, and `isPending(path)` tells it for any field. A new object only when that
+   * changes. Without fills, nothing is pending.
+   */
+  readonly fills: FillsState
 }
 
 /** Any form `useJsonForm` returns, typed or not: what the components take. */
@@ -79,8 +94,11 @@ export type AnyJsonFormInstance = JsonFormInstance<FormSchema>
  * `DefinitionError`, so run `validate()` first when it comes from outside your code. Like
  * Formisch's `useForm`, it reads the definition, the builder, the initial input and the validation
  * modes on the first render: give the component a new `key` to use another definition. The
- * components and layout components are read on every render. With conditions, it clears the fields
- * they clear as soon as they do, with Formisch's `setInput`, wherever the fields are rendered.
+ * components, the layout components and `onFillError` are read on every render. With conditions,
+ * it clears the fields they clear as soon as they do, with Formisch's `setInput`, wherever the
+ * fields are rendered. With fills, each new value of a trigger sets the fields of its fill, and a
+ * trigger that loses its value blanks them, with Formisch's `setInput`. The fills of sources the
+ * form starts with run once it is mounted, as the values it starts with.
  */
 export function useJsonForm(definition: JsonForm, options?: UseJsonFormOptions): JsonFormInstance
 /**
@@ -106,6 +124,7 @@ export function useJsonForm(
       fields: builder.getFieldTree(definition),
       layout: builder.getLayout(definition),
       visibility: builder.getVisibility(definition),
+      fills: builder.getFills(definition),
     }
   })
   const form = useForm({
@@ -121,7 +140,8 @@ export function useJsonForm(
     // The paths come from the definition at runtime, so the schema's types can't check them.
     for (const { path, input } of toClear) setInput(form, { path, input } as never)
   }, [form, toClear])
-  const steps = useJsonFormSteps(form, built.layout, options, visibility)
+  const { run, state: fills } = useFills(form, built.fills, options)
+  const steps = useJsonFormSteps(form, built.layout, options, visibility, run.settled)
   const { components, layoutComponents } = options
   return useMemo(
     () => ({
@@ -134,7 +154,8 @@ export function useJsonForm(
       layout: built.layout,
       steps,
       visibility,
+      fills,
     }),
-    [form, built, components, layoutComponents, steps, visibility],
+    [form, built, components, layoutComponents, steps, visibility, fills],
   )
 }

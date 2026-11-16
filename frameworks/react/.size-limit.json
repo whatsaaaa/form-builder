@@ -10,6 +10,6 @@
     "path": "dist/index.js",
     "import": "*",
     "ignore": ["@whatsaaaa/form-builder-schema"],
-    "limit": "3 kB"
+    "limit": "3.5 kB"
   }
 ]

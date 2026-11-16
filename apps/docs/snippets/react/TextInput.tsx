@@ -19,6 +19,7 @@ export function TextInput({
   required,
   inputProps,
   setInput,
+  pending,
 }: ValueFieldProps) {
   return (
     <label>
@@ -29,6 +30,9 @@ export function TextInput({
         value={String(input ?? '')}
         placeholder={field.placeholder}
         required={required}
+        // While a fill waits for the field's value.
+        aria-busy={pending || undefined}
+        readOnly={pending}
         onChange={(event) => setInput(event.target.value)}
       />
       {errors && <small>{errors[0]}</small>}

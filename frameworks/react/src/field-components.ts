@@ -41,6 +41,11 @@ export interface ValueFieldProps {
   inputProps: FieldElementProps
   /** Sets the input, after turning `'5'` into `5` for a number, or a `FileList` into files. */
   setInput: (input: unknown) => void
+  /**
+   * In a form with fills: true while a fill waits for this field's value, as its trigger or as a
+   * field it sets, e.g. to show a spinner. Left out in a form without fills.
+   */
+  pending?: boolean
 }
 
 /** The props of a component for a container of kind `object`, like the built-in group. */

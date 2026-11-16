@@ -43,13 +43,13 @@ React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required. `
 
 ## Options
 
-`useJsonForm` takes the builder, the values the form starts with, your components, and Formisch's validation modes:
+`useJsonForm` takes the builder, the values the form starts with, your components, Formisch's validation modes, and what to do with the errors of fills:
 
 <<< @/snippets/react/options.ts#options
 
-`builder`, `initialInput`, `validate` and `revalidate` are read on the first render, with the definition, so make the builder once, outside the component. `components` and `layoutComponents` are read on every render. They can also go to `<JsonFields>` and `<JsonField>` as props, which win over the options.
+`builder`, `initialInput`, `validate` and `revalidate` are read on the first render, with the definition, so make the builder once, outside the component. `components`, `layoutComponents` and `onFillError` are read on every render. The components can also go to `<JsonFields>` and `<JsonField>` as props, which win over the options.
 
-Pass a builder when your definitions use your own types, rules or messages, or the [conditions](/guide/conditions) of the affects package.
+Pass a builder when your definitions use your own types, rules or messages, the [conditions](/guide/conditions) of the affects package, or the [fills](#fills) of the fills package.
 
 ## Initial input
 
@@ -63,6 +63,21 @@ A form starts with the defaults of its definition. To start it with other values
 - **It keeps what the user typed** when you build the form again, like for [another language](/guide/messages#changing-the-language): pass the old form's input.
 
 [`UseJsonFormOptions`](/api/react/UseJsonFormOptions#initial-input) has every rule: groups, lists, conditions and the types.
+
+## Fills
+
+With [`fills()`](/api/fills/fills) in the builder, choosing a value of a field fills in others: picking a profile sets the first and last name. `useJsonForm` runs the fills of the definition, so your part is the sources, what to show while one loads, and its errors:
+
+<<< @/snippets/react/ProfileForm.tsx
+
+- **A fill runs on each new value of its trigger**, from the user or from code, and sets the fields the user hasn't changed since the last fill, or every one with `"overwrite": "always"`. A trigger that loses its value blanks every field its fill sets.
+- **As the form starts**, a fill runs only for a trigger that starts from its default. A trigger that `initialInput` has a key for, like a saved record, fills nothing, and a fill never sets a field it has a key for then. The values of a map are in the initial input, on the first render. Those of a source come once the form is mounted, as values the form starts with, so it isn't dirty.
+- **`jsonForm.fills`** says what waits for a source: `pending` lists the triggers, and `isPending(path)` tells it for any field. It is a new object only when that changes. Each field component gets it as its [`pending`](/frameworks/field-components#value-fields) prop, like the text input above shows.
+- **Submitting while a fill waits is yours to handle**: disable the submit button while `fills.pending` isn't empty, as above. With [steps](/frameworks/multi-step-forms), Next waits for the pending fills before it validates.
+- **`onFillError`** gets what a source threw, or a `TypeError` for a value its field can't hold, with the trigger and its value. Without it, the error is thrown like an uncaught one, so it shows in the console.
+- **The newest value wins.** A new value of the trigger aborts the call before it through its `signal`, and so does unmounting the form. In development, StrictMode mounts the form twice, so a source the form starts with is called twice, and the first call is aborted.
+
+[`fills()`](/api/fills/fills) has the syntax and the sources, and [extensions](/guide/extensions#fills) every rule of when a fill runs and what it sets.
 
 ## Not included
 

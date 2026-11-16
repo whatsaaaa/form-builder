@@ -31,6 +31,7 @@ See [field components](/frameworks/field-components).
   - `errors` `[string, ...string[]] | null`: its error messages
   - `inputProps` `FieldElementProps`: Formisch's element props, to spread on the input element
   - `setInput` `(input: unknown) => void`: sets the input, after turning what an element gives into the value of its kind
+  - `pending` `boolean`: in a form with fills, true while a fill waits for its value, as its trigger or as a field it sets. Left out in a form without fills
 
 ## GroupFieldProps
 

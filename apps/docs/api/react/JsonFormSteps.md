@@ -14,13 +14,13 @@ The steps of a form, from its layout. A form without `steps` in its layout has o
   - `current` <code>[LayoutStep](/api/schema/FormLayout#layoutstep)</code>: the step `<JsonFields>` renders
   - `isFirst` <code>boolean</code>
   - `isLast` <code>boolean</code>
-  - `next` <code>() =&gt; Promise&lt;boolean&gt;</code>: validates, and moves on when the step's fields have no issues. Resolves to whether it moved
+  - `next` <code>() =&gt; Promise&lt;boolean&gt;</code>: waits for pending fills, validates, and moves on when the step's fields have no issues. Resolves to whether it moved
   - `back` <code>() =&gt; void</code>: moves back, without validating
   - `goTo` <code>(index: number) =&gt; Promise&lt;boolean&gt;</code>: moves back freely, or forward through each step on the way, stopping at the first with issues
 
 ### Explanation
 
-See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate.
+See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate. Moving forward with `next()` or `goTo()` waits for the [fills](/frameworks/react#fills) that are pending first, so it validates the values they set, not the blanks before them. `back()` doesn't wait.
 
 ## Example
 

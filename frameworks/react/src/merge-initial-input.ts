@@ -7,7 +7,9 @@ import type { FieldNode, JsonForm, SchemaBuilder } from '@whatsaaaa/form-builder
  * options, the definition's defaults with it over them. A key that is there wins over the field's
  * default, with any value, so a field given `undefined` starts blank. The fields of a group are
  * merged the same way, and a list is taken whole, each item over what a new item starts with.
- * Then the fields the conditions clear for that input are blank, as in the builder's own.
+ * Then the fills written in the definition, like a map, set the fields `given` has no key for, for
+ * each trigger it has no key for, and the fields the conditions clear for that input are blank, as
+ * in the builder's own.
  */
 export function mergeInitialInput(
   builder: SchemaBuilder,
@@ -17,7 +19,8 @@ export function mergeInitialInput(
   if (!isRecord(given)) return builder.getInitialInput(definition)
   // The builder's own input has the fields blank that the defaults hide, which `given` may show.
   const input = mergeFields(builder.getFieldTree(definition), given)
-  return builder.getVisibility(definition).clear(input)
+  const filled = builder.getFills(definition).initialInput(input, given)
+  return builder.getVisibility(definition).clear(filled)
 }
 
 /**

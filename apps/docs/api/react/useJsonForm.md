@@ -23,9 +23,9 @@ const jsonForm = useJsonForm<TInput, TOutput>(definition, options)
 
 ### Explanation
 
-A definition with issues throws the builder's `DefinitionError`, so run `validate()` first when it comes from outside your code. Like Formisch's `useForm`, it reads the definition, the builder, the initial input and the validation modes on the first render: give the component a new `key` to use another definition, or to start again with other values. The components and layout components are read on every render.
+A definition with issues throws the builder's `DefinitionError`, so run `validate()` first when it comes from outside your code. Like Formisch's `useForm`, it reads the definition, the builder, the initial input and the validation modes on the first render: give the component a new `key` to use another definition, or to start again with other values. The components, the layout components and `onFillError` are read on every render.
 
-With conditions, it clears the fields they clear as soon as they do, with Formisch's `setInput`, wherever the fields are rendered. With your input type, and your output type when it differs, the form is typed, so Formisch checks paths and values. See [TypeScript](/guide/typescript#typing-the-form).
+With conditions, it clears the fields they clear as soon as they do, with Formisch's `setInput`, wherever the fields are rendered. With [fills](/frameworks/react#fills), each new value of a trigger sets the fields of its fill with Formisch's `setInput`, and the fills of sources the form starts with run once it is mounted, as the values it starts with. With your input type, and your output type when it differs, the form is typed, so Formisch checks paths and values. See [TypeScript](/guide/typescript#typing-the-form).
 
 ## Returns
 
@@ -42,6 +42,12 @@ With conditions, it clears the fields they clear as soon as they do, with Formis
 `initialInput` starts the form with the values of a record. See [initial input](/api/react/UseJsonFormOptions#initial-input) for how it goes over the defaults.
 
 <<< @/snippets/react/EditCustomer.tsx
+
+### Filling fields
+
+With [fills](/frameworks/react#fills), `jsonForm.fills` says what waits for a source, and `onFillError` gets their errors.
+
+<<< @/snippets/react/ProfileForm.tsx
 
 ## Related
 
