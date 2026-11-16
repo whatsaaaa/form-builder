@@ -34,7 +34,7 @@ The builder does the rest: groups, lists, sections and steps hide what is in the
 
 ## Adding fills from an extension {#fills}
 
-This section is for extension authors. To use fills in a form, see the [fills package](/api/fills/).
+This section shows how an extension adds fills. To use fills in a form, see the [fills package](/api/fills/fills). How a running fill behaves, below, holds for every fill.
 
 A fill sets fields from the value of another, its trigger: choosing a profile fills in the name, say. The [fills package](/api/fills/) adds them from `fills` in the definition, with values from a map or from a source of yours. An extension adds one with `ctx.fill(target, fill)`, where `fill` is a [`TargetFill`](/api/schema/TargetFill). This one adds `copyTo`, which copies a text field to others while the user hasn't changed them:
 
