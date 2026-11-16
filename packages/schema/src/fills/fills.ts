@@ -25,8 +25,8 @@ export interface Fills {
    * the conditions clear, as the form starts or for those values, is blank, even when a later
    * value ends the clear, and a trigger they clear keeps none of its fills' values, whatever the
    * order of the fields. It throws what the static fills' `values()` throw, and a TypeError when
-   * they give a promise, or no object of values. Apply the conditions' `clear()` after it. The builder's `getInitialInput()`
-   * does all of it already.
+   * they give a promise, or no object of values. Apply the conditions' `clear()` after it. The
+   * builder's `getInitialInput()` does all of it already.
    */
   initialInput<T>(input: T, given: unknown): T
   /** Starts the fills of one form. Call `start()` on the run once the form is on the page. */

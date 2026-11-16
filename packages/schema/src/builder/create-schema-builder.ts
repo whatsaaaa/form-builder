@@ -116,9 +116,8 @@ export interface SchemaBuilder<
    * still gets that default. A field that conditions clear when the form starts starts blank. With
    * fills, it has the values of the fills written in the definition, like a map, for each trigger
    * that starts with its default, unless the conditions clear that trigger, as the form starts or
-   * for those values. It
-   * throws what their `values()` throw, and a TypeError when they
-   * give a promise, or no object of values.
+   * for those values. It throws what their `values()` throw, and a TypeError when they give a
+   * promise, or no object of values.
    */
   getInitialInput(json: JsonForm): Record<string, unknown>
   /**
