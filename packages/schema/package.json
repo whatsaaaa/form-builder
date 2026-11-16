@@ -1,6 +1,6 @@
 {
   "name": "@whatsaaaa/form-builder-schema",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "description": "Build Formisch-ready Valibot schemas from JSON form definitions.",
   "keywords": [
     "form",
