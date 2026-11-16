@@ -335,7 +335,7 @@ function firstSettable(
 
 /**
  * Adds an issue when the field can't hold a value a map gives it. `null` always fits, and so does
- * a value its kind counts as empty, like `""` for text or `[]` for a list.
+ * a value its kind counts as empty, like `""` for text or `[]` for a multiselect.
  */
 function checkValue(
   value: FillMapValue,

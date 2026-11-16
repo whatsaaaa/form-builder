@@ -27,7 +27,7 @@ type Fill<TSource extends string = string> =
 - **Fields** are named by their dot path from the root, like `firstName`, or `address.city` for a field of a group. A fill can't set a group or a list as a whole, a file, or a field inside a list's items.
 - **The trigger** is a field with a string, number, boolean or date value, outside a list's items, like a select, a radio, a checkbox, a text or a date field.
 - **The keys of a map** must be values the trigger can hold, like the value of one of a select's options.
-- **The values of a map** must be values their field can hold, rules included, like a `default`. `null` always fits, and so does `""` for a text, number or date field, or `[]` for a multiselect or list.
+- **The values of a map** must be values their field can hold, rules included, like a `default`. `null` always fits, and so does `""` for a text, number or date field, or `[]` for a multiselect.
 
 What a running fill does, like when it fires and which fields it leaves alone, is in [fills](/guide/extensions#fills).
 
