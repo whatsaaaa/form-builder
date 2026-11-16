@@ -66,7 +66,7 @@ Types a definition written in TypeScript against the builder's registries and ex
 const input = builder.getInitialInput(json)
 ```
 
-Formisch's `initialInput`: each field's `default`, nested the way the value is, the builder's own container types included. A container of kind `object` gives an object, and one of kind `array` without a default gives `[]`. It leaves out a field with issues. A field that conditions clear when the form starts starts blank. With fills, it has the values of the fills written in the definition, like a map, for each trigger that starts with its default, unless the conditions clear that trigger for those values. It throws what their `values()` throw, and a `TypeError` when they give a promise, or no object of values.
+Formisch's `initialInput`: each field's `default`, nested the way the value is, the builder's own container types included. A container of kind `object` gives an object, and one of kind `array` without a default gives `[]`. It leaves out a field with issues. A field that conditions clear when the form starts starts blank. With fills, it has the values of the fills written in the definition, like a map, for each trigger that starts with its default, unless the conditions clear that trigger, as the form starts or for those values. It throws what their `values()` throw, and a `TypeError` when they give a promise, or no object of values.
 
 ### getItemInput
 

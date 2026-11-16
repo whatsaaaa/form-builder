@@ -749,6 +749,61 @@ describe('the form as it starts', () => {
     })
   })
 
+  it('starts blank with a trigger its conditions clear as it starts, whatever the order', () => {
+    type Field = Record<string, unknown>
+    const json = (fields: Field[]): JsonForm => ({ version: '1', fields }) as never
+    const tier = {
+      name: 'tier',
+      type: 'text',
+      hideWhen: { field: 'vip', clear: true },
+      prefill: { map: { gold: { discount: 5 } } },
+    }
+    const plan = {
+      name: 'plan',
+      type: 'text',
+      hideWhen: { field: 'student', clear: true },
+      prefill: { map: { pro: { vip: true } } },
+    }
+    const profile = (sets: Field) => ({
+      name: 'profile',
+      type: 'text',
+      prefill: { map: { a: sets } },
+    })
+    const discount = { name: 'discount', type: 'number' }
+    const vip = { name: 'vip', type: 'checkbox' }
+    const student = { name: 'student', type: 'checkbox' }
+    const cases: [fields: Field[], expected: Field][] = [
+      // vip starts ticked, which clears tier, and the profile unticks it.
+      [
+        [tier, discount, profile({ vip: false }), { ...vip, default: true }],
+        { profile: 'a', vip: false },
+      ],
+      // plan ticks vip, which clears tier, and the profile clears plan, which unticks vip.
+      [
+        [plan, tier, discount, profile({ student: true }), vip, student],
+        { profile: 'a', student: true },
+      ],
+    ]
+    const choices: Record<string, string> = { plan: 'pro', tier: 'gold', profile: 'a' }
+    for (const [fields, expected] of cases) {
+      const starting = fields.map((field) => {
+        const start = choices[field['name'] as string]
+        return start === undefined ? field : { ...field, default: start }
+      })
+      expect(builder.getInitialInput(json(starting))).toEqual(expected)
+      expect(builder.getInitialInput(json([...starting].reverse()))).toEqual(expected)
+      // As in an open form where the user picks the same values, in the order of the fields.
+      const open = openForm(builder, json(fields), { clearLater: true })
+      for (const field of fields) {
+        const choice = choices[field['name'] as string]
+        if (choice === undefined) continue
+        open.type(field['name'] as string, choice)
+        open.clear()
+      }
+      expect(open.input).toEqual(expected)
+    }
+  })
+
   it('starts blank with a trigger whose own values clear it', () => {
     const json: JsonForm = {
       version: '1',

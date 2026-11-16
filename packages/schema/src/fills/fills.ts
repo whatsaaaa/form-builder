@@ -22,8 +22,9 @@ export interface Fills {
    * The input a form starts with: `input`, the defaults with the app's initial input over them,
    * with the values of each static fill, like a map, whose trigger starts from the definition with
    * a value. They leave alone the fields `given`, the app's initial input, has a key for. A trigger
-   * the conditions clear for those values is blank, with every field its fills set. It
-   * throws what the static fills' `values()` throw, and a TypeError when they give a promise, or no
+   * the conditions clear, as the form starts or for those values, is blank, and keeps none of its
+   * fills' values, whatever the order of the fields. It throws what the static fills' `values()`
+   * throw, and a TypeError when they give a promise, or no
    * object of values. Apply the conditions' `clear()` after it. The builder's `getInitialInput()`
    * does all of it already.
    */
@@ -203,11 +204,12 @@ function same(a: unknown, b: unknown): boolean {
 }
 
 /**
- * The input a form starts with, with the values of each static fill whose trigger starts from the
- * definition with a value. A fill after one that sets its trigger reads that value. Nothing is
- * edited yet, so they set every field `given` has no key for. A trigger those values leave blank,
- * or that its conditions clear for them, is blank, with every field its fills set, as in an open
- * form.
+ * The input a form starts with, with the values of each static fill whose trigger has a value, as
+ * an open form settles them. Nothing is edited yet, so they set every field `given` has no key
+ * for. Each pass, a trigger its conditions clear loses its value, as an open form clears it, and
+ * each fill whose trigger has another value than the one it last handled runs again: with a value
+ * it sets its fields, and without one it blanks them. A trigger that starts without a value blanks
+ * nothing. Every fill reads the input as the pass began, so the order of the fields doesn't matter.
  */
 function fillInitialInput<T>(
   plan: FillPlan,
@@ -215,47 +217,55 @@ function fillInitialInput<T>(
   input: T,
   given: unknown,
 ): T {
+  const fills = plan.fills.filter(
+    (fill) => fill.target.static && !isGiven(given, fill.trigger.path),
+  )
+  // The value of its trigger that each fill last handled.
+  const handled = new Map<PlannedFill, FillTriggerValue | undefined>()
   let current: unknown = input
-  // The triggers whose fills set their values.
-  const filled = new Set<FillField>()
-  for (const fill of plan.fills) {
-    if (!fill.target.static || isGiven(given, fill.trigger.path)) continue
-    const value = triggerValue(fill.trigger, current, clearedIn(engine, current))
-    if (value === undefined) continue
-    const signal = createAbortController().signal
-    const result = fill.target.values(value, { signal, input: inputOf(current) })
-    if (isThenable(result)) {
-      throw new TypeError(
-        `The fill of "${fill.trigger.dotPath}" is static, so its values() can't give a promise`,
-      )
-    }
-    const values = valuesOf(result)
-    if (!values) throw notValues(fill, result)
-    for (const field of fill.fields) {
-      if (!isGiven(given, field.path)) {
-        current = setAt(current, field.path, fit(rawOf(values, field), field).input)
+  // A value goes one fill down a chain of fills per pass, once as it is set and once as a clear
+  // blanks it, so the input settles within this many passes.
+  for (let pass = 0; pass < 2 * fills.length + 2; pass++) {
+    const start = current
+    const isCleared = clearedIn(engine, current)
+    for (const { trigger } of fills) {
+      if (triggerValue(trigger, current, NONE_CLEARED) !== undefined && isCleared(trigger)) {
+        current = setAt(current, trigger.path, blankOf(trigger))
       }
     }
-    filled.add(fill.trigger)
-  }
-  // Blanking one can clear another, so it goes on until none is left. Each is blanked once.
-  for (;;) {
-    const isCleared = clearedIn(engine, current)
-    const emptied = [...filled].filter(
-      (trigger) => triggerValue(trigger, current, isCleared) === undefined,
-    )
-    if (!emptied.length) return current as T
-    for (const trigger of emptied) {
-      filled.delete(trigger)
-      current = setAt(current, trigger.path, blankOf(trigger))
-      for (const fill of plan.fills) {
-        if (fill.trigger !== trigger) continue
-        for (const field of fill.fields) {
-          if (!isGiven(given, field.path)) current = setAt(current, field.path, blankOf(field))
+    const read = current
+    for (const fill of fills) {
+      const value = triggerValue(fill.trigger, read, NONE_CLEARED)
+      if (same(value, handled.get(fill))) continue
+      handled.set(fill, value)
+      const values = value === undefined ? {} : staticValues(fill, value, read)
+      for (const field of fill.fields) {
+        if (!isGiven(given, field.path)) {
+          current = setAt(current, field.path, fit(rawOf(values, field), field).input)
         }
       }
     }
+    if (current === start) break
   }
+  return current as T
+}
+
+/** The values a static fill gives at once for `value`. */
+function staticValues(
+  fill: PlannedFill,
+  value: FillTriggerValue,
+  input: unknown,
+): Readonly<Record<string, unknown>> {
+  const signal = createAbortController().signal
+  const result = fill.target.values(value, { signal, input: inputOf(input) })
+  if (isThenable(result)) {
+    throw new TypeError(
+      `The fill of "${fill.trigger.dotPath}" is static, so its values() can't give a promise`,
+    )
+  }
+  const values = valuesOf(result)
+  if (!values) throw notValues(fill, result)
+  return values
 }
 
 /** A fill that waits for its values. */
