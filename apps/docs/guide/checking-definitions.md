@@ -16,7 +16,7 @@ A definition that comes from outside your code, like one from a database or a vi
 
 ## Build
 
-`build()` runs the same checks and throws one [`DefinitionError`](/api/schema/DefinitionError) with every issue. So do `getLayout()`, `getFieldTree()` and `getVisibility()`, and the adapters' `useJsonForm`, which calls them:
+`build()` runs the same checks and throws one [`DefinitionError`](/api/schema/DefinitionError) with every issue. So do `getLayout()`, `getFieldTree()`, `getVisibility()` and `getFills()`, and the adapters' `useJsonForm`:
 
 <<< @/snippets/schema/checking-definitions.ts#build
 
@@ -36,6 +36,7 @@ Run `validate()` when you save a definition, and again before you render one you
 | `invalid_props`       | a prop that the type's props schema rejects, like an empty `options` list                                 |
 | `invalid_default`     | a `default` that the field's own schema rejects, rules included                                           |
 | `unknown_rule`        | a rule or form rule the builder doesn't know                                                              |
+| `unknown_source`      | a source of values the extension doesn't know                                                             |
 | `unknown_param`       | a param that the rule doesn't take                                                                        |
 | `invalid_params`      | a param of the wrong type, or a `regex` pattern that JavaScript rejects                                   |
 | `kind_mismatch`       | a rule that doesn't fit the field's kind, or form rule fields of different kinds                          |
@@ -45,7 +46,7 @@ Run `validate()` when you save a definition, and again before you render one you
 | `duplicate_id`        | two layout nodes with the same `id`                                                                       |
 | `invalid_span`        | a layout `span` that is no whole number from 1 to 12, or outside a row, or spans that don't fit their row |
 | `invalid_value`       | a value in a condition that the field can't hold                                                          |
-| `cycle`               | conditions that depend on each other                                                                      |
+| `cycle`               | conditions that depend on each other, or fills that set each other's triggers                             |
 
 ### Codes are API, messages are not
 

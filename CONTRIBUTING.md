@@ -84,6 +84,7 @@ packages/schema/
 │   ├── errors/
 │   ├── extensions/                   what a feature from another package, like affects, plugs into
 │   ├── field-types/
+│   ├── fills/                        what the fills of extensions set while a form is open
 │   ├── json-schema/
 │   ├── kinds/
 │   ├── render/                       helpers for renderers in any framework
@@ -107,7 +108,7 @@ packages/schema/
   an entry is internal and free to change. Feature folders don't get their own `index.ts`, so imports always point at
   the real file.
 - **Dependencies flow one way.** `shared` ← `errors`, `kinds`, `definition` ← `rules`, `field-types`, `render`,
-  `extensions` ← `visibility` ← `builder` ← `index.ts`, and `definition`, `rules`, `field-types`, `extensions` ←
+  `extensions` ← `visibility` ← `fills` ← `builder` ← `index.ts`, and `definition`, `rules`, `field-types`, `extensions` ←
   `json-schema` ← `json-schema.ts`. Each package lists its features and what they may import in `packageFeatures` in
   [`eslint.config.ts`](./eslint.config.ts). Add a new feature folder there, and lint enforces the rest.
 - **Tests live in `tests/`.** They mirror the `src/` tree, end in `.test.ts`, and import the package by its name

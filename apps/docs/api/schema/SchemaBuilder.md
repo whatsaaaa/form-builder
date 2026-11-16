@@ -24,6 +24,7 @@ What [`createSchemaBuilder`](/api/schema/createSchemaBuilder) returns. Its metho
   - `getFieldTree` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; [FieldNode](/api/schema/FieldNode)[]</code>
   - `getLayout` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; [FormLayout](/api/schema/FormLayout)</code>
   - `getVisibility` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; [Visibility](/api/schema/Visibility)</code>
+  - `getFills` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; [Fills](/api/schema/Fills)</code>
   - `walkFields` <code>(json: [JsonForm](/api/schema/JsonForm)) =&gt; Generator&lt;[WalkedField](/api/schema/WalkedField)&gt;</code>
   - `rulesForKind` <code>(kind: [ValueKind](/api/schema/ValueKind)) =&gt; [name: string, def: [RuleDef](/api/schema/RuleDef)][]</code>
   - `kinds` <code>Readonly&lt;Record&lt;string, [KindDef](/api/schema/KindDef)&gt;&gt;</code>
@@ -65,7 +66,7 @@ Types a definition written in TypeScript against the builder's registries and ex
 const input = builder.getInitialInput(json)
 ```
 
-Formisch's `initialInput`: each field's `default`, nested the way the value is, the builder's own container types included. A container of kind `object` gives an object, and one of kind `array` without a default gives `[]`. It never throws, and leaves out a field with issues. A field that conditions clear when the form starts starts blank.
+Formisch's `initialInput`: each field's `default`, nested the way the value is, the builder's own container types included. A container of kind `object` gives an object, and one of kind `array` without a default gives `[]`. It never throws, and leaves out a field with issues. A field that conditions clear when the form starts starts blank. With fills, it has the values of the fills written in the definition, like a map, for each trigger that starts with its default.
 
 ### getItemInput
 
@@ -98,6 +99,14 @@ const visibility = builder.getVisibility(json)
 ```
 
 What the conditions of the builder's extensions hide, for any input, as a [`Visibility`](/api/schema/Visibility). Without extensions or conditions, nothing is hidden. Throws a `DefinitionError` like `build()`. See [conditions](/guide/conditions#rendering).
+
+### getFills
+
+```ts
+const fills = builder.getFills(json)
+```
+
+The fills of the builder's extensions, as [`Fills`](/api/schema/Fills): what a form starts with, and what runs while it is open. Without fills, they do nothing. Throws a `DefinitionError` like `build()`. See [fills](/guide/extensions#fills).
 
 ### walkFields
 

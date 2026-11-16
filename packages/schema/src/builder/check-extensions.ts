@@ -11,11 +11,13 @@ import type {
   ResolvedField,
   TargetConditions,
 } from '../extensions/schema-extension'
+import type { FillPlan } from '../fills/fill-plan'
 import type { FormLayout, LayoutNode } from '../render/form-layout'
 import type { AnySchema } from '../shared/valibot-types'
 import { createEngine, type Engine, findCycles, keyOf, type Unit } from '../visibility/engine'
 import { type FieldsByPath, findField, outsideItem } from './check-form-rules'
-import { lookup, type Registry } from './registry'
+import { collectFills, type FillValue } from './collect-fills'
+import type { Registry } from './registry'
 import type { CheckedField } from './validate-definition'
 
 /** What the compiler built, that the extensions read. */
@@ -27,27 +29,43 @@ export interface Built {
   readonly layout: FormLayout | undefined
 }
 
+/** What the extensions add to a definition. */
+export interface Extended {
+  /** Works out what the conditions hide. Undefined without extensions, or with a loop. */
+  readonly engine: Engine | undefined
+  /** The fills, in the order they run. Undefined without any, or with a loop. */
+  readonly fills: FillPlan | undefined
+}
+
 /**
  * Runs the check of each extension, adds their issues to `issues`, and checks that no conditions
- * depend on each other in a loop. Returns the engine that works out what the conditions hide, or
- * undefined without extensions.
+ * depend on each other in a loop, and no fills set each other's triggers in one.
  */
 export function checkExtensions(
   registry: Registry,
   built: Built,
   issues: DefinitionIssue[],
-): Engine | undefined {
-  if (!registry.extensions.length) return undefined
+): Extended {
+  if (!registry.extensions.length) return { engine: undefined, fills: undefined }
   const lookups = createLookups(built)
-  const { targets, units, fieldUnits } = createUnits(registry, built, lookups)
+  const { targets, units, fieldUnits } = createUnits(built, lookups)
   const conditions = new Map<ExtensionTarget, TargetConditions[]>()
+  const fills = collectFills({
+    walked: built.walked,
+    isOwn: (field) => fieldUnits.has(field),
+    valueOf: fillValues(built, lookups),
+  })
 
-  const ctx: ExtensionContext = {
+  const shared: Omit<ExtensionContext, 'fill'> = {
     targets: targets.map(({ target }) => target),
     resolve: (dotPath, from) => resolve(dotPath, from, built, lookups),
     issue: (code, path, message) => issues.push(issue(code, path, message)),
   }
   for (const extension of registry.extensions) {
+    const ctx: ExtensionContext = {
+      ...shared,
+      fill: (trigger, fill) => fills.add(extension.name, trigger, fill),
+    }
     for (const [target, own] of extension.check(ctx)) {
       conditions.set(target, [...(conditions.get(target) ?? []), own])
     }
@@ -68,8 +86,44 @@ export function checkExtensions(
       issue('cycle', readInLoop(loop), `Conditions depend on each other in a loop: ${names}`),
     )
   }
-  return cycles.length ? undefined : createEngine(units)
+  return {
+    engine: cycles.length ? undefined : createEngine(units),
+    fills: fills.plan(issues),
+  }
 }
+
+/**
+ * Each field with a name and a value as fills see it, made once, so every fill that reads or sets
+ * it shares it.
+ */
+function fillValues(built: Built, lookups: Lookups): (field: WalkedField) => FillValue | undefined {
+  const made = new Map<WalkedField, FillValue | undefined>()
+  return (field) => {
+    if (made.has(field)) return made.get(field)
+    const checked = lookups.checked.get(keyOf(field.definitionPath))
+    const value: FillValue | undefined =
+      checked?.name === undefined || checked.valueKind === 'none'
+        ? undefined
+        : {
+            field: {
+              path: field.dataPath.map(String),
+              dotPath: field.dataPath.join('.'),
+              definitionPath: field.definitionPath,
+              kind: checked.valueKind,
+              itemKind: checked.itemKind,
+              kindDef: checked.kind,
+              schema: built.schemas.get(checked) as AnySchema,
+            },
+            role: roleOf(checked),
+          }
+    made.set(field, value)
+    return value
+  }
+}
+
+/** How a renderer shows a field: a field with a value, or a container of kind `object` or `array`. */
+const roleOf = (checked: CheckedField): 'value' | 'group' | 'array' =>
+  checked.type.container !== true ? 'value' : checked.valueKind === 'array' ? 'array' : 'group'
 
 /**
  * The field at a dot path read from `from`, as form rules find it. A field of a list's items is
@@ -100,6 +154,7 @@ function resolve(
     kindDef: found.kind,
     schema,
     item: found.valueKind === 'array' ? itemOf(found, field, schema, built) : undefined,
+    role: roleOf(found),
   }
 }
 
@@ -180,7 +235,7 @@ interface TargetUnit {
  * A target and a unit for each field, and for each step, section and display element of the
  * layout. A field is in its group or array, and in the step or section the layout places it in.
  */
-function createUnits(registry: Registry, built: Built, lookups: Lookups) {
+function createUnits(built: Built, lookups: Lookups) {
   const targets: TargetUnit[] = []
   const units: Unit[] = []
   const fieldUnits = new Map<WalkedField, Unit>()
@@ -197,7 +252,7 @@ function createUnits(registry: Registry, built: Built, lookups: Lookups) {
   for (const field of built.walked) {
     const checked = lookups.checked.get(keyOf(field.definitionPath))
     const unit = createUnit(field.definitionPath, labelOfField(field), field.dataPath, {
-      value: valueOf(field, checked, registry),
+      value: valueOf(field, checked),
     })
     containers.length = field.depth
     addParent(unit, containers.at(-1))
@@ -299,14 +354,9 @@ function addParent(unit: Unit, parent: Unit | undefined): void {
 }
 
 /** What holds the value of a field with a name and a value, without issues. */
-function valueOf(
-  field: WalkedField,
-  checked: CheckedField | undefined,
-  registry: Registry,
-): Unit['value'] {
+function valueOf(field: WalkedField, checked: CheckedField | undefined): Unit['value'] {
   if (!checked || checked.name === undefined) return undefined
-  const container = lookup(registry.fieldTypes, field.type)?.container === true
-  const role = !container ? 'value' : checked.valueKind === 'array' ? 'array' : 'group'
+  const role = roleOf(checked)
   return { dataPath: field.dataPath, role, isEmpty: (input) => checked.kind.isEmpty(input) }
 }
 

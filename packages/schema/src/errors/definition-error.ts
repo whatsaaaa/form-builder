@@ -20,6 +20,7 @@ export type DefinitionIssueCode =
   | 'invalid_props'
   | 'invalid_default'
   | 'unknown_rule'
+  | 'unknown_source'
   | 'unknown_param'
   | 'invalid_params'
   | 'kind_mismatch'
