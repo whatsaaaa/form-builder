@@ -1,0 +1,7 @@
+# @whatsaaaa/form-builder-fills
+
+## 0.1.0-rc.0
+
+### Minor Changes
+
+- [#76](https://github.com/whatsaaaa/form-builder/pull/76) [`3faed07`](https://github.com/whatsaaaa/form-builder/commit/3faed07a578d59246cadf381df8b03b62e775879) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - The first release of the fills package, before 1.0: `fills()` is an extension for the schema builder that adds `fills` to fields. Each new value of the field, like a profile picked from a select, sets other fields, with values from a `map` in the definition, for each value of the field, or from a `source`, a function of yours registered with `fills({ sources })` that gives the values at once or in a promise and gets an `AbortSignal` to pass to `fetch()`. `fields` names the fields a source sets, by dot path, at any depth outside lists, and `overwrite: "always"` sets the fields the user edited too. `validate()` checks every fill: its shape, the fields it sets, the keys and values of its map, and with `sources`, the name of its source, reported as `unknown_source`. `defineForm()` types `fills`, with `source` as one of the names you registered, and the package ships `definition.schema.json` with `fills`, hosted at https://whatsaaaa.github.io/form-builder/schema/v1/fills/definition.schema.json. The builder's `getFills()` runs the fills in a form, as https://whatsaaaa.github.io/form-builder/guide/extensions#fills describes.
