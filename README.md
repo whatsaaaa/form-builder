@@ -59,6 +59,7 @@ const schema = builder.build(json)
 | ------------------------------------------------------- | ---------------------------------------------------------------------- |
 | [`@whatsaaaa/form-builder-schema`](./packages/schema)   | Builds Formisch-ready Valibot schemas from JSON definitions. The core. |
 | [`@whatsaaaa/form-builder-affects`](./packages/affects) | Conditions that show, hide and clear fields, sections and steps.       |
+| [`@whatsaaaa/form-builder-fills`](./packages/fills)     | Fills fields from the value of another, by a map or a source of yours. |
 | [`@whatsaaaa/form-builder-vue`](./frameworks/vue)       | Renders definitions with Formisch and your own Vue components.         |
 | [`@whatsaaaa/form-builder-react`](./frameworks/react)   | Renders definitions with Formisch and your own React components.       |
 
@@ -68,9 +69,9 @@ Planned: `@whatsaaaa/form-builder-codegen`, a CLI that turns definitions into ty
 
 ## Status
 
-The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects package stays before 1.0 for now. See [stability](https://whatsaaaa.github.io/form-builder/guide/stability), [supported versions](https://whatsaaaa.github.io/form-builder/guide/support), and [migrating to 1.0](https://whatsaaaa.github.io/form-builder/guide/migrating-to-1.0).
+The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects and fills packages stay before 1.0 for now. See [stability](https://whatsaaaa.github.io/form-builder/guide/stability), [supported versions](https://whatsaaaa.github.io/form-builder/guide/support), and [migrating to 1.0](https://whatsaaaa.github.io/form-builder/guide/migrating-to-1.0).
 
-1.0 is in release candidates on the `rc` dist-tag, while a plain install still gives 0.x. To try it, add `@rc` to each form-builder package you install, for example `pnpm add @whatsaaaa/form-builder-schema@rc @whatsaaaa/form-builder-vue@rc @formisch/vue valibot` (or `@whatsaaaa/form-builder-react@rc @formisch/react`, plus `@whatsaaaa/form-builder-affects@rc` for conditions). With pnpm 11 or later, see the [installation guide](https://whatsaaaa.github.io/form-builder/guide/installation) for what `@rc` needs right after a release candidate comes out. Read the migration guide and stability policy above before you upgrade, and tell us how it goes in a [GitHub issue](https://github.com/whatsaaaa/form-builder/issues).
+1.0 is in release candidates on the `rc` dist-tag, while a plain install still gives 0.x. To try it, add `@rc` to each form-builder package you install, for example `pnpm add @whatsaaaa/form-builder-schema@rc @whatsaaaa/form-builder-vue@rc @formisch/vue valibot` (or `@whatsaaaa/form-builder-react@rc @formisch/react`, plus `@whatsaaaa/form-builder-affects@rc` for conditions and `@whatsaaaa/form-builder-fills@rc` for fills). With pnpm 11 or later, see the [installation guide](https://whatsaaaa.github.io/form-builder/guide/installation) for what `@rc` needs right after a release candidate comes out. Read the migration guide and stability policy above before you upgrade, and tell us how it goes in a [GitHub issue](https://github.com/whatsaaaa/form-builder/issues).
 
 ## Contributing
 

@@ -16,7 +16,7 @@ These are compile errors:
 
 <<< @/snippets/schema/define-form.ts#errors
 
-- **Checked:** unknown types, rules and form rules, keys that are neither the keys every field takes nor props of its type, and props and params of the wrong type. Child fields of groups and lists are checked the same way, and so are the layout's nodes, with display elements typed by their props, and `affects` with the affects package.
+- **Checked:** unknown types, rules and form rules, keys that are neither the keys every field takes nor props of its type, and props and params of the wrong type. Child fields of groups and lists are checked the same way, and so are the layout's nodes, with display elements typed by their props, `affects` with the affects package, and `fills` with the fills package.
 - **Not checked:** whether a rule fits the field's kind, names, defaults, the paths of form rules and of the layout, and spans. [`validate()`](/guide/checking-definitions) checks those.
 - The builder knows your types and rules by name when you pass them in the options, as above. Options typed as `SchemaBuilderOptions` have no known names, so `defineForm` then takes any type.
 

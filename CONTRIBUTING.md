@@ -46,7 +46,7 @@ The docs site is in [`apps/docs`](./apps/docs), and deploys to [GitHub Pages](ht
 ## Repository layout
 
 ```
-packages/        the framework-agnostic core: schema and affects
+packages/        the framework-agnostic core: schema, affects and fills
 frameworks/      thin adapters for Vue and React
 apps/            the playground and the docs site (a visual builder is planned)
 fixtures/        sample JSON forms every test suite shares
@@ -56,7 +56,8 @@ consumer-smoke/  the packed packages in a new npm project at the lowest or lates
 
 The JSON Schema of the definition format ships with the schema package as
 [`definition.schema.json`](./packages/schema/definition.schema.json), and the one with conditions with the affects
-package as [`definition.schema.json`](./packages/affects/definition.schema.json).
+package as [`definition.schema.json`](./packages/affects/definition.schema.json), and the one with fills with the fills
+package as [`definition.schema.json`](./packages/fills/definition.schema.json).
 
 Dependencies only flow downhill:
 

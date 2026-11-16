@@ -2,12 +2,13 @@
 // ES modules they ship without a flag.
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { affects } = require('@whatsaaaa/form-builder-affects')
+const { fills } = require('@whatsaaaa/form-builder-fills')
 const { createSchemaBuilder } = require('@whatsaaaa/form-builder-schema')
 const { toJsonSchema } = require('@whatsaaaa/form-builder-schema/json-schema')
 const vue = require('@whatsaaaa/form-builder-vue')
 const react = require('@whatsaaaa/form-builder-react')
 
-const builder = createSchemaBuilder({ extensions: [affects()] })
+const builder = createSchemaBuilder({ extensions: [affects(), fills()] })
 if (typeof toJsonSchema(builder) !== 'object') throw new Error('no JSON Schema')
 for (const [name, adapter] of Object.entries({ vue, react })) {
   if (typeof adapter.useJsonForm !== 'function') throw new Error(`${name}: no useJsonForm`)

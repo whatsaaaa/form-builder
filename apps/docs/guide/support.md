@@ -12,6 +12,7 @@ Below you will find the versions of the peers and the platforms each package sup
 | ------- | ----------------------------------------------------------------------------------------- |
 | Schema  | `valibot` 1.3.0+, and `@valibot/to-json-schema` 1.6.0+ for the `/json-schema` entry only  |
 | Affects | `valibot` 1.3.0+, the schema package 1.x                                                  |
+| Fills   | `valibot` 1.3.0+, the schema package 1.x                                                  |
 | Vue     | `vue` 3.5.2+, `@formisch/vue` 1.1.1+, `valibot` 1.4.1+, the schema package 1.x            |
 | React   | `react` 18.0.0+ or 19, `@formisch/react` 1.2.0+, `valibot` 1.4.1+, the schema package 1.x |
 
@@ -43,7 +44,7 @@ TypeScript 5.3 or later, with `strict` on. Older versions reject the keys of ext
 Node 20.19 or later, to `import` the packages, to parse on a server and to render there.
 
 - The packages are ES modules only. Node 20.19 and later can also `require()` them from CommonJS, without a flag.
-- CI runs the schema and affects tests on Node 22 and 24, and a project that installs the packed packages on Node 20.19 and 24, with an import, a server render with each adapter, and a `require()`.
+- CI runs the schema, affects and fills tests on Node 22 and 24, and a project that installs the packed packages on Node 20.19 and 24, with an import, a server render with each adapter, and a `require()`.
 - Both adapters render on the server, with `react-dom/server` and `vue/server-renderer`. See [validating on the server](/guide/server-validation).
 
 ## Browsers

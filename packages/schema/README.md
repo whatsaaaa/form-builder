@@ -74,6 +74,7 @@ const { steps } = builder.getLayout(json)
 ## Related packages
 
 - [`@whatsaaaa/form-builder-affects`](https://github.com/whatsaaaa/form-builder/tree/main/packages/affects): show, hide and clear fields by conditions
+- [`@whatsaaaa/form-builder-fills`](https://github.com/whatsaaaa/form-builder/tree/main/packages/fills): fill fields from the value of another
 - [`@whatsaaaa/form-builder-vue`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/vue): render definitions with your own Vue components
 - [`@whatsaaaa/form-builder-react`](https://github.com/whatsaaaa/form-builder/tree/main/frameworks/react): render definitions with your own React components
 

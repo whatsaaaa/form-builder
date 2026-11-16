@@ -168,6 +168,14 @@ const affectsApi: DefaultTheme.SidebarItem[] = [
   { text: 'Types', items: link('affects', ['Affect', 'AffectsExtension', 'Condition']) },
 ]
 
+const fillsApi: DefaultTheme.SidebarItem[] = [
+  { text: 'Functions', items: link('fills', ['fills']) },
+  {
+    text: 'Types',
+    items: link('fills', ['Fill', 'FillSource', 'FillSourceContext', 'FillsExtension']),
+  },
+]
+
 /** The Vue and React adapters have the same API. */
 const adapterApi = (pkg: 'vue' | 'react'): DefaultTheme.SidebarItem[] => [
   { text: pkg === 'vue' ? 'Composables' : 'Hooks', items: link(pkg, ['useJsonForm']) },
@@ -187,6 +195,7 @@ const adapterApi = (pkg: 'vue' | 'react'): DefaultTheme.SidebarItem[] => [
 const packages = [
   { text: 'Schema', link: '/api/schema/', activeMatch: '/api/schema/' },
   { text: 'Affects', link: '/api/affects/', activeMatch: '/api/affects/' },
+  { text: 'Fills', link: '/api/fills/', activeMatch: '/api/fills/' },
   { text: 'Vue', link: '/api/vue/', activeMatch: '/api/vue/' },
   { text: 'React', link: '/api/react/', activeMatch: '/api/react/' },
 ]
@@ -224,6 +233,7 @@ export default defineConfigWithTheme<ThemeConfig>({
       '/frameworks/': frameworks,
       '/api/schema/': schemaApi,
       '/api/affects/': affectsApi,
+      '/api/fills/': fillsApi,
       '/api/vue/': adapterApi('vue'),
       '/api/react/': adapterApi('react'),
     },

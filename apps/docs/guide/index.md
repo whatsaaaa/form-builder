@@ -59,6 +59,7 @@ To render the form, the [Vue](/frameworks/vue) and [React](/frameworks/react) ad
 | ---------------------------------------------------- | --------------------------------------------------------------- |
 | [`@whatsaaaa/form-builder-schema`](/api/schema/)     | Checks definitions and builds Formisch-ready Valibot schemas    |
 | [`@whatsaaaa/form-builder-affects`](/api/affects/)   | Conditions that show, hide and clear fields, sections and steps |
+| [`@whatsaaaa/form-builder-fills`](/api/fills/)       | Fills fields from the value of another, by a map or a source    |
 | [`@whatsaaaa/form-builder-vue`](/frameworks/vue)     | Renders definitions with Formisch and your own Vue components   |
 | [`@whatsaaaa/form-builder-react`](/frameworks/react) | Renders definitions with Formisch and your own React components |
 
@@ -70,7 +71,7 @@ form-builder is for the other case: the form is data. Someone edits it without a
 
 ## Status
 
-The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects package stays before 1.0 for now. See [stability](/guide/stability) for what is covered, [supported versions](/guide/support) for the versions of the peers, and [migrating to 1.0](/guide/migrating-to-1.0) to update. Each package's changelog lists what changed.
+The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects and fills packages stay before 1.0 for now. See [stability](/guide/stability) for what is covered, [supported versions](/guide/support) for the versions of the peers, and [migrating to 1.0](/guide/migrating-to-1.0) to update. Each package's changelog lists what changed.
 
 ## Feedback
 

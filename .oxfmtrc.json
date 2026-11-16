@@ -8,7 +8,9 @@
     "apps/docs/api/schema/rules.md",
     "packages/affects/definition.schema.json",
     "apps/docs/public/schema/v1/definition.schema.json",
-    "apps/docs/public/schema/v1/affects/definition.schema.json"
+    "apps/docs/public/schema/v1/affects/definition.schema.json",
+    "packages/fills/definition.schema.json",
+    "apps/docs/public/schema/v1/fills/definition.schema.json"
   ],
   "overrides": [
     {

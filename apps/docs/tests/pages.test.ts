@@ -5,11 +5,15 @@
 // ones in snippets/schema, which need no UI framework, run here too.
 import { readdirSync, readFileSync } from 'node:fs'
 import { affects } from '@whatsaaaa/form-builder-affects'
+import { fills } from '@whatsaaaa/form-builder-fills'
 import { createSchemaBuilder, formatPath, type JsonForm } from '@whatsaaaa/form-builder-schema'
 import { describe, expect, it } from 'vitest'
 
 const root = new URL('../', import.meta.url)
-const builder = createSchemaBuilder({ extensions: [affects()] })
+// The sources the pages name, so their names are checked too.
+const builder = createSchemaBuilder({
+  extensions: [affects(), fills({ sources: { profiles: () => null } })],
+})
 
 const pages = readdirSync(root, { recursive: true, encoding: 'utf8' }).filter(
   (path) => path.endsWith('.md') && !/(^|\/)(node_modules|\.vitepress)\//.test(path),

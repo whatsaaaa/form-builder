@@ -1,4 +1,5 @@
 import { affects } from '@whatsaaaa/form-builder-affects'
+import { type FillSource, fills } from '@whatsaaaa/form-builder-fills'
 import {
   createSchemaBuilder,
   defineFieldType,
@@ -8,7 +9,7 @@ import {
 import { toJsonSchema } from '@whatsaaaa/form-builder-schema/json-schema'
 import * as v from 'valibot'
 
-// A field type, a rule and an extension of your own, the way an app registers them.
+// A field type, a rule, extensions and a source of fills of your own, the way an app registers them.
 const money = defineFieldType({
   kind: 'number',
   props: v.object({ currency: v.picklist(['EUR', 'USD']) }),
@@ -20,10 +21,12 @@ const even = defineRule({
   create: (_, message) => v.check((input: number) => input % 2 === 0, message),
 })
 
+const companies: FillSource = (value) => (value === 'business' ? { company: 'Acme' } : null)
+
 export const builder = createSchemaBuilder({
   fieldTypes: { money },
   rules: { even },
-  extensions: [affects()],
+  extensions: [affects(), fills({ sources: { companies } })],
 })
 
 export const definition = builder.defineForm({
@@ -39,6 +42,7 @@ export const definition = builder.defineForm({
         { value: 'personal', label: 'Personal' },
         { value: 'business', label: 'Business' },
       ],
+      fills: { source: 'companies', fields: ['company'] },
     },
     {
       name: 'company',
@@ -73,6 +77,14 @@ export function checkServer(): void {
   })
   if (output.company !== undefined) throw new Error('company should be cleared')
   if (typeof toJsonSchema(builder) !== 'object') throw new Error('no JSON Schema')
+  const { issues } = builder.validate({
+    version: '1',
+    fields: [
+      { name: 'a', type: 'text', fills: { source: 'nope', fields: ['b'] } },
+      { name: 'b', type: 'text' },
+    ],
+  })
+  if (issues[0]?.code !== 'unknown_source') throw new Error('an unknown source should be reported')
 
   try {
     builder.build({ version: '1', fields: [{ name: 'a', type: 'nope' }] })
