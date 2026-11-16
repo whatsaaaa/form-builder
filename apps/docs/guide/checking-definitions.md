@@ -91,6 +91,28 @@ With the [affects package](/guide/conditions), `validate()` checks every `affect
 
 Each issue has its full path, like `['fields', 3, 'affects', 0, 'when', 'all', 1, 'field']`.
 
+## Fills
+
+With the [fills package](/api/fills/), `validate()` checks every `fills` too, after the layout:
+
+| Problem                                                                                                              | Code             |
+| -------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `fills` isn't an object, has both `source` and `map` or neither, or `source` without `fields`                        | `invalid_shape`  |
+| `source` that is no name, `fields` that is no list of dot paths or names one twice, `fields` with `map`              | `invalid_shape`  |
+| `map` with no entry, an entry that is no object, a value that is no string, number, boolean, `null` or list of those | `invalid_shape`  |
+| `overwrite` other than `"unedited"` or `"always"`                                                                    | `invalid_shape`  |
+| `fills` on a field inside a list's items                                                                             | `invalid_shape`  |
+| A key no fill takes, like `sources`                                                                                  | `unknown_key`    |
+| A `source` that isn't one of the sources given to `fills({ sources })`                                               | `unknown_source` |
+| `fills` on a display element, or on a field whose value is no string, number, boolean or date, like a multiselect    | `kind_mismatch`  |
+| A path to no field with a value: a typo, a display element, or a field inside a list's items                         | `unknown_field`  |
+| A path to a group or a list, rather than to the fields inside it, or to a file field                                 | `kind_mismatch`  |
+| A key of `map` the field can't hold, like an option it doesn't have, `"01"` for a number, or `"yes"` for a checkbox  | `invalid_value`  |
+| A value of `map` its field can't hold, rules included, like a `default`. `null` and `""` are blank and always fit    | `invalid_value`  |
+| A fill that sets the field it is on, or fills that set each other's triggers in a loop                               | `cycle`          |
+
+Each issue has its full path, like `['fields', 0, 'fills', 'map', 'a', 'address.city']`. Without `sources`, as on a server that only validates, the names of sources aren't checked.
+
 ## Mistakes in code
 
 Mistakes in your own code throw a `TypeError` instead, as soon as they can: an unknown kind in a field type of yours, a reserved key in a rule's params, a missing component in a renderer. A `DefinitionError` always means the definition, and a `TypeError` your code.

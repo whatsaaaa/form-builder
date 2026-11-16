@@ -1,0 +1,33 @@
+{
+  "$schema": "../../packages/fills/definition.schema.json",
+  "version": "1",
+  "fields": [
+    {
+      "name": "profile",
+      "type": "select",
+      "label": "Profile",
+      "default": "a",
+      "options": [
+        { "value": "a", "label": "Profile A" },
+        { "value": "b", "label": "Profile B" },
+        { "value": "c", "label": "Profile C" },
+        { "value": "other", "label": "Someone else" }
+      ],
+      "fills": {
+        "map": {
+          "a": { "firstName": "Marko", "lastName": "Petrović", "address.city": "Beograd" },
+          "b": { "firstName": "Jelena", "lastName": "Jovanović", "address.city": "Novi Sad" },
+          "c": { "firstName": "Nikola", "lastName": "Nikolić", "address.city": null }
+        }
+      }
+    },
+    { "name": "firstName", "type": "text", "label": "First name", "required": true },
+    { "name": "lastName", "type": "text", "label": "Last name", "required": true },
+    {
+      "name": "address",
+      "type": "group",
+      "label": "Address",
+      "fields": [{ "name": "city", "type": "text", "label": "City" }]
+    }
+  ]
+}

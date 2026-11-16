@@ -10,8 +10,9 @@ From 1.0, the schema, Vue and React packages follow [semantic versioning](https:
 
 - **`@whatsaaaa/form-builder-schema`, `@whatsaaaa/form-builder-vue` and `@whatsaaaa/form-builder-react`** are 1.x, and follow semantic versioning as this page describes.
 - **`@whatsaaaa/form-builder-affects`** stays before 1.0: a minor can break, a patch can't. It goes 1.0 once its conditions have settled.
+- **`@whatsaaaa/form-builder-fills`** is before 1.0 the same way. It goes 1.0 once its `fills` syntax and sources have settled.
 
-The affects package plugs into the schema package's [extension contract](/guide/extensions#how-the-contract-grows), which is part of the schema package's 1.x API. So the affects package can change on its own, while extensions you write keep working with every schema 1.x.
+The affects and fills packages plug into the schema package's [extension contract](/guide/extensions#how-the-contract-grows), which is part of the schema package's 1.x API. So they can change on their own, while extensions you write keep working with every schema 1.x. What a running fill does, like when it fires and which fields it leaves alone, is the schema package's, so it follows semantic versioning with it: a fills release can change the `fills` syntax, its checks and the source API, but not how a fill runs.
 
 ## What the API is
 

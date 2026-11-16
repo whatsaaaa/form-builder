@@ -14,6 +14,7 @@ pnpm add @whatsaaaa/form-builder-schema@rc valibot
 pnpm add @whatsaaaa/form-builder-vue@rc @formisch/vue     # Vue
 pnpm add @whatsaaaa/form-builder-react@rc @formisch/react # React
 pnpm add @whatsaaaa/form-builder-affects@rc               # Conditions
+pnpm add @whatsaaaa/form-builder-fills@rc                 # Fills
 ```
 
 pnpm 11 and later hold back versions published in the last day. Right after a release candidate comes out, `@rc` then gives you an older version, or fails to unpack a `0.0.0-stage` placeholder. To get the newest one, exempt the packages in your `pnpm-workspace.yaml` before you install:
@@ -137,6 +138,30 @@ yarn add @whatsaaaa/form-builder-affects
 
 ```sh [bun]
 bun add @whatsaaaa/form-builder-affects
+```
+
+:::
+
+## Fills
+
+To fill fields from the value of another, like a name from a picked profile, also add the fills package:
+
+::: code-group
+
+```sh [npm]
+npm install @whatsaaaa/form-builder-fills
+```
+
+```sh [pnpm]
+pnpm add @whatsaaaa/form-builder-fills
+```
+
+```sh [yarn]
+yarn add @whatsaaaa/form-builder-fills
+```
+
+```sh [bun]
+bun add @whatsaaaa/form-builder-fills
 ```
 
 :::

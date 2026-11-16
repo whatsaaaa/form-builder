@@ -20,6 +20,7 @@
     "@valibot/to-json-schema": "^1.8.0",
     "@whatsaaaa/design-system": "^0.8.1",
     "@whatsaaaa/form-builder-affects": "workspace:*",
+    "@whatsaaaa/form-builder-fills": "workspace:*",
     "@whatsaaaa/form-builder-react": "workspace:*",
     "@whatsaaaa/form-builder-schema": "workspace:*",
     "@whatsaaaa/form-builder-vue": "workspace:*",

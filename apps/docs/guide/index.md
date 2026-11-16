@@ -59,6 +59,7 @@ To render the form, the [Vue](/frameworks/vue) and [React](/frameworks/react) ad
 | ---------------------------------------------------- | --------------------------------------------------------------- |
 | [`@whatsaaaa/form-builder-schema`](/api/schema/)     | Checks definitions and builds Formisch-ready Valibot schemas    |
 | [`@whatsaaaa/form-builder-affects`](/api/affects/)   | Conditions that show, hide and clear fields, sections and steps |
+| [`@whatsaaaa/form-builder-fills`](/api/fills/)       | Fills fields from the value of another, by a map or a source    |
 | [`@whatsaaaa/form-builder-vue`](/frameworks/vue)     | Renders definitions with Formisch and your own Vue components   |
 | [`@whatsaaaa/form-builder-react`](/frameworks/react) | Renders definitions with Formisch and your own React components |
 

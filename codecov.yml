@@ -8,6 +8,8 @@ flag_management:
       paths: [packages/schema/src/]
     - name: affects
       paths: [packages/affects/src/]
+    - name: fills
+      paths: [packages/fills/src/]
     - name: vue
       paths: [frameworks/vue/src/]
     - name: react

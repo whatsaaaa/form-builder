@@ -44,11 +44,17 @@ const packageFeatures: Record<string, Record<string, string[]>> = {
     evaluate: ['definition'],
     check: ['definition', 'evaluate'],
   },
+  fills: {
+    definition: [],
+    values: ['definition'],
+    check: ['definition', 'values'],
+  },
 }
 
 // The packages each package builds on, by their public entry, like an app uses them.
 const packageDependencies: Record<string, string[]> = {
   affects: ['schema'],
+  fills: ['schema'],
 }
 
 // UI frameworks belong in frameworks/ and apps/, never in the core packages.

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "fills(), without its peers, the schema package and Valibot",
+    "path": "dist/index.js",
+    "import": "{ fills }",
+    "limit": "3 kB"
+  }
+]
