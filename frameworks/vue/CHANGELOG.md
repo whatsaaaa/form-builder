@@ -1,5 +1,16 @@
 # @whatsaaaa/form-builder-vue
 
+## 1.0.0-rc.3
+
+### Minor Changes
+
+- [#88](https://github.com/whatsaaaa/form-builder/pull/88) [`ae21b1f`](https://github.com/whatsaaaa/form-builder/commit/ae21b1fabcec0b7e76b01dc3ad32d2f878c49560) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - `useJsonForm` runs the fills of the builder's extensions, like the `fills` of `@whatsaaaa/form-builder-fills`: each new value of a field with `fills`, like a profile picked from a select, sets the fields it names with Formisch's `setInput`. A field that starts from its `default` fills in the others as the form starts: the values of a `map` are in the initial input, and those of a `source` are set once the form is mounted, as the values it starts with, so it isn't dirty. A field the `initialInput` option has a key for fills nothing as the form starts, so a saved record keeps its values. `jsonForm.fills` says what is pending, to disable the submit button while values are on their way, each value field gets a `pending` prop in a form with fills, and the steps' Next waits for pending fills before it validates. `jsonForm.reset()` resets the whole form, like Formisch's `reset` with the same options but `keepInput`, with an `initialInput` that goes over the definition's defaults like the option's, and starts the fills again, as when the form was mounted, so the next value sets every field the user hasn't edited since, and the steps from the first one. The new `onFillError` option gets each error of a fill, with its trigger and value; without it, the error is thrown like an uncaught one. Unmounting the form aborts the calls of its sources. `FillsState` and `FillErrorInfo` are exported. Every rule is in https://whatsaaaa.github.io/form-builder/frameworks/vue#fills.
+
+### Patch Changes
+
+- Updated dependencies [[`482379a`](https://github.com/whatsaaaa/form-builder/commit/482379a5b9e07e50eb24177c94c7ffd62050dd18)]:
+  - @whatsaaaa/form-builder-schema@1.0.0-rc.2
+
 ## 1.0.0-rc.2
 
 ### Patch Changes
