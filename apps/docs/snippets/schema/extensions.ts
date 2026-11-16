@@ -77,6 +77,8 @@ const copies: SchemaExtension = {
         field?.role === 'value' && field.kind === 'string'
       const { dataPath } = target.field
       const own = ctx.resolve(dataPath.join('.'), target)
+      // null for a field with issues, which are reported already.
+      if (own === null) continue
       if (
         typeof own === 'string' ||
         !isText(own) ||
@@ -189,6 +191,20 @@ if (
   twice[0].path.join('.') !== 'fields.0.copyTo.1'
 ) {
   throw new Error('A path listed twice was not reported')
+}
+const withIssues = shop.validate({
+  ...definition,
+  fields: [
+    { name: 'a', type: 'text' },
+    { name: 'a', type: 'text', copyTo: ['b'] },
+    { name: 'b', type: 'text' },
+    { name: 'c', type: 'text', nope: 1, copyTo: ['b'] },
+  ],
+}).issues
+if (
+  withIssues.map(({ code }) => code).join() !== 'duplicate_name,unknown_key'
+) {
+  throw new Error('A field with issues got an issue from copyTo')
 }
 if (
   shop.validate({

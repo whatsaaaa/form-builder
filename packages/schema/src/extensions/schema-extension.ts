@@ -88,10 +88,11 @@ export interface ExtensionContext {
    * Adds a fill: while a form is open, each new value of the field `trigger` sets the fields of
    * `fill`. Add only fills without issues. The builder keeps them when the whole definition has
    * none, reports fills that set each other in a loop as `cycle`, and runs them through
-   * `getFills()`. Throws a TypeError for a fill no form can run: a trigger without a string,
-   * number, boolean or date value, a field to set that is no field with a value, or is a file,
-   * either inside a list's items, a field to set twice, or an `overwrite` other than `'unedited'`
-   * or `'always'`.
+   * `getFills()`. A fill on a trigger with issues of its own, like a duplicate name, is left out:
+   * the definition reports them. Throws a TypeError for a fill no form can run: a trigger without
+   * a string, number, boolean or date value, a field to set that is no field with a value, or
+   * holds files, either inside a list's items, a field to set twice, or an `overwrite` other than
+   * `'unedited'` or `'always'`.
    */
   fill(trigger: FieldTarget, fill: TargetFill): void
 }

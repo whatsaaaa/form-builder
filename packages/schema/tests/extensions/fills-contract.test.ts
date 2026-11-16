@@ -30,6 +30,7 @@ const fields: JsonField[] = [
   { name: 'address', type: 'group', fields: [{ name: 'city', type: 'text' }] },
   { name: 'lines', type: 'array', fields: [{ name: 'sku', type: 'text' }] },
   { type: 'heading', text: 'About you' },
+  { name: 'scans', type: 'file', multiple: true },
 ]
 
 describe('a resolved field', () => {
@@ -107,12 +108,39 @@ describe('ctx.fill()', () => {
     expect(failure('profile', ['photo'])).toBe(
       'Extension "test": a fill can\'t set a file, like "photo"',
     )
+    expect(failure('profile', ['scans'])).toBe(
+      'Extension "test": a fill can\'t set a file, like "scans"',
+    )
     expect(failure('profile', ['address.city', 'address.city'])).toBe(
       'Extension "test": the fill of "profile" sets "address.city" twice',
     )
     expect(failure('profile', ['profile'], { overwrite: 'sometimes' as never })).toBe(
       'Extension "test": the overwrite of a fill is \'unedited\' or \'always\', not "sometimes"',
     )
+  })
+
+  it('leaves out a fill on a trigger with issues of its own, which the definition reports', () => {
+    const json = form(
+      { name: 'a', type: 'text' },
+      { name: 'a', type: 'text' },
+      { name: 'b', type: 'text' },
+      { name: 'c', type: 'text', nope: 1 } as never,
+    )
+    const extension = withContext((ctx) => {
+      const b = ctx.resolve('b', ctx.targets[0] as never) as ResolvedField
+      for (const target of ctx.targets) {
+        if (target.kind !== 'field' || target.field.field.name === 'b') continue
+        ctx.fill(target, {
+          fields: [{ field: b, at: [] }],
+          overwrite: 'unedited',
+          static: true,
+          values: () => null,
+        })
+      }
+    })
+    const issues = createSchemaBuilder().validate(json).issues
+    expect(issues.map(({ code }) => code)).toEqual(['duplicate_name', 'unknown_key'])
+    expect(createSchemaBuilder({ extensions: [extension] }).validate(json).issues).toEqual(issues)
   })
 
   it("throws a TypeError for a field inside a list's items", () => {

@@ -43,7 +43,7 @@ A fill sets fields from the value of another, its trigger: choosing a profile fi
 - `static` is true when `values()` answers at once from the definition alone, like a map written in it. A form then starts with the values for its trigger's default, as part of `getInitialInput()`.
 - `overwrite` is `'unedited'` to leave a field the user changed since the last fill, or `'always'`.
 
-The trigger is a field with a string, number, boolean or date value, and the fields it sets have a value and aren't files. Neither can be inside a list's items. A fill names each field it sets once, and its `overwrite` is `'unedited'` or `'always'`. `ctx.fill()` throws a `TypeError` for a fill that breaks these rules, so check them in `check()` and report a mistake in the definition as an issue instead. Fills that set each other's triggers in a loop are `cycle` issues.
+The trigger is a field with a string, number, boolean or date value, and the fields it sets have a value and aren't files. Neither can be inside a list's items. A fill names each field it sets once, and its `overwrite` is `'unedited'` or `'always'`. `ctx.fill()` throws a `TypeError` for a fill that breaks these rules, so check them in `check()` and report a mistake in the definition as an issue instead. A fill on a trigger with issues of its own, like a duplicate name, is left out, as the definition reports them. Fills that set each other's triggers in a loop are `cycle` issues.
 
 A renderer runs the fills with [`getFills()`](/api/schema/Fills): it opens them on a form, starts them once the form is on the page, and calls `update()` after each change of the input:
 

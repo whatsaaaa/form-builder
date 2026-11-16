@@ -28,7 +28,10 @@ export interface FillFields {
 
 /** The fills the extensions add with `ctx.fill()`. */
 export interface FillCollector {
-  /** Checks a fill an extension adds, and keeps it. Throws a TypeError for one no form can run. */
+  /**
+   * Checks a fill an extension adds, and keeps it, unless its trigger has issues of its own. Throws
+   * a TypeError for one no form can run.
+   */
   add(extension: string, trigger: FieldTarget, fill: TargetFill): void
   /**
    * The fills in the order they run, or undefined without any. Adds a `cycle` issue for each loop
@@ -57,6 +60,9 @@ export function collectFills(fields: FillFields): FillCollector {
     if (trigger.kind !== 'field' || !fields.isOwn(trigger.field)) {
       fail('ctx.fill() takes a field of ctx.targets')
     }
+    // A trigger with issues of its own, like a duplicate name, has no value: the definition reports
+    // them, and keeps no fill.
+    if (trigger.field.kind === undefined) return
     const own = fields.valueOf(trigger.field)
     if (!own || own.role !== 'value' || !TRIGGER_KINDS.has(own.field.kind)) {
       fail(
@@ -78,7 +84,9 @@ export function collectFills(fields: FillFields): FillCollector {
       const value = fields.valueOf(field)
       const label = labelOf(field, fields)
       if (!value || value.role !== 'value') fail(`a fill sets fields with a value, not ${label}`)
-      if (value?.field.kind === 'file') fail(`a fill can't set a file, like ${label}`)
+      if (value?.field.kind === 'file' || value?.field.itemKind === 'file') {
+        fail(`a fill can't set a file, like ${label}`)
+      }
       if (field.dataPath.includes('*')) fail(`a fill can't set ${label}, inside a list's items`)
       if (seen.has(field)) fail(`the fill of ${labelOf(trigger.field, fields)} sets ${label} twice`)
       seen.add(field)

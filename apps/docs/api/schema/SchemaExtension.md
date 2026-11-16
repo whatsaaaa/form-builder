@@ -25,7 +25,7 @@ See [extensions](/guide/extensions).
   - `targets` `readonly ExtensionTarget[]`: every field, and every step, section and display element of the layout, in document order
   - `resolve` `(dotPath: string, from: ExtensionTarget) => ResolvedField | string | null`: the field a path names, a message when there is none, or `null` when it has issues of its own
   - `issue` `(code: DefinitionIssueCode, path: DefinitionPath, message: string) => void`: adds an issue
-  - `fill` <code>(trigger: FieldTarget, fill: [TargetFill](/api/schema/TargetFill)) =&gt; void</code>: adds a fill: each new value of the field `trigger` sets the fields of `fill`. Add only fills without issues. Throws a `TypeError` for a fill no form can run
+  - `fill` <code>(trigger: FieldTarget, fill: [TargetFill](/api/schema/TargetFill)) =&gt; void</code>: adds a fill: each new value of the field `trigger` sets the fields of `fill`. Add only fills without issues. A fill on a trigger with issues of its own is left out, as the definition reports them. Throws a `TypeError` for a fill no form can run
 
 ## ExtensionTarget
 
