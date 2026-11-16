@@ -3,7 +3,6 @@ import type {
   ExtensionContext,
   ExtensionTarget,
   FieldTarget,
-  JsonField,
   ResolvedField,
   TargetConditions,
   TargetFill,
@@ -49,8 +48,8 @@ export function checkFills(
 ): (ctx: ExtensionContext) => ReadonlyMap<ExtensionTarget, TargetConditions> {
   return (ctx) => {
     for (const target of ctx.targets) {
-      // `fills` is no key of steps and sections, so the builder reports it there.
-      if (target.kind === 'step' || target.kind === 'section') continue
+      // Only fields and display elements take `fills`: the builder reports it on any other target.
+      if (target.kind !== 'field' && target.kind !== 'display') continue
       if (!Object.hasOwn(target.json, 'fills')) continue
       const fill = checkTarget(target, ctx, sources)
       if (fill) ctx.fill(target as FieldTarget, fill)
@@ -300,21 +299,38 @@ function settable(
     return { code: 'kind_mismatch', message }
   }
   if (field.role === 'group') {
-    const first = firstName(field)
-    const like = first === undefined ? '' : `, like "${dotPath}.${first}"`
+    const first = firstSettable(field, target, ctx)
+    const like = first === undefined ? '' : `, like "${first}"`
     const message = `A fill sets fields with a value, not the group "${dotPath}". Name its fields${like}`
     return { code: 'kind_mismatch', message }
   }
-  if (field.kind === 'file' || field.item?.kind === 'file') {
+  if (holdsFile(field)) {
     return { code: 'kind_mismatch', message: `A fill can't set a file, like "${dotPath}"` }
   }
   return field
 }
 
-/** The name of the first field of a group with one, as written. */
-function firstName(group: ResolvedField): string | undefined {
-  const fields = group.field.field['fields'] as readonly JsonField[]
-  return fields.find((each) => each.name !== undefined)?.name
+const holdsFile = (field: ResolvedField): boolean =>
+  field.kind === 'file' || field.item?.kind === 'file'
+
+/** The dot path of the first field of a group that the fill on `target` can set, if any. */
+function firstSettable(
+  group: ResolvedField,
+  target: ExtensionTarget,
+  ctx: ExtensionContext,
+): string | undefined {
+  const parent = group.field.dataPath
+  for (const each of ctx.targets) {
+    if (each.kind !== 'field' || each === target) continue
+    const { dataPath } = each.field
+    if (dataPath.length !== parent.length + 1 || parent.some((key, i) => dataPath[i] !== key)) {
+      continue
+    }
+    const dotPath = dataPath.join('.')
+    const field = ctx.resolve(dotPath, target)
+    if (typeof field === 'object' && field?.role === 'value' && !holdsFile(field)) return dotPath
+  }
+  return undefined
 }
 
 /** Adds an issue when the field can't hold a value a map gives it. A blank one always fits. */

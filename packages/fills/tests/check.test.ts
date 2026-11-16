@@ -1,7 +1,12 @@
-import { createSchemaBuilder, type JsonField } from '@whatsaaaa/form-builder-schema'
+import {
+  createSchemaBuilder,
+  defineFieldType,
+  type JsonField,
+} from '@whatsaaaa/form-builder-schema'
 import { fills } from '@whatsaaaa/form-builder-fills'
+import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
-import { builder, definitionIssues, form } from './helpers'
+import { builder, definitionIssues, form, sources } from './helpers'
 
 const fields: JsonField[] = [
   { name: 'name', type: 'text' },
@@ -219,6 +224,18 @@ describe('the field a fill is on', () => {
     ])
   })
 
+  it("skips a kind of target it doesn't know, which a later schema can add", () => {
+    const added: string[] = []
+    const note = { kind: 'note', json: { fills: { map: { a: {} } } }, definitionPath: ['notes', 0] }
+    fills({ sources }).check({
+      targets: [note as never],
+      resolve: () => 'Unknown field',
+      issue: (code, path) => added.push(`${code} at ${path.join('.')}`),
+      fill: () => added.push('fill'),
+    })
+    expect(added).toEqual([])
+  })
+
   it('adds no issue when the field has issues of its own', () => {
     const json = form({ name: 'name', type: 'text' }, {
       name: 'name',
@@ -282,7 +299,9 @@ describe('the fields a fill sets', () => {
         name: 'a',
         type: 'group',
         fields: [
-          { type: 'heading', text: 'Address' },
+          { type: 'heading', name: 'intro', text: 'Address' },
+          { name: 'inner', type: 'group', fields: [{ name: 'street', type: 'text' }] },
+          { name: 'photo', type: 'file' },
           { name: 'city', type: 'text' },
         ],
       } as never,
@@ -291,6 +310,49 @@ describe('the fields a fill sets', () => {
     expect(definitionIssues(json)).toEqual([
       'kind_mismatch at fields.0.fills.fields.0: A fill sets fields with a value, not the group "a". Name its fields, like "a.city"',
       'kind_mismatch at fields.0.fills.fields.1: A fill sets fields with a value, not the group "b". Name its fields',
+    ])
+
+    const around = form({
+      name: 'a',
+      type: 'group',
+      fields: [
+        { name: 'x', type: 'text', fills: { source: 'profiles', fields: ['a'] } },
+        { name: 'city', type: 'text' },
+      ],
+    } as never)
+    expect(definitionIssues(around)).toEqual([
+      'kind_mismatch at fields.0.fields.0.fills.fields.0: A fill sets fields with a value, not the group "a". Name its fields, like "a.city"',
+    ])
+  })
+
+  it('names a field of a group whose other fields have issues of their own', () => {
+    const json = form(
+      { name: 'x', type: 'text', fills: { source: 'profiles', fields: ['a'] } } as never,
+      { name: 'a', type: 'group', fields: [null, { name: 'city', type: 'text' }] } as never,
+    )
+    expect(definitionIssues(json)).toEqual([
+      'invalid_shape at fields.1.fields.0: Invalid type: Expected Object but received null',
+      'kind_mismatch at fields.0.fills.fields.0: A fill sets fields with a value, not the group "a". Name its fields, like "a.city"',
+    ])
+  })
+
+  it('names a field of a container of your own, wherever it keeps its fields', () => {
+    const panel = defineFieldType({
+      kind: 'object',
+      container: true,
+      props: v.object({ items: v.array(v.custom<JsonField>(() => true)) }),
+      schema: (field, ctx) => ctx.buildFields(field.items, [...ctx.path, 'items']),
+    })
+    const withPanel = createSchemaBuilder({
+      fieldTypes: { panel },
+      extensions: [fills({ sources })],
+    })
+    const json = form(
+      { name: 'x', type: 'text', fills: { source: 'profiles', fields: ['a'] } } as never,
+      { name: 'a', type: 'panel', items: [{ name: 'city', type: 'text' }] } as never,
+    )
+    expect(definitionIssues(json, withPanel)).toEqual([
+      'kind_mismatch at fields.0.fills.fields.0: A fill sets fields with a value, not the group "a". Name its fields, like "a.city"',
     ])
   })
 

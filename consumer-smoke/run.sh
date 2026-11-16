@@ -55,7 +55,7 @@ case "$mode" in
     ;;
 esac
 
-for package in packages/schema packages/affects frameworks/vue frameworks/react; do
+for package in packages/schema packages/affects packages/fills frameworks/vue frameworks/react; do
   pnpm --dir "$root/$package" pack --pack-destination "$work/packs"
 done
 
