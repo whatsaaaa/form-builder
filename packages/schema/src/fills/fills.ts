@@ -79,7 +79,8 @@ export interface FillsRun {
   subscribe(listener: () => void): () => void
   /**
    * Runs the fills the form starts with that aren't static, like those of sources. Call it once
-   * the form is on the page, never on a server. After `stop()`, it runs those that didn't finish.
+   * the form is on the page, never on a server. After `stop()`, it runs again each fill it
+   * cancelled whose trigger still has the value it ran for.
    */
   start(): void
   /**
@@ -276,8 +277,14 @@ function staticValues(
   return values
 }
 
+/** A fill to run, with the value of its trigger, and its phase. */
+interface Start {
+  readonly value: FillTriggerValue
+  readonly phase: Phase
+}
+
 /** A fill that waits for its values. */
-interface Call {
+interface Call extends Start {
   readonly controller: WebAbortController
   /**
    * Settles once the values came and were applied, or were dropped, or as soon as the call is
@@ -316,8 +323,8 @@ function openFills(
   // last fill set. A field that holds something else was edited.
   const baselines = new Map<FillField, unknown>()
   const calls = new Map<PlannedFill, Call>()
-  // The fills to run as the form starts, with the value of their trigger.
-  const loads = new Map<PlannedFill, FillTriggerValue>()
+  // The fills `start()` runs: those the form starts with, and those `stop()` cancelled.
+  const starts = new Map<PlannedFill, Start>()
   const listeners = new Set<() => void>()
   let state = NOTHING_PENDING
   let pendingKey = ''
@@ -336,12 +343,12 @@ function openFills(
    */
   function startFrom(input: unknown): void {
     const isCleared = clearedIn(engine, input)
-    loads.clear()
+    starts.clear()
     for (const [trigger, fills] of byTrigger) {
       const value = triggerValue(trigger, input, isCleared)
       seen.set(trigger, value)
       if (value === undefined || isGiven(given, trigger.path)) continue
-      for (const fill of fills) if (!fill.target.static) loads.set(fill, value)
+      for (const fill of fills) if (!fill.target.static) starts.set(fill, { value, phase: 'load' })
     }
     for (const fill of plan.fills) {
       for (const field of fill.fields) baselines.set(field, valueAt(input, field.path))
@@ -351,23 +358,29 @@ function openFills(
   function start(): void {
     started = true
     guarded(() => {
-      // A fill whose trigger an earlier one sets runs with its new value, and leaves `loads`.
-      for (const [fill, value] of loads) {
+      // A fill whose trigger an earlier one sets runs with its new value, and leaves `starts`.
+      for (const [fill, { value, phase }] of starts) {
         if (calls.has(fill)) continue
         const input = form.getInput()
         if (same(triggerValue(fill.trigger, input, clearedIn(engine, input)), value)) {
-          run(fill, value, 'load')
+          run(fill, value, phase)
         } else {
-          // The trigger changed before the form started: `update()` runs that change.
-          loads.delete(fill)
+          // The trigger changed since: `update()` runs that change.
+          starts.delete(fill)
         }
       }
     })
   }
 
-  /** Aborts every fill pending. */
+  /**
+   * Aborts every fill pending. Each one is kept for `start()`, to run again while its trigger
+   * still has the value it ran for, unless `startFrom()` takes a new input after it.
+   */
   function cancel(): void {
-    for (const call of calls.values()) call.controller.abort()
+    for (const [fill, call] of calls) {
+      call.controller.abort()
+      starts.set(fill, call)
+    }
     calls.clear()
     notify()
   }
@@ -417,7 +430,7 @@ function openFills(
     seen.set(trigger, value)
     const fills = byTrigger.get(trigger) as PlannedFill[]
     for (const fill of fills) {
-      loads.delete(fill)
+      starts.delete(fill)
       calls.get(fill)?.controller.abort()
       calls.delete(fill)
     }
@@ -445,21 +458,21 @@ function openFills(
         input: inputOf(form.getInput()),
       })
     } catch (error) {
-      loads.delete(fill)
+      starts.delete(fill)
       report(error, info)
       return
     }
     if (!isThenable(result)) {
-      loads.delete(fill)
+      starts.delete(fill)
       apply(fill, value, result, phase)
       return
     }
-    const call: Call = { controller, done: Promise.resolve() }
+    const call: Call = { value, phase, controller, done: Promise.resolve() }
     // Only the newest call of a fill is applied: an aborted or older one is dropped unseen.
     const settle = (work: () => void) => {
       if (calls.get(fill) !== call) return
       calls.delete(fill)
-      loads.delete(fill)
+      starts.delete(fill)
       notify()
       guarded(work)
     }

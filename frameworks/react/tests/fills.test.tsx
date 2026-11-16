@@ -1,4 +1,5 @@
 import { Form, getInput, setInput } from '@formisch/react'
+import { affects } from '@whatsaaaa/form-builder-affects'
 import { fills, type FillSource } from '@whatsaaaa/form-builder-fills'
 import {
   createSchemaBuilder,
@@ -19,7 +20,7 @@ import { createRoot } from 'react-dom/client'
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
 import profileMap from '../../../fixtures/fills/profile-map.json'
 import { builtInComponents, TestInput, values } from './components'
-import { form, mount, settle, type, update } from './helpers'
+import { errorAt, form, mount, settle, type, update } from './helpers'
 
 /** A source whose calls wait until the test answers them. */
 function waitingSource() {
@@ -59,8 +60,8 @@ const withSource = (extra: Partial<JsonField> = {}) => form(profile(extra), ...p
 const marko = { firstName: 'Marko', lastName: 'Petrović', 'address.city': 'Beograd' }
 
 /**
- * Mounts the definition in Formisch's `<Form>` with a builder that knows fills, with `profiles`
- * as its source. `current()` gives what `useJsonForm` returned on the last render, and
+ * Mounts the definition in Formisch's `<Form>` with a builder that knows affects and fills, with
+ * `profiles` as its source. `current()` gives what `useJsonForm` returned on the last render, and
  * `rerender()` renders it again with other options.
  */
 function mountFills(
@@ -69,7 +70,9 @@ function mountFills(
   { strict = false } = {},
 ) {
   const { profiles = () => null, ...rest } = options
-  const builder = createSchemaBuilder({ extensions: [fills({ sources: { profiles } })] })
+  const builder = createSchemaBuilder({
+    extensions: [affects(), fills({ sources: { profiles } })],
+  })
   const latest: { current?: JsonFormInstance } = {}
   function App(props: UseJsonFormOptions) {
     const jsonForm = useJsonForm(json, { builder, components: builtInComponents, ...props })
@@ -302,14 +305,6 @@ describe('a fill with a source', () => {
 
   it('runs for a value a component sets as it mounts', () => {
     const { source, calls } = waitingSource()
-    function Preset(props: ValueFieldProps) {
-      const { setInput: set } = props
-      const preset = props.path.join('.') === 'profile'
-      useEffect(() => {
-        if (preset) set('c')
-      }, [preset, set])
-      return <TestInput {...props} />
-    }
     mountFills(withSource(), {
       profiles: source,
       components: { ...builtInComponents, select: Preset },
@@ -317,6 +312,16 @@ describe('a fill with a source', () => {
     expect(calls.map(({ value }) => value)).toEqual(['c'])
   })
 })
+
+/** A select that sets the profile to 'c' as it mounts. */
+function Preset(props: ValueFieldProps) {
+  const { setInput: set } = props
+  const preset = props.path.join('.') === 'profile'
+  useEffect(() => {
+    if (preset) set('c')
+  }, [preset, set])
+  return <TestInput {...props} />
+}
 
 describe('fills in StrictMode', () => {
   it('run a load fill again after the first mount stops it, and set its values once', async () => {
@@ -334,6 +339,26 @@ describe('fills in StrictMode', () => {
     expect(input()).toMatchObject({ firstName: 'Marko' })
     expect(current().fills.pending).toEqual([])
     expect(current().form.isDirty).toBe(false)
+  })
+
+  it('run the fill of a value a component sets as it mounts again after the first mount stops it', async () => {
+    const { source, calls } = waitingSource()
+    const { current, input } = mountFills(
+      withSource(),
+      { profiles: source, components: { ...builtInComponents, select: Preset } },
+      { strict: true },
+    )
+    expect(calls.map(({ value }) => value)).toEqual(['c', 'c'])
+    expect(calls[0]?.signal.aborted).toBe(true)
+
+    const resolve = calls[1]?.resolve
+    await answer(() => resolve?.(marko))
+    expect(input()).toMatchObject({
+      profile: 'c',
+      firstName: 'Marko',
+      address: { city: 'Beograd' },
+    })
+    expect(current().fills.pending).toEqual([])
   })
 })
 
@@ -453,5 +478,93 @@ describe('steps with fills', () => {
     })
     expect(moved).toBe(false)
     expect(current().steps.current.step.id).toBe('who')
+  })
+
+  /** A company step on show only for a business account, which the profile fills. */
+  const business = (accountType?: string) =>
+    ({
+      version: '1',
+      fields: [
+        profile({ fills: { source: 'profiles', fields: ['firstName', 'accountType'] } }),
+        { name: 'firstName', type: 'text', required: true },
+        {
+          name: 'accountType',
+          type: 'select',
+          options: [
+            { value: 'personal', label: 'Personal' },
+            { value: 'business', label: 'Business' },
+          ],
+          ...(accountType && { default: accountType }),
+        },
+        { name: 'company', type: 'text', required: true },
+        { name: 'city', type: 'text' },
+      ],
+      layout: {
+        steps: [
+          { id: 'who', items: ['profile', 'firstName', 'accountType'] },
+          {
+            id: 'company',
+            items: ['company'],
+            affects: [{ effect: 'show', when: { field: 'accountType', equals: 'business' } }],
+          },
+          { id: 'where', items: ['city'] },
+        ],
+      },
+    }) as JsonForm
+
+  /** Runs `step` on the latest steps while the profile's source answers with `values`. */
+  async function moveWhileFilling(
+    current: () => JsonFormInstance,
+    resolve: ((values: FillResult) => void) | undefined,
+    values: FillResult,
+    step: (steps: JsonFormInstance['steps']) => Promise<boolean>,
+  ) {
+    let moved: boolean | undefined
+    await act(async () => {
+      const moving = step(current().steps)
+      resolve?.(values)
+      moved = await moving
+    })
+    return moved
+  }
+
+  const ids = (current: () => JsonFormInstance) => current().steps.list.map(({ step }) => step.id)
+
+  it('move Next to a step the pending fill shows', async () => {
+    const { source, calls } = waitingSource()
+    const { current } = mountFills(business(), { profiles: source })
+    expect(ids(current)).toEqual(['who', 'where'])
+    await set('profile', 'a')
+
+    const values = { firstName: 'Marko', accountType: 'business' }
+    const next = (steps: JsonFormInstance['steps']) => steps.next()
+    expect(await moveWhileFilling(current, calls[0]?.resolve, values, next)).toBe(true)
+    expect(current().steps.current.step.id).toBe('company')
+    expect(ids(current)).toEqual(['who', 'company', 'where'])
+  })
+
+  it('skip with Next a step the pending fill hides', async () => {
+    const { source, calls } = waitingSource()
+    const { current } = mountFills(business('business'), { profiles: source })
+    expect(ids(current)).toEqual(['who', 'company', 'where'])
+    await set('profile', 'a')
+
+    const values = { firstName: 'Marko', accountType: 'personal' }
+    const next = (steps: JsonFormInstance['steps']) => steps.next()
+    expect(await moveWhileFilling(current, calls[0]?.resolve, values, next)).toBe(true)
+    expect(current().steps.current.step.id).toBe('where')
+    expect(ids(current)).toEqual(['who', 'where'])
+  })
+
+  it('stop goTo() at a step the pending fill shows on the way, with its issues', async () => {
+    const { source, calls } = waitingSource()
+    const { root, current } = mountFills(business(), { profiles: source })
+    await set('profile', 'a')
+
+    const values = { firstName: 'Marko', accountType: 'business' }
+    const where = (steps: JsonFormInstance['steps']) => steps.goTo(1)
+    expect(await moveWhileFilling(current, calls[0]?.resolve, values, where)).toBe(false)
+    expect(current().steps.current.step.id).toBe('company')
+    expect(errorAt(root, 'company')).not.toBeNull()
   })
 })

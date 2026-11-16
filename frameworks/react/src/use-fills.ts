@@ -44,7 +44,8 @@ export function useFills(
   })
   useEffect(() => {
     if (!fills.active) return
-    // In StrictMode it starts, stops and starts again: the second start runs what the stop aborted.
+    // In StrictMode, or when an <Activity> hides the form and shows it again, it stops and starts
+    // again: the second start runs again each fill the stop cancelled, whatever started it.
     run.start()
     // A change between the first render and now, like a field a component set as it mounted.
     run.update()

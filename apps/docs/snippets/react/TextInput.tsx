@@ -32,7 +32,6 @@ export function TextInput({
         required={required}
         // While a fill waits for the field's value.
         aria-busy={pending || undefined}
-        readOnly={pending}
         onChange={(event) => setInput(event.target.value)}
       />
       {errors && <small>{errors[0]}</small>}

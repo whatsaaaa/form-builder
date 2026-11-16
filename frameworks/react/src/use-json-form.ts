@@ -141,7 +141,14 @@ export function useJsonForm(
     for (const { path, input } of toClear) setInput(form, { path, input } as never)
   }, [form, toClear])
   const { run, state: fills } = useFills(form, built.fills, options)
-  const steps = useJsonFormSteps(form, built.layout, options, visibility, run.settled)
+  const steps = useJsonFormSteps(
+    form,
+    built.layout,
+    options,
+    visibility,
+    built.visibility,
+    run.settled,
+  )
   const { components, layoutComponents } = options
   return useMemo(
     () => ({
