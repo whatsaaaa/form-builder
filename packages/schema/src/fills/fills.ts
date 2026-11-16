@@ -270,7 +270,10 @@ function staticValues(
 /** A fill that waits for its values. */
 interface Call {
   readonly controller: WebAbortController
-  /** Settles once the values came and were applied, or were dropped. Never rejects. */
+  /**
+   * Settles once the values came and were applied, or were dropped, or as soon as the call is
+   * aborted, so nothing waits for a call that is no longer pending. Never rejects.
+   */
   done: Promise<void>
 }
 
@@ -416,10 +419,14 @@ function openFills(
       notify()
       guarded(work)
     }
-    call.done = Promise.resolve(result).then(
+    const answered = Promise.resolve(result).then(
       (values) => settle(() => apply(fill, value, values, phase)),
       (error: unknown) => settle(() => report(error, info)),
     )
+    const aborted = new Promise<void>((resolve) => {
+      controller.signal.addEventListener('abort', () => resolve(), { once: true })
+    })
+    call.done = Promise.race([answered, aborted])
     calls.set(fill, call)
     notify()
   }

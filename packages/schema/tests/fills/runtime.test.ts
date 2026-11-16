@@ -450,6 +450,42 @@ describe('a fill with a source', () => {
     expect(form.log).toEqual([])
   })
 
+  it('settles without waiting for a call a new value dropped', async () => {
+    const { calls, source } = handSource()
+    const form = openForm(
+      createSchemaBuilder({ extensions: [prefill({ profiles: source })] }),
+      sourceForm(),
+    )
+    // The call for 'a' never answers.
+    form.type('profile', 'a')
+    let settled = false
+    void form.run.settled().then(() => {
+      settled = true
+    })
+    form.type('profile', 'b')
+    calls[1]?.settle.resolve(profiles.b)
+    await new Promise((resolve) => setTimeout(resolve))
+    expect(settled).toBe(true)
+    expect(form.input['firstName']).toBe('Jelena')
+  })
+
+  it('settles once stop() cancels the calls pending', async () => {
+    const { source } = handSource()
+    const form = openForm(
+      createSchemaBuilder({ extensions: [prefill({ profiles: source })] }),
+      sourceForm(),
+    )
+    // The call never answers.
+    form.type('profile', 'a')
+    let settled = false
+    void form.run.settled().then(() => {
+      settled = true
+    })
+    form.run.stop()
+    await new Promise((resolve) => setTimeout(resolve))
+    expect(settled).toBe(true)
+  })
+
   it('gives a symbol for no object of values the way it can', () => {
     const onError = vi.fn()
     const sources = { profiles: () => Symbol('Marko') as never }
