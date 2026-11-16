@@ -1018,7 +1018,20 @@ describe('a reset', () => {
     expect(form.input).toEqual({ firstName: 'Ana', address: {} })
   })
 
-  it('calls no source for the values the form started with', async () => {
+  it('aborts the call of a change', () => {
+    const { calls, source } = handSource()
+    const form = openForm(
+      createSchemaBuilder({ extensions: [prefill({ profiles: source })] }),
+      sourceForm(),
+    )
+    form.type('profile', 'b')
+    form.reset()
+    expect(calls[0]?.signal.aborted).toBe(true)
+    expect(form.run.state.pending).toEqual([])
+    expect(calls).toHaveLength(1)
+  })
+
+  it('calls the source of a default again, and sets its values as the ones the form starts with', async () => {
     const { calls, source } = handSource()
     const sources = createSchemaBuilder({ extensions: [prefill({ profiles: source })] })
     const form = openForm(sources, sourceForm({ default: 'a' }))
@@ -1028,61 +1041,86 @@ describe('a reset', () => {
     form.type('profile', 'b')
     calls[1]?.settle.resolve(profiles.b)
     await form.run.settled()
+    const log = [...form.log]
 
     form.reset()
-    expect(calls).toHaveLength(2)
-    expect(form.run.state.pending).toEqual([])
+    expect(calls.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
     expect(form.input).toMatchObject({ profile: 'a', firstName: 'Marko' })
+    calls[2]?.settle.resolve({ ...profiles.a, lastName: 'Marković' })
+    await form.run.settled()
+    expect(form.log).toEqual([...log, 'start lastName "Marković"'])
+
     form.type('profile', 'b')
-    calls[2]?.settle.resolve(profiles.b)
+    calls[3]?.settle.resolve(profiles.b)
     await form.run.settled()
     expect(form.input).toMatchObject({ firstName: 'Jelena', address: { city: 'Novi Sad' } })
   })
 
-  it('fills the next value when the trigger already held the value it started with', () => {
-    const record = { profile: 'b', firstName: 'Ana', lastName: 'Ilić' }
-    const form = openForm(builder, mapForm(), { given: record })
-    form.type('profile', 'c')
-    form.type('profile', 'b')
-    form.reset()
-    expect(form.input).toEqual({ ...record, address: {} })
-
-    form.type('profile', 'c')
-    expect(form.input).toMatchObject({ firstName: 'Nikola', lastName: 'Nikolić' })
-  })
-
-  it('cancels the call of a change, but lets a value the form starts with come', async () => {
+  it('calls the source of a default again that a pick cancelled', async () => {
     const { calls, source } = handSource()
     const sources = createSchemaBuilder({ extensions: [prefill({ profiles: source })] })
-    const changed = openForm(sources, sourceForm())
-    changed.type('profile', 'b')
-    changed.reset()
-    expect(calls[0]?.signal.aborted).toBe(true)
-    expect(changed.run.state.pending).toEqual([])
+    const form = openForm(sources, sourceForm({ default: 'a' }))
+    form.run.start()
+    form.type('profile', 'b')
+    calls[1]?.settle.resolve(profiles.b)
+    await form.run.settled()
 
-    const loading = openForm(sources, sourceForm({ default: 'a' }))
-    loading.run.start()
-    loading.reset()
-    expect(calls[1]?.signal.aborted).toBe(false)
-    calls[1]?.settle.resolve(profiles.a)
-    await loading.run.settled()
-    expect(loading.log).toEqual([
+    form.reset()
+    expect(calls.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
+    calls[2]?.settle.resolve(profiles.a)
+    await form.run.settled()
+    expect(form.input).toEqual({
+      profile: 'a',
+      firstName: 'Marko',
+      lastName: 'Petrović',
+      address: { city: 'Beograd' },
+    })
+    expect(form.log.slice(-3)).toEqual([
       'start firstName "Marko"',
       'start lastName "Petrović"',
       'start address.city "Beograd"',
     ])
   })
 
-  it('cancels a value the form starts with when the reset gives its trigger another', () => {
+  it('leaves alone what the initial input it gives has a key for', async () => {
     const { calls, source } = handSource()
     const sources = createSchemaBuilder({ extensions: [prefill({ profiles: source })] })
+    const record = { profile: 'a', firstName: 'Ana', lastName: 'Ilić', address: {} }
     const form = openForm(sources, sourceForm({ default: 'a' }))
     form.run.start()
     // Like Formisch's reset with another initial input.
-    ;(form.input as Record<string, unknown>)['profile'] = 'c'
-    form.run.reset()
+    Object.assign(form.input, record)
+    form.run.reset({ given: record })
     expect(calls[0]?.signal.aborted).toBe(true)
-    expect(form.run.state.pending).toEqual([])
+    calls[0]?.settle.resolve(profiles.a)
+    await form.run.settled()
+    expect(calls).toHaveLength(1)
+    expect(form.input).toEqual(record)
+    expect(form.log).toEqual([])
+
+    const named = openForm(sources, sourceForm({ default: 'a' }))
+    named.run.start()
+    named.input['firstName'] = 'Ana'
+    named.run.reset({ given: { firstName: 'Ana' } })
+    expect(calls.at(-1)?.value).toBe('a')
+    calls.at(-1)?.settle.resolve(profiles.a)
+    await named.run.settled()
+    expect(named.input).toMatchObject({ firstName: 'Ana', lastName: 'Petrović' })
+  })
+
+  it('calls no source before the form starts, or after it stops', () => {
+    const { calls, source } = handSource()
+    const form = openForm(
+      createSchemaBuilder({ extensions: [prefill({ profiles: source })] }),
+      sourceForm({ default: 'a' }),
+    )
+    form.run.reset()
+    expect(calls).toHaveLength(0)
+    form.run.start()
+    expect(calls).toHaveLength(1)
+    form.run.stop()
+    form.run.reset()
+    expect(calls).toHaveLength(1)
   })
 })
 
@@ -1153,6 +1191,31 @@ describe('chains', () => {
       expect(form.input).toEqual({ profile: 'b', country: 'ME', city: 'Podgorica' })
     }
     expect(values).toHaveBeenCalledTimes(8)
+  })
+
+  it('run again after a reset, the source of one a fill before it set too', async () => {
+    const { calls, source } = handSource()
+    const sources = createSchemaBuilder({
+      extensions: [prefill({ profiles: source, countries: source })],
+    })
+    const json = chain(
+      { source: 'profiles', fields: ['country'] },
+      { source: 'countries', fields: ['city'] },
+    )
+    const form = openForm(sources, json)
+    form.run.start()
+    calls[0]?.settle.resolve({ country: 'RS' })
+    await new Promise((resolve) => setTimeout(resolve))
+    expect(calls.map(({ value }) => value)).toEqual(['a', 'RS'])
+
+    form.reset()
+    expect(calls[1]?.signal.aborted).toBe(true)
+    expect(calls.slice(2).map(({ value }) => value)).toEqual(['a', 'RS'])
+    calls[2]?.settle.resolve({ country: 'RS' })
+    calls[3]?.settle.resolve({ city: 'Beograd' })
+    await form.run.settled()
+    expect(form.input).toEqual({ profile: 'a', country: 'RS', city: 'Beograd' })
+    expect(form.log.at(-1)).toBe('start city "Beograd"')
   })
 
   it('run a source the form starts with once, when a fill before it sets its trigger', () => {

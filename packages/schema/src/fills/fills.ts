@@ -88,12 +88,13 @@ export interface FillsRun {
    */
   update(): void
   /**
-   * Call it after the form is reset, like with Formisch's `reset`: the input the form holds now is
-   * the one its fills start from again. Each trigger's value counts as handled, so it fills
-   * nothing, and no field counts as edited. It cancels the fills pending, except those of the
-   * values the form starts with, which are still set as those when they come.
+   * Call it after the form is reset, like with Formisch's `reset`, with `given` when the reset
+   * gives the form another initial input. It starts the fills again on the input the form holds,
+   * as `open()` and `start()` do: it cancels every fill pending, each trigger's value counts as
+   * handled and no field as edited, and once the form is started, the fills the form starts with
+   * run again, as starting values.
    */
-  reset(): void
+  reset(options?: Pick<OpenFillsOptions, 'given'>): void
   /** Resolves once no fill is pending, including the fills that those start. */
   settled(): Promise<void>
   /** Cancels the fills pending now, e.g. when the form closes. */
@@ -303,7 +304,7 @@ function openFills(
   form: FillsForm,
   options: OpenFillsOptions,
 ): FillsRun {
-  const { given } = options
+  let { given } = options
   // The fills of each trigger, the triggers in the order their fills run.
   const byTrigger = new Map<FillField, PlannedFill[]>()
   for (const fill of plan.fills) {
@@ -323,26 +324,52 @@ function openFills(
   // How deep the run is in its own work, and whether `update()` was called during it.
   let depth = 0
   let changed = false
+  // True once the form is on the page: `start()` was called, and `stop()` wasn't since.
+  let started = false
 
   startFrom(form.getInput())
-  for (const [trigger, fills] of byTrigger) {
-    const value = seen.get(trigger)
-    if (value === undefined || isGiven(given, trigger.path)) continue
-    for (const fill of fills) if (!fill.target.static) loads.set(fill, value)
-  }
 
   /**
-   * Takes `input` as the one the form starts with: each trigger's value is handled, and no field
-   * is edited.
+   * Takes `input` as the one the form starts with: each trigger's value is handled, no field is
+   * edited, and the fills to run as it starts are those of each trigger with a value `given` has
+   * no key for.
    */
   function startFrom(input: unknown): void {
     const isCleared = clearedIn(engine, input)
-    for (const trigger of byTrigger.keys()) {
-      seen.set(trigger, triggerValue(trigger, input, isCleared))
+    loads.clear()
+    for (const [trigger, fills] of byTrigger) {
+      const value = triggerValue(trigger, input, isCleared)
+      seen.set(trigger, value)
+      if (value === undefined || isGiven(given, trigger.path)) continue
+      for (const fill of fills) if (!fill.target.static) loads.set(fill, value)
     }
     for (const fill of plan.fills) {
       for (const field of fill.fields) baselines.set(field, valueAt(input, field.path))
     }
+  }
+
+  function start(): void {
+    started = true
+    guarded(() => {
+      // A fill whose trigger an earlier one sets runs with its new value, and leaves `loads`.
+      for (const [fill, value] of loads) {
+        if (calls.has(fill)) continue
+        const input = form.getInput()
+        if (same(triggerValue(fill.trigger, input, clearedIn(engine, input)), value)) {
+          run(fill, value, 'load')
+        } else {
+          // The trigger changed before the form started: `update()` runs that change.
+          loads.delete(fill)
+        }
+      }
+    })
+  }
+
+  /** Aborts every fill pending. */
+  function cancel(): void {
+    for (const call of calls.values()) call.controller.abort()
+    calls.clear()
+    notify()
   }
 
   function report(error: unknown, info: FillErrorInfo): void {
@@ -538,39 +565,20 @@ function openFills(
         listeners.delete(listener)
       }
     },
-    start() {
-      guarded(() => {
-        // A fill whose trigger an earlier one sets runs with its new value, and leaves `loads`.
-        for (const [fill, value] of loads) {
-          if (calls.has(fill)) continue
-          const input = form.getInput()
-          if (same(triggerValue(fill.trigger, input, clearedIn(engine, input)), value)) {
-            run(fill, value, 'load')
-          } else {
-            // The trigger changed before the form started: `update()` runs that change.
-            loads.delete(fill)
-          }
-        }
-      })
-    },
+    start,
     update,
-    reset() {
+    reset(options = {}) {
+      if (Object.hasOwn(options, 'given')) given = options.given
+      cancel()
       startFrom(form.getInput())
-      for (const [fill, call] of calls) {
-        if (loads.has(fill) && same(loads.get(fill), seen.get(fill.trigger))) continue
-        call.controller.abort()
-        calls.delete(fill)
-        loads.delete(fill)
-      }
-      notify()
+      if (started) start()
     },
     async settled() {
       while (calls.size) await Promise.all([...calls.values()].map((call) => call.done))
     },
     stop() {
-      for (const call of calls.values()) call.controller.abort()
-      calls.clear()
-      notify()
+      started = false
+      cancel()
     },
   }
 }

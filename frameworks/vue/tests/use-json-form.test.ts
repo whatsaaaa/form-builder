@@ -42,6 +42,10 @@ describe('useJsonForm', () => {
     jsonForm.reset({ initialInput: { name: 'Jelena' } })
     expect(getInput(jsonForm.form)).toEqual({ name: 'Jelena' })
     expect(isDirty(jsonForm.form)).toBe(false)
+
+    // Like the option, a new initial input goes over the defaults.
+    jsonForm.reset({ initialInput: {} })
+    expect(getInput(jsonForm.form)).toEqual({ name: 'Ana' })
   })
 
   it('throws a DefinitionError for a definition with issues', () => {

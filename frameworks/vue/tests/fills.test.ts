@@ -282,21 +282,26 @@ describe('a fill with a map', () => {
     expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Nikola', lastName: 'Nikolić' })
   })
 
-  it("takes the options of Formisch's reset, like another initial input", async () => {
+  it("takes the options of Formisch's reset, with an initial input like useJsonForm's", async () => {
     const { jsonForm } = mountForm(profileMap as JsonForm, builtInComponents, {
       builder: mapBuilder,
     })
     jsonForm.reset({ initialInput: { profile: 'c', firstName: 'Ana' } })
     await settle()
-    expect(getInput(jsonForm.form)).toMatchObject({
-      profile: 'c',
-      firstName: 'Ana',
-      lastName: undefined,
-    })
+    expect(getInput(jsonForm.form)).toEqual({ profile: 'c', firstName: 'Ana', address: {} })
     expect(isDirty(jsonForm.form)).toBe(false)
-
     await set('profile', 'b')
     expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Jelena', lastName: 'Jovanović' })
+
+    jsonForm.reset({ initialInput: { firstName: 'Ana' } })
+    await settle()
+    expect(getInput(jsonForm.form)).toEqual({
+      profile: 'a',
+      firstName: 'Ana',
+      lastName: 'Petrović',
+      address: { city: 'Beograd' },
+    })
+    expect(isDirty(jsonForm.form)).toBe(false)
   })
 })
 
@@ -391,7 +396,7 @@ describe('a fill with a source', () => {
     expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Marko' })
   })
 
-  it('calls no source on a reset, and fills again after it', async () => {
+  it('calls the source of its default again on a reset, and fills again after it', async () => {
     const { builder, profiles } = sourceBuilder()
     const json = structuredClone(profileSource) as JsonForm
     ;(json.fields[0] as { default?: string }).default = 'a'
@@ -404,12 +409,14 @@ describe('a fill with a source', () => {
 
     jsonForm.reset()
     await settle()
-    expect(profiles).toHaveLength(2)
+    expect(profiles.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
+    profiles[2]?.resolve(marko)
+    await settle()
     expect(getInput(jsonForm.form)).toEqual({ profile: 'a', ...marko, address: {} })
     expect(isDirty(jsonForm.form)).toBe(false)
 
     await set('profile', 'b')
-    profiles[2]?.resolve(jelena)
+    profiles[3]?.resolve(jelena)
     await settle()
     expect(getInput(jsonForm.form)).toEqual({
       profile: 'b',
@@ -417,6 +424,40 @@ describe('a fill with a source', () => {
       lastName: 'Jovanović',
       address: { city: 'Novi Sad' },
     })
+  })
+
+  it('fills the values of its default again on a reset after an early pick', async () => {
+    const { builder, profiles } = sourceBuilder()
+    const json = structuredClone(profileSource) as JsonForm
+    ;(json.fields[0] as { default?: string }).default = 'a'
+    const { jsonForm } = mountFills(json, { builder })
+    await set('profile', 'b')
+    profiles[1]?.resolve(jelena)
+    await settle()
+
+    jsonForm.reset()
+    await settle()
+    profiles[2]?.resolve(marko)
+    await settle()
+    expect(profiles.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
+    expect(getInput(jsonForm.form)).toEqual({ profile: 'a', ...marko, address: {} })
+    expect(isDirty(jsonForm.form)).toBe(false)
+  })
+
+  it("keeps a record a reset gives while its default's values are on their way", async () => {
+    const { builder, profiles } = sourceBuilder()
+    const json = structuredClone(profileSource) as JsonForm
+    ;(json.fields[0] as { default?: string }).default = 'a'
+    const { jsonForm } = mountFills(json, { builder })
+    const record = { profile: 'a', firstName: 'Ana', lastName: 'Ilić' }
+
+    jsonForm.reset({ initialInput: record })
+    expect(profiles[0]?.signal.aborted).toBe(true)
+    profiles[0]?.resolve(marko)
+    await settle()
+    expect(profiles).toHaveLength(1)
+    expect(getInput(jsonForm.form)).toEqual({ ...record, address: {} })
+    expect(isDirty(jsonForm.form)).toBe(false)
   })
 
   it("empties a record's fields when the option is cleared before its values come", async () => {

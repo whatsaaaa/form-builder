@@ -1,6 +1,7 @@
 import { type FormStore, getInput, reset, setInput } from '@formisch/vue'
 import type {
   FillErrorInfo,
+  FillsRun,
   FillsState,
   JsonForm,
   SchemaBuilder,
@@ -20,8 +21,8 @@ export interface JsonFormFills {
   readonly state: { readonly value: FillsState }
   /** Resolves once no fill is pending. */
   settled(): Promise<void>
-  /** Takes the form's input now as the one the fills start from, after a reset. */
-  reset(): void
+  /** Starts the fills again on the form's input, after a reset. */
+  readonly reset: FillsRun['reset']
 }
 
 const withFills = new WeakMap<FormStore, JsonFormFills>()
@@ -63,7 +64,7 @@ export function useFills(
   const result: JsonFormFills = {
     state,
     settled: () => run.settled(),
-    reset: () => run.reset(),
+    reset: (options) => run.reset(options),
   }
   // Without fills, nothing is ever pending, so the input isn't watched.
   if (!fills.active) return result

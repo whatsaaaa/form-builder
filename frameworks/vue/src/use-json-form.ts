@@ -85,9 +85,12 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
    */
   readonly fills: FillsState
   /**
-   * Resets the whole form, like Formisch's `reset` with the same options, and its fills with it:
-   * the next value of a trigger sets every field the user hasn't edited since. Formisch's own
-   * `reset` leaves the fills comparing the fields with what the last fill set, as edits.
+   * Resets the whole form, like Formisch's `reset` with the same options, and starts its fills
+   * again, as when the form opened: the fills of the triggers that start from their default run
+   * again, and the next value of a trigger sets every field the user hasn't edited since. A new
+   * `initialInput` goes over the definition's defaults, like the option's, and its fields and
+   * triggers are left alone as the form starts. Formisch's own `reset` leaves the fills comparing
+   * the fields with what the last fill set, as edits.
    */
   reset(config?: ResetFormConfig<TSchema>): void
 }
@@ -156,9 +159,15 @@ export function useJsonForm(
     get fills() {
       return fills.state.value
     },
-    reset(config) {
-      reset(form, config ?? {})
-      fills.reset()
+    reset(config = {}) {
+      if (Object.hasOwn(config, 'initialInput')) {
+        const given = config.initialInput
+        reset(form, { ...config, initialInput: mergeInitialInput(builder, definition, given) })
+        fills.reset({ given })
+      } else {
+        reset(form, config)
+        fills.reset()
+      }
     },
   }
 }

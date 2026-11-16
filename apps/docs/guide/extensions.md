@@ -45,7 +45,7 @@ A fill sets fields from the value of another, its trigger: choosing a profile fi
 
 The trigger is a field with a string, number, boolean or date value, and the fields it sets have a value and aren't files. Neither can be inside a list's items. A fill names each field it sets once, and its `overwrite` is `'unedited'` or `'always'`. `ctx.fill()` throws a `TypeError` for a fill that breaks these rules, so check them in `check()` and report a mistake in the definition as an issue instead. A fill on a trigger with issues of its own, like a duplicate name, is left out, as the definition reports them. Fills that set each other's triggers in a loop are `cycle` issues.
 
-A renderer runs the fills with [`getFills()`](/api/schema/Fills): it opens them on a form, starts them once the form is on the page, calls `update()` after each change of the input, and `reset()` after the form is reset:
+A renderer runs the fills with [`getFills()`](/api/schema/Fills): it opens them on a form, starts them once the form is on the page, calls `update()` after each change of the input, and `reset()` after the form is reset, with its new initial input as `given` if it has one:
 
 <<< @/snippets/schema/extensions.ts#run
 
@@ -53,7 +53,7 @@ What a running fill does is the same for every extension:
 
 - **It runs when its trigger gets a new value**, from the user or from code. As the form starts, it runs only when the trigger starts from its default: a trigger the app's initial input has a key for, like a saved record, fills nothing, and a fill never sets a field that input has a key for.
 - **It sets the fields the user hasn't edited.** A field is edited when it holds something other than what it started with, or than the last fill set. An empty field is never edited. With `'always'`, it sets them all.
-- **A reset starts it over.** After `reset()`, the input the form holds is what each field started with, and nothing is filled until a trigger gets a new value.
+- **A reset starts it over**, like the form opening: `reset()` aborts every pending call, the input the form holds is what each field started with, and a trigger that starts from its default fills again, as starting values.
 - **It sets every field it names.** A field its values leave out, or give `null` for, is set blank.
 - **Values are fitted to their field**, like typed input: `'5'` becomes `5` for a number, and `11000` becomes `'11000'` for text. A value of a type the field can't hold, like `'abc'` for a number, is set blank and reported as a `TypeError`. A value that only breaks a rule, like an email without `@`, is set, and the form shows its error.
 - **The newest value wins.** A new value of the trigger aborts the call before it, and its values are dropped.
