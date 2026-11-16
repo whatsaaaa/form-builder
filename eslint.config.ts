@@ -24,6 +24,7 @@ const packageFeatures: Record<string, Record<string, string[]>> = {
     render: ['shared', 'definition', 'errors'],
     extensions: ['shared', 'errors', 'kinds', 'definition'],
     visibility: ['shared', 'errors', 'definition', 'render', 'extensions'],
+    fills: ['shared', 'errors', 'kinds', 'definition', 'render', 'extensions', 'visibility'],
     builder: [
       'shared',
       'errors',
@@ -34,6 +35,7 @@ const packageFeatures: Record<string, Record<string, string[]>> = {
       'render',
       'extensions',
       'visibility',
+      'fills',
     ],
     'json-schema': ['shared', 'definition', 'rules', 'field-types', 'extensions'],
   },

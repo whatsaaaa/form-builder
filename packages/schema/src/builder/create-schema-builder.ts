@@ -5,6 +5,7 @@ import { DefinitionError, type ValidateResult } from '../errors/definition-error
 import type { SchemaExtension } from '../extensions/schema-extension'
 import type { defaultFieldTypes } from '../field-types/default-field-types'
 import type { FieldTypeDef } from '../field-types/field-type-def'
+import { createFills, type Fills } from '../fills/fills'
 import type { KindDef } from '../kinds/kind-def'
 import { type FieldNode, fieldTree } from '../render/field-tree'
 import type { FormLayout } from '../render/form-layout'
@@ -111,8 +112,12 @@ export interface SchemaBuilder<
    * Formisch's `initialInput`: each field's `default`, nested the way the value is, your own
    * container types included. A container of kind `object` gives an object, and one of kind
    * `array` without a default gives `[]`. Other fields without a default, and display elements,
-   * are left out. It never throws, and leaves out a field with issues, but a field whose only
-   * issue is its default still gets that default.
+   * are left out. It leaves out a field with issues, but a field whose only issue is its default
+   * still gets that default. A field that conditions clear when the form starts starts blank. With
+   * fills, it has the values of the fills written in the definition, like a map, for each trigger
+   * that starts with its default, unless the conditions clear that trigger, as the form starts or
+   * for those values. It throws what their `values()` throw, and a TypeError when they give a
+   * promise, or no object of values.
    */
   getInitialInput(json: JsonForm): Record<string, unknown>
   /**
@@ -141,6 +146,12 @@ export interface SchemaBuilder<
    * validated. Throws one `DefinitionError` with every issue the definition has, like `build()`.
    */
   getVisibility(json: JsonForm): Visibility
+  /**
+   * The fills of this builder's extensions, for a renderer: what the form starts with, and what
+   * runs while it is open. Without fills, they do nothing. Throws one `DefinitionError` with every
+   * issue the definition has, like `build()`.
+   */
+  getFills(json: JsonForm): Fills
   /** The registered rules that can be used on a field of `kind`, e.g. for a rule picker. */
   rulesForKind(kind: ValueKind): [name: string, def: RuleDef][]
   readonly kinds: Readonly<Record<string, KindDef>>
@@ -224,7 +235,11 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
   }
 
   function getInitialInput(json: JsonForm): Record<string, unknown> {
-    return compileDefinition(json, registry, messages).initialInput
+    const { initialInput, engine, fills } = compileDefinition(json, registry, messages)
+    // The values of the fills written in the definition, for the triggers that start with a value.
+    const filled = createFills(fills, engine).initialInput(initialInput, undefined)
+    // A field its conditions clear when the form starts starts blank, without its default.
+    return createVisibility(engine).clear(filled)
   }
 
   function getItemInput(field: JsonField): unknown {
@@ -250,6 +265,12 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     return createVisibility(engine)
   }
 
+  function getFills(json: JsonForm): Fills {
+    const { issues, engine, fills } = compileDefinition(json, registry, messages)
+    if (issues.length) throw new DefinitionError(issues)
+    return createFills(fills, engine)
+  }
+
   function rulesForKind(kind: ValueKind): [name: string, def: RuleDef][] {
     return Object.entries(registry.rules).filter(([, def]) => def.kinds.includes(kind))
   }
@@ -265,6 +286,7 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
     getFieldTree,
     getLayout,
     getVisibility,
+    getFills,
     rulesForKind,
     kinds: registry.kinds,
     fieldTypes: registry.fieldTypes,

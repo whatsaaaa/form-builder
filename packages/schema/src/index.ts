@@ -43,10 +43,14 @@ export type {
   ExtensionContext,
   ExtensionTarget,
   FieldTarget,
+  FillContext,
+  FillResult,
+  FillTriggerValue,
   LayoutTarget,
   ResolvedField,
   SchemaExtension,
   TargetConditions,
+  TargetFill,
 } from './extensions/schema-extension'
 export { defaultFieldTypes } from './field-types/default-field-types'
 export { defineFieldType } from './field-types/define-field-type'
@@ -57,6 +61,14 @@ export type {
   FieldWithProps,
   KindOf,
 } from './field-types/field-type-def'
+export type {
+  FillErrorInfo,
+  Fills,
+  FillsForm,
+  FillsRun,
+  FillsState,
+  OpenFillsOptions,
+} from './fills/fills'
 export { defaultKinds } from './kinds/default-kinds'
 export type { KindDef } from './kinds/kind-def'
 export { checkComponents } from './render/check-components'

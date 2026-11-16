@@ -1,6 +1,7 @@
 import type { WalkedField } from '../definition/walked-field'
 import type { DefinitionIssueCode, DefinitionPath } from '../errors/definition-error'
 import type { KindDef } from '../kinds/kind-def'
+import type { WebAbortSignal } from '../shared/web-globals'
 import type { AnyObjectSchema, AnySchema } from '../shared/valibot-types'
 import type { ValueKind } from '../shared/value-kind'
 
@@ -39,7 +40,7 @@ export interface SchemaExtension {
   /**
    * Checks its keys once the fields, form rules and layout are checked, and adds their issues
    * with `ctx.issue()`. Returns the conditions of each target that has some: what they read, and
-   * whether they hide or clear it for an input.
+   * whether they hide or clear it for an input. Adds the fills of a field with `ctx.fill()`.
    */
   check(ctx: ExtensionContext): ReadonlyMap<ExtensionTarget, TargetConditions>
 }
@@ -83,6 +84,17 @@ export interface ExtensionContext {
   resolve(dotPath: string, from: ExtensionTarget): ResolvedField | string | null
   /** Adds an issue to the definition's. */
   issue(code: DefinitionIssueCode, path: DefinitionPath, message: string): void
+  /**
+   * Adds a fill: while a form is open, each new value of the field `trigger` sets the fields of
+   * `fill`. Add only fills without issues. The builder keeps them when the whole definition has
+   * none, reports fills that set each other in a loop as `cycle`, and runs them through
+   * `getFills()`. A fill on a trigger with issues of its own, like a duplicate name, is left out:
+   * the definition reports them. Throws a TypeError for a fill no form can run: a trigger without
+   * a string, number, boolean or date value, a field to set that is no field with a value, or
+   * holds files, either inside a list's items, a field to set twice, or an `overwrite` other than
+   * `'unedited'` or `'always'`.
+   */
+  fill(trigger: FieldTarget, fill: TargetFill): void
 }
 
 /** A field with a value that a condition reads. */
@@ -98,6 +110,11 @@ export interface ResolvedField {
    * list of single values: the kind and schema of each item.
    */
   readonly item: { readonly kind: ValueKind; readonly schema: AnySchema } | undefined
+  /**
+   * How a renderer shows it: a field with a value, or a container of kind `object` or `array`.
+   * This builder always sets it.
+   */
+  readonly role?: 'value' | 'group' | 'array'
 }
 
 /** The conditions on one target. */
@@ -110,4 +127,42 @@ export interface TargetConditions {
    * field is hidden.
    */
   evaluate(read: (i: number) => unknown): { readonly hidden: boolean; readonly clear: boolean }
+}
+
+/** What the fill of one field sets, as an extension adds it with `ctx.fill()`. */
+export interface TargetFill {
+  /** The fields it sets, found with `ctx.resolve()`, and where each is named in the definition. */
+  readonly fields: readonly { readonly field: ResolvedField; readonly at: DefinitionPath }[]
+  /** `'unedited'` leaves a field the user changed since the last fill. `'always'` sets it anyway. */
+  readonly overwrite: 'unedited' | 'always'
+  /**
+   * True when `values()` gives the same values for the same value at once, from the definition,
+   * like a map written in it. A form then starts with the values for its trigger's default.
+   */
+  readonly static: boolean
+  /**
+   * The values of the fields for a value of the trigger, by the dot path of each field, or a
+   * promise of them. Called only with a value: an empty trigger runs no fill.
+   */
+  values(value: FillTriggerValue, ctx: FillContext): FillResult | PromiseLike<FillResult>
+}
+
+/** The value of a fill's trigger, as `coerceInput` reads it: a date is its ISO string. */
+export type FillTriggerValue = string | number | boolean
+
+/**
+ * The values a fill sets, by the dot path of each field, like `{ 'address.city': 'Beograd' }`.
+ * Null or undefined set no values, so every field of the fill is blank.
+ */
+export type FillResult = Readonly<Record<string, unknown>> | null | undefined
+
+/** What a fill's `values()` gets with the value of its trigger. */
+export interface FillContext {
+  /**
+   * Aborted when the trigger gets another value or is cleared, or the form closes, e.g. to pass
+   * to `fetch()`. It is the runtime's `AbortSignal`.
+   */
+  readonly signal: WebAbortSignal
+  /** The form's input when the fill started. */
+  readonly input: Readonly<Record<string, unknown>>
 }

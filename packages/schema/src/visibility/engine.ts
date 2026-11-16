@@ -1,6 +1,7 @@
 import type { DefinitionPath } from '../errors/definition-error'
 import type { TargetConditions } from '../extensions/schema-extension'
 import { type FieldPath, toFieldPath } from '../render/to-field-path'
+import { findLoops } from '../shared/find-loops'
 
 type DataPath = readonly (string | number)[]
 
@@ -229,76 +230,7 @@ function topologicalOrder(units: ReadonlySet<Unit>): Unit[] {
  * first in the definition. A unit depends on its parents and on what its conditions read, so a
  * loop always goes through a condition.
  */
-export function findCycles(units: readonly Unit[]): Unit[][] {
-  const position = new Map(units.map((unit, i) => [unit, i]))
-  const cycles: Unit[][] = []
-  for (const component of stronglyConnected(units)) {
-    const inLoop = new Set(component)
-    const first = units.find((unit) => inLoop.has(unit)) as Unit
-    // A unit on its own is a loop only when it depends on itself.
-    if (component.length === 1 && !dependencies(first).includes(first)) continue
-    cycles.push(loopFrom(first, inLoop))
-  }
-  return cycles.sort(
-    (a, b) => (position.get(a[0] as Unit) as number) - (position.get(b[0] as Unit) as number),
-  )
-}
-
-/** The shortest way from `start` back to itself through `inLoop`, as its units. */
-function loopFrom(start: Unit, inLoop: ReadonlySet<Unit>): Unit[] {
-  // Each unit after the one it was first reached from, nearest first.
-  const previous = new Map<Unit, Unit>([[start, start]])
-  const queue = [start]
-  for (const unit of queue) {
-    for (const next of dependencies(unit)) {
-      if (!inLoop.has(next) || previous.has(next)) continue
-      previous.set(next, unit)
-      queue.push(next)
-    }
-  }
-  // The units form a loop, so one of them depends on `start`: the nearest closes it.
-  const loop = [queue.find((unit) => dependencies(unit).includes(start)) as Unit]
-  while (loop[0] !== start) loop.unshift(previous.get(loop[0] as Unit) as Unit)
-  return loop
-}
-
-/** Tarjan's strongly connected components of the dependency graph. */
-function stronglyConnected(units: readonly Unit[]): Unit[][] {
-  let next = 0
-  const index = new Map<Unit, number>()
-  const low = new Map<Unit, number>()
-  const stack: Unit[] = []
-  const onStack = new Set<Unit>()
-  const components: Unit[][] = []
-
-  const visit = (unit: Unit) => {
-    index.set(unit, next)
-    low.set(unit, next)
-    next++
-    stack.push(unit)
-    onStack.add(unit)
-    for (const dependency of dependencies(unit)) {
-      if (!index.has(dependency)) {
-        visit(dependency)
-        low.set(unit, Math.min(low.get(unit) as number, low.get(dependency) as number))
-      } else if (onStack.has(dependency)) {
-        low.set(unit, Math.min(low.get(unit) as number, index.get(dependency) as number))
-      }
-    }
-    if (low.get(unit) !== index.get(unit)) return
-    const component: Unit[] = []
-    let member: Unit
-    do {
-      member = stack.pop() as Unit
-      onStack.delete(member)
-      component.push(member)
-    } while (member !== unit)
-    components.push(component)
-  }
-
-  for (const unit of units) if (!index.has(unit)) visit(unit)
-  return components
-}
+export const findCycles = (units: readonly Unit[]): Unit[][] => findLoops(units, dependencies)
 
 /** The indexes of every item `scope` has in `input`, one list per instance, outermost first. */
 export function indexesOf(scope: DataPath, input: unknown): number[][] {

@@ -8,11 +8,11 @@ import {
   toIssues,
 } from '../errors/definition-error'
 import type { BuildContext } from '../field-types/field-type-def'
+import type { FillPlan } from '../fills/fill-plan'
 import type { FormLayout } from '../render/form-layout'
 import type { AnySchema } from '../shared/valibot-types'
 import type { Engine } from '../visibility/engine'
 import { fieldGate, rootGate } from '../visibility/gate'
-import { clearFields } from '../visibility/visibility'
 import { buildFieldSchema, type MessageContext, type Messages } from './build-field-schema'
 import { checkExtensions } from './check-extensions'
 import { checkFormRules } from './check-form-rules'
@@ -28,7 +28,10 @@ export interface CompileResult {
   schema: BuiltSchema
   /** Every field the compiler read, as `walkFields` yields them, your own containers included. */
   walked: WalkedField[]
-  /** Formisch's `initialInput`, as `getInitialInput` gives it, your own containers included. */
+  /**
+   * Each field's default, nested the way the value is, your own containers included.
+   * `getInitialInput` adds the values of the static fills, then blanks what the conditions clear.
+   */
   initialInput: Record<string, unknown>
   /** The layout, with every reference resolved. Only there when the definition has no issues. */
   layout: FormLayout | undefined
@@ -37,6 +40,8 @@ export interface CompileResult {
    * extensions and the definition has no issues.
    */
   engine: Engine | undefined
+  /** What the extensions' fills set. Only there when the definition has fills and no issues. */
+  fills: FillPlan | undefined
 }
 
 /** The schema of a list of fields: an object with a key for each field that has a value. */
@@ -75,6 +80,7 @@ export function compileDefinition(
     initialInput: {},
     layout: undefined,
     engine: undefined,
+    fills: undefined,
   }
 
   const form = v.safeParse(formShape, json)
@@ -106,9 +112,13 @@ export function compileDefinition(
   const rules = checkFormRules(form.output.formRules ?? [], registry, compiler.fieldsByPath, issues)
   const layout = checkLayout(form.output.layout, fieldsBuilt ? walked : undefined, registry, issues)
   const { fieldsByPath, schemas } = compiler
-  const engine = checkExtensions(registry, { walked, fieldsByPath, schemas, layout }, issues)
-  const result = { issues, schema, walked, initialInput: input, layout, engine }
-  if (issues.length) return { ...result, layout: undefined, engine: undefined }
+  const { engine, fills } = checkExtensions(
+    registry,
+    { walked, fieldsByPath, schemas, layout },
+    issues,
+  )
+  const result = { issues, schema, walked, initialInput: input, layout, engine, fills }
+  if (issues.length) return { ...result, layout: undefined, engine: undefined, fills: undefined }
 
   // A field conditions can hide is built again in a gate, which the root gate opens on each parse.
   // Nothing else changes: without conditions, the schema is the one built above.
@@ -126,13 +136,7 @@ export function compileDefinition(
   const withRules: BuiltSchema = withMessages.length
     ? v.pipe(fields, formRulesAction(withMessages))
     : fields
-  if (!conditional) return { ...result, schema: withRules }
-  return {
-    ...result,
-    schema: rootGate(withRules, conditional),
-    // A field its conditions clear when the form starts starts blank, without its default.
-    initialInput: clearFields(input, conditional.evaluate(input).toClear),
-  }
+  return { ...result, schema: conditional ? rootGate(withRules, conditional) : withRules }
 }
 
 /** The fields again, each that conditions can hide in a gate. Their issues were reported. */
