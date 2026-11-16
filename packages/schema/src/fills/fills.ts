@@ -84,11 +84,16 @@ export interface FillsRun {
   start(): void
   /**
    * Call it after the form's input changes: each trigger with a new value runs its fill, and each
-   * trigger that lost its value blanks every field its fills set. A trigger that holds what it
-   * started with again, and so does every field its fills set, like after Formisch's `reset`,
-   * runs nothing, and those fields count as unedited again.
+   * trigger that lost its value blanks every field its fills set.
    */
   update(): void
+  /**
+   * Call it after the form is reset, like with Formisch's `reset`: the input the form holds now is
+   * the one its fills start from again. Each trigger's value counts as handled, so it fills
+   * nothing, and no field counts as edited. It cancels the fills pending, except those of the
+   * values the form starts with, which are still set as those when they come.
+   */
+  reset(): void
   /** Resolves once no fill is pending, including the fills that those start. */
   settled(): Promise<void>
   /** Cancels the fills pending now, e.g. when the form closes. */
@@ -110,6 +115,7 @@ const IDLE: FillsRun = {
   subscribe: () => () => {},
   start() {},
   update() {},
+  reset() {},
   settled: () => Promise.resolve(),
   stop() {},
 }
@@ -308,10 +314,6 @@ function openFills(
   // What each field holds while the user hasn't changed it: what it started with, then what the
   // last fill set. A field that holds something else was edited.
   const baselines = new Map<FillField, unknown>()
-  // What each trigger and each field of its fills starts with: the input the form opened with,
-  // then what the fills that run as it starts set. A field whose fill was cancelled before it set
-  // its value has none.
-  const starts = new Map<FillField, unknown>()
   const calls = new Map<PlannedFill, Call>()
   // The fills to run as the form starts, with the value of their trigger.
   const loads = new Map<PlannedFill, FillTriggerValue>()
@@ -322,19 +324,24 @@ function openFills(
   let depth = 0
   let changed = false
 
-  const opened = form.getInput()
-  const clearedAtOpen = clearedIn(engine, opened)
+  startFrom(form.getInput())
   for (const [trigger, fills] of byTrigger) {
-    const value = triggerValue(trigger, opened, clearedAtOpen)
-    seen.set(trigger, value)
+    const value = seen.get(trigger)
     if (value === undefined || isGiven(given, trigger.path)) continue
     for (const fill of fills) if (!fill.target.static) loads.set(fill, value)
   }
-  for (const fill of plan.fills) {
-    starts.set(fill.trigger, valueAt(opened, fill.trigger.path))
-    for (const field of fill.fields) {
-      baselines.set(field, valueAt(opened, field.path))
-      starts.set(field, valueAt(opened, field.path))
+
+  /**
+   * Takes `input` as the one the form starts with: each trigger's value is handled, and no field
+   * is edited.
+   */
+  function startFrom(input: unknown): void {
+    const isCleared = clearedIn(engine, input)
+    for (const trigger of byTrigger.keys()) {
+      seen.set(trigger, triggerValue(trigger, input, isCleared))
+    }
+    for (const fill of plan.fills) {
+      for (const field of fill.fields) baselines.set(field, valueAt(input, field.path))
     }
   }
 
@@ -370,10 +377,6 @@ function openFills(
           // end the clear, and it would fill them again.
           if (value !== undefined && isCleared(trigger)) continue
           if (same(value, seen.get(trigger))) continue
-          if (restarted(trigger, input)) {
-            restart(trigger, value)
-            continue
-          }
           change(trigger, value, 'change')
           changed = true
           break
@@ -382,44 +385,18 @@ function openFills(
     })
   }
 
-  /** True when a trigger and every field its fills set hold what they started with. */
-  function restarted(trigger: FillField, input: unknown): boolean {
-    const fills = byTrigger.get(trigger) as PlannedFill[]
-    return [trigger, ...fills.flatMap((fill) => fill.fields)].every(
-      (field) => starts.has(field) && holds(field, valueAt(input, field.path), starts.get(field)),
-    )
-  }
-
   /** A trigger has a new value: its fills run, or blank their fields when it has none. */
   function change(trigger: FillField, value: FillTriggerValue | undefined, phase: Phase): void {
-    const fills = handle(trigger, value)
-    if (value === undefined) clear(fills, phase)
-    else for (const fill of fills) run(fill, value, phase)
-  }
-
-  /**
-   * A trigger is back where it started, with the fields its fills set, like after Formisch's
-   * `reset`: so are its fills. Nothing runs, and those fields count as unedited again.
-   */
-  function restart(trigger: FillField, value: FillTriggerValue | undefined): void {
-    for (const fill of handle(trigger, value)) {
-      for (const field of fill.fields) baselines.set(field, starts.get(field))
-    }
-  }
-
-  /** Makes `value` the one the fills of `trigger` handled, and cancels those pending. */
-  function handle(trigger: FillField, value: FillTriggerValue | undefined): readonly PlannedFill[] {
     seen.set(trigger, value)
     const fills = byTrigger.get(trigger) as PlannedFill[]
     for (const fill of fills) {
-      // A fill the form starts with that never set its values leaves its fields nothing to go
-      // back to.
-      if (loads.delete(fill)) for (const field of fill.fields) starts.delete(field)
+      loads.delete(fill)
       calls.get(fill)?.controller.abort()
       calls.delete(fill)
     }
     notify()
-    return fills
+    if (value === undefined) clear(fills, phase)
+    else for (const fill of fills) run(fill, value, phase)
   }
 
   /** Blanks every field the fills set, edited or not. */
@@ -518,7 +495,6 @@ function openFills(
     const input = form.getInput()
     for (const { field, input: value } of writes) {
       baselines.set(field, value)
-      if (phase === 'load') starts.set(field, value)
       if (holds(field, valueAt(input, field.path), value)) continue
       if (phase === 'load') form.setStartInput(field.path, value)
       else form.setInput(field.path, value)
@@ -578,6 +554,16 @@ function openFills(
       })
     },
     update,
+    reset() {
+      startFrom(form.getInput())
+      for (const [fill, call] of calls) {
+        if (loads.has(fill) && same(loads.get(fill), seen.get(fill.trigger))) continue
+        call.controller.abort()
+        calls.delete(fill)
+        loads.delete(fill)
+      }
+      notify()
+    },
     async settled() {
       while (calls.size) await Promise.all([...calls.values()].map((call) => call.done))
     },

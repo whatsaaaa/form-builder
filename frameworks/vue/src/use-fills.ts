@@ -20,6 +20,8 @@ export interface JsonFormFills {
   readonly state: { readonly value: FillsState }
   /** Resolves once no fill is pending. */
   settled(): Promise<void>
+  /** Takes the form's input now as the one the fills start from, after a reset. */
+  reset(): void
 }
 
 const withFills = new WeakMap<FormStore, JsonFormFills>()
@@ -58,7 +60,11 @@ export function useFills(
     },
   )
   const state = shallowRef(run.state)
-  const result: JsonFormFills = { state, settled: () => run.settled() }
+  const result: JsonFormFills = {
+    state,
+    settled: () => run.settled(),
+    reset: () => run.reset(),
+  }
   // Without fills, nothing is ever pending, so the input isn't watched.
   if (!fills.active) return result
 

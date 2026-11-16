@@ -83,6 +83,7 @@ describe('getFills', () => {
       const unsubscribe = run.subscribe(listener)
       run.start()
       run.update()
+      run.reset()
       run.stop()
       unsubscribe()
       await run.settled()
@@ -276,6 +277,19 @@ describe('a cleared trigger', () => {
     calls[0]?.settle.resolve(profiles.a)
     await form.run.settled()
     await Promise.resolve()
+    expect(form.input).toEqual({ address: {} })
+  })
+
+  it('blanks what the app gave its fields, even before its values come', () => {
+    const { calls, source } = handSource()
+    const form = openForm(
+      createSchemaBuilder({ extensions: [prefill({ profiles: source })] }),
+      sourceForm(),
+      { given: { firstName: 'Ana', lastName: 'Ilić' } },
+    )
+    form.type('profile', 'a')
+    form.type('profile', undefined)
+    expect(calls[0]?.signal.aborted).toBe(true)
     expect(form.input).toEqual({ address: {} })
   })
 
@@ -930,6 +944,24 @@ describe('the form as it starts', () => {
     expect(calls.map(({ value }) => value)).toEqual(['b'])
   })
 
+  it('calls a source again when the value it failed for is picked again', async () => {
+    const { calls, source } = handSource()
+    const form = openForm(
+      createSchemaBuilder({ extensions: [prefill({ profiles: source })] }),
+      sourceForm({ default: 'a' }),
+      { onError: vi.fn() },
+    )
+    form.run.start()
+    calls[0]?.settle.reject(new Error('Down'))
+    await form.run.settled()
+    form.type('profile', 'b')
+    form.type('profile', 'a')
+    expect(calls.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
+    calls[2]?.settle.resolve(profiles.a)
+    await form.run.settled()
+    expect(form.input).toMatchObject({ firstName: 'Marko', address: { city: 'Beograd' } })
+  })
+
   it('leaves a source alone that changed before start() without update()', () => {
     const { calls, source } = handSource()
     const form = openForm(
@@ -1007,20 +1039,50 @@ describe('a reset', () => {
     expect(form.input).toMatchObject({ firstName: 'Jelena', address: { city: 'Novi Sad' } })
   })
 
-  it('calls a source again whose values the form never started with', async () => {
+  it('fills the next value when the trigger already held the value it started with', () => {
+    const record = { profile: 'b', firstName: 'Ana', lastName: 'Ilić' }
+    const form = openForm(builder, mapForm(), { given: record })
+    form.type('profile', 'c')
+    form.type('profile', 'b')
+    form.reset()
+    expect(form.input).toEqual({ ...record, address: {} })
+
+    form.type('profile', 'c')
+    expect(form.input).toMatchObject({ firstName: 'Nikola', lastName: 'Nikolić' })
+  })
+
+  it('cancels the call of a change, but lets a value the form starts with come', async () => {
+    const { calls, source } = handSource()
+    const sources = createSchemaBuilder({ extensions: [prefill({ profiles: source })] })
+    const changed = openForm(sources, sourceForm())
+    changed.type('profile', 'b')
+    changed.reset()
+    expect(calls[0]?.signal.aborted).toBe(true)
+    expect(changed.run.state.pending).toEqual([])
+
+    const loading = openForm(sources, sourceForm({ default: 'a' }))
+    loading.run.start()
+    loading.reset()
+    expect(calls[1]?.signal.aborted).toBe(false)
+    calls[1]?.settle.resolve(profiles.a)
+    await loading.run.settled()
+    expect(loading.log).toEqual([
+      'start firstName "Marko"',
+      'start lastName "Petrović"',
+      'start address.city "Beograd"',
+    ])
+  })
+
+  it('cancels a value the form starts with when the reset gives its trigger another', () => {
     const { calls, source } = handSource()
     const sources = createSchemaBuilder({ extensions: [prefill({ profiles: source })] })
     const form = openForm(sources, sourceForm({ default: 'a' }))
     form.run.start()
-    form.type('profile', 'b')
-    calls[1]?.settle.resolve(profiles.b)
-    await form.run.settled()
-
-    form.reset()
-    expect(calls.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
-    calls[2]?.settle.resolve(profiles.a)
-    await form.run.settled()
-    expect(form.input).toMatchObject({ firstName: 'Marko', address: { city: 'Beograd' } })
+    // Like Formisch's reset with another initial input.
+    ;(form.input as Record<string, unknown>)['profile'] = 'c'
+    form.run.reset()
+    expect(calls[0]?.signal.aborted).toBe(true)
+    expect(form.run.state.pending).toEqual([])
   })
 })
 

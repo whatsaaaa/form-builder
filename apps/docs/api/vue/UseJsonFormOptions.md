@@ -27,7 +27,7 @@ The options of [`useJsonForm`](/api/vue/useJsonForm).
 
 ## Initial input
 
-`initialInput` goes over the definition's defaults, and the result is the form's initial input: what Formisch's `reset` goes back to, and what `isDirty` compares with.
+`initialInput` goes over the definition's defaults, and the result is the form's initial input: what [`reset()`](/api/vue/JsonFormInstance) goes back to, and what `isDirty` compares with.
 
 - **A field without a key** keeps its `default`.
 - **A key that is there wins**, with any value. `undefined` starts the field blank, without its default, and so does `null`, which every built-in kind reads as empty.

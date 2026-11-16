@@ -1,4 +1,4 @@
-import { getErrors, getInput } from '@formisch/vue'
+import { getErrors, getInput, isDirty, setInput } from '@formisch/vue'
 import {
   createSchemaBuilder,
   DefinitionError,
@@ -30,6 +30,18 @@ describe('useJsonForm', () => {
     const { form: store } = withSetup(() => useJsonForm(fixtures.array as JsonForm))
 
     expect(getInput(store)).toEqual({ tags: ['new'], lines: [] })
+  })
+
+  it("resets the form like Formisch's reset, with its options", () => {
+    const json = form({ name: 'name', type: 'text', default: 'Ana' })
+    const jsonForm = withSetup(() => useJsonForm(json))
+    setInput(jsonForm.form, { path: ['name'], input: 'Marta' } as never)
+    jsonForm.reset()
+    expect(getInput(jsonForm.form)).toEqual({ name: 'Ana' })
+
+    jsonForm.reset({ initialInput: { name: 'Jelena' } })
+    expect(getInput(jsonForm.form)).toEqual({ name: 'Jelena' })
+    expect(isDirty(jsonForm.form)).toBe(false)
   })
 
   it('throws a DefinitionError for a definition with issues', () => {

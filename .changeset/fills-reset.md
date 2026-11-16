@@ -1,5 +1,5 @@
 ---
-'@whatsaaaa/form-builder-schema': patch
+'@whatsaaaa/form-builder-schema': minor
 ---
 
-A reset starts the fills over. A trigger that holds what it started with again, and so does every field its fills set, like after Formisch's `reset`, runs nothing, and those fields count as unedited again. Before, the fields were still compared with what the last fill set, so the next value filled none of them, a `source` was called again, and a trigger from the app's initial input ran its fill and left the form dirty.
+`FillsRun` has `reset()`, to call after the form is reset, like with Formisch's `reset`: the input the form holds then is the one its fills start from again. Each trigger's value counts as handled, so nothing is filled, and no field counts as edited, so the next value sets every field the user hasn't changed since. It cancels the fills pending, except those of the values the form starts with.

@@ -23,12 +23,15 @@ What [`useJsonForm`](/api/vue/useJsonForm) returns. Pass it to `<JsonFields>` an
   - `steps` <code>[JsonFormSteps](/api/vue/JsonFormSteps)</code>: the current step, and Next, Back and Go to
   - `visibility` <code>[VisibilityState](/api/schema/Visibility#visibilitystate)</code>: what the conditions hide for the form's input now
   - `fills` <code>[FillsState](/api/schema/FillsState)</code>: what the fills are waiting for now. Without fills, nothing is pending
+  - `reset` <code>(config?: ResetFormConfig&lt;TSchema&gt;) =&gt; void</code>: resets the whole form, like Formisch's `reset` with the same options, and the fills with it
 
 ### Explanation
 
 `AnyJsonFormInstance` is any form `useJsonForm` returns, typed or not: what the components take.
 
 `visibility` and `fills` are reactive: a template or a `computed` that reads them updates when they change. `fills.pending` lists the trigger of each fill that waits for its values, so disable the submit button while it isn't empty. See [fills](/frameworks/vue#fills).
+
+Reset a form with `reset()` rather than Formisch's own `reset`: it resets the fills too, so the next value of a field with `fills` sets every field the user hasn't edited since. Formisch's `reset` leaves the fills comparing the fields with what the last fill set.
 
 ## Related
 

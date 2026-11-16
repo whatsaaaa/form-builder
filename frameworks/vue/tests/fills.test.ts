@@ -1,4 +1,4 @@
-import { Form, getInput, isDirty, reset, setInput } from '@formisch/vue'
+import { Form, getInput, isDirty, setInput } from '@formisch/vue'
 import { affects } from '@whatsaaaa/form-builder-affects'
 import { type FillSource, fills } from '@whatsaaaa/form-builder-fills'
 import {
@@ -226,12 +226,12 @@ describe('a fill with a map', () => {
     expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Jelena' })
   })
 
-  it('fills every field again after a reset', async () => {
+  it('fills every field again after jsonForm.reset()', async () => {
     const { jsonForm } = mountForm(profileMap as JsonForm, builtInComponents, {
       builder: mapBuilder,
     })
     await set('profile', 'b')
-    reset(jsonForm.form)
+    jsonForm.reset()
     await settle()
     expect(getInput(jsonForm.form)).toMatchObject({ profile: 'a', firstName: 'Marko' })
     expect(isDirty(jsonForm.form)).toBe(false)
@@ -252,7 +252,7 @@ describe('a fill with a map', () => {
       initialInput: record,
     })
     await set('profile', 'c')
-    reset(jsonForm.form)
+    jsonForm.reset()
     await settle()
     expect(getInput(jsonForm.form)).toEqual({ ...record, address: {} })
     expect(isDirty(jsonForm.form)).toBe(false)
@@ -264,6 +264,39 @@ describe('a fill with a map', () => {
       lastName: 'Nikolić',
       address: {},
     })
+  })
+
+  it('fills the next option after a reset back to the option it already had', async () => {
+    const record = { profile: 'b', firstName: 'Ana', lastName: 'Ilić' }
+    const { jsonForm } = mountForm(profileMap as JsonForm, builtInComponents, {
+      builder: mapBuilder,
+      initialInput: record,
+    })
+    await set('profile', 'c')
+    await set('profile', 'b')
+    jsonForm.reset()
+    await settle()
+    expect(getInput(jsonForm.form)).toEqual({ ...record, address: {} })
+
+    await set('profile', 'c')
+    expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Nikola', lastName: 'Nikolić' })
+  })
+
+  it("takes the options of Formisch's reset, like another initial input", async () => {
+    const { jsonForm } = mountForm(profileMap as JsonForm, builtInComponents, {
+      builder: mapBuilder,
+    })
+    jsonForm.reset({ initialInput: { profile: 'c', firstName: 'Ana' } })
+    await settle()
+    expect(getInput(jsonForm.form)).toMatchObject({
+      profile: 'c',
+      firstName: 'Ana',
+      lastName: undefined,
+    })
+    expect(isDirty(jsonForm.form)).toBe(false)
+
+    await set('profile', 'b')
+    expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Jelena', lastName: 'Jovanović' })
   })
 })
 
@@ -351,9 +384,9 @@ describe('a fill with a source', () => {
     expect(getInput(jsonForm.form)).toEqual({ profile: 'a', ...marko, address: {} })
     expect(isDirty(jsonForm.form)).toBe(false)
 
-    // Formisch's reset goes back to them.
+    // jsonForm.reset() goes back to them.
     type(root, 'firstName', 'Marta')
-    reset(jsonForm.form)
+    jsonForm.reset()
     await settle()
     expect(getInput(jsonForm.form)).toMatchObject({ firstName: 'Marko' })
   })
@@ -369,7 +402,7 @@ describe('a fill with a source', () => {
     profiles[1]?.resolve(jelena)
     await settle()
 
-    reset(jsonForm.form)
+    jsonForm.reset()
     await settle()
     expect(profiles).toHaveLength(2)
     expect(getInput(jsonForm.form)).toEqual({ profile: 'a', ...marko, address: {} })
@@ -384,6 +417,18 @@ describe('a fill with a source', () => {
       lastName: 'Jovanović',
       address: { city: 'Novi Sad' },
     })
+  })
+
+  it("empties a record's fields when the option is cleared before its values come", async () => {
+    const { builder, profiles } = sourceBuilder()
+    const { jsonForm } = mountFills(profileSource, {
+      builder,
+      initialInput: { firstName: 'Ana', lastName: 'Ilić' },
+    })
+    await set('profile', 'a')
+    await set('profile', undefined)
+    expect(profiles[0]?.signal.aborted).toBe(true)
+    expect(getInput(jsonForm.form)).toEqual({ address: {} })
   })
 
   it('calls no source as a record starts', () => {
@@ -491,6 +536,61 @@ describe('the steps of a form with fills', () => {
     await settle()
     jsonForm.steps.back()
     cities[0]?.resolve({ 'address.city': 'Beograd' })
+    expect(await moved).toBe(false)
+    expect(jsonForm.steps.current.step.id).toBe('profile')
+  })
+
+  /** A profile whose source sets the account type, which shows the company step for a business. */
+  const companySteps = (accountType?: string): JsonForm => ({
+    version: '1',
+    fields: [
+      {
+        name: 'profile',
+        type: 'select',
+        options: [{ value: 'a', label: 'Profile A' }],
+        fills: { source: 'profiles', fields: ['accountType'] },
+      },
+      { name: 'accountType', type: 'text', ...(accountType && { default: accountType }) },
+      {
+        name: 'companyName',
+        type: 'text',
+        required: true,
+        affects: [{ effect: 'show', when: { field: 'accountType', equals: 'business' } }],
+      },
+      { name: 'email', type: 'email' },
+    ] as JsonForm['fields'],
+    layout: {
+      steps: [
+        { id: 'profile', label: 'Profile', items: ['profile', 'accountType'] },
+        { id: 'company', label: 'Company', items: ['companyName'] },
+        { id: 'contact', label: 'Contact', items: ['email'] },
+      ],
+    },
+  })
+
+  it('go on Next to the step a fill shows', async () => {
+    const { builder, profiles } = sourceBuilder()
+    const { jsonForm } = mountFills(companySteps(), { builder })
+    expect(jsonForm.steps.list.map(({ step }) => step.id)).toEqual(['profile', 'contact'])
+    await set('profile', 'a')
+
+    const moved = jsonForm.steps.next()
+    await settle()
+    await settle()
+    profiles[0]?.resolve({ accountType: 'business' })
+    expect(await moved).toBe(true)
+    expect(jsonForm.steps.current.step.id).toBe('company')
+  })
+
+  it("don't go to a step a fill hides", async () => {
+    const { builder, profiles } = sourceBuilder()
+    const { jsonForm } = mountFills(companySteps('business'), { builder })
+    await set('profile', 'a')
+
+    const moved = jsonForm.steps.goTo(1)
+    await settle()
+    await settle()
+    profiles[0]?.resolve({ accountType: 'personal' })
     expect(await moved).toBe(false)
     expect(jsonForm.steps.current.step.id).toBe('profile')
   })

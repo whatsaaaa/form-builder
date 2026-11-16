@@ -33,18 +33,19 @@ export interface JsonFormSteps {
   readonly isFirst: boolean
   readonly isLast: boolean
   /**
-   * Waits for the fills that are pending, then validates the whole form, and moves to the next step
-   * when the fields of this one have no issues. Otherwise it stays, and focuses the first field
-   * with an issue, in layout order. Resolves to whether it moved: a step the user goes to while it
-   * waits wins, and it resolves to false.
+   * Waits for the fills that are pending, then validates the whole form, and moves to the next step,
+   * the one after this among the steps on show once the fills set their values, when the fields of
+   * this one have no issues. Otherwise it stays, and focuses the first field with an issue, in
+   * layout order. Resolves to whether it moved: a step the user goes to while it waits wins, and it
+   * resolves to false.
    */
   next(): Promise<boolean>
   /** Moves to the step before, without validating. */
   back(): void
   /**
    * Moves to the step at `index`. Back is free, and forward waits for pending fills and validates
-   * every step on the way, like `next()`, and stops at the first with issues. Resolves to whether
-   * it got there.
+   * every step on the way once they set their values, like `next()`, and stops at the first with
+   * issues. Resolves to whether it got there: not to a step the fills hid meanwhile.
    */
   goTo(index: number): Promise<boolean>
 }
@@ -102,24 +103,35 @@ export function useJsonFormSteps(
     if (!Number.isInteger(target) || target < 0 || target >= shown.length) {
       throw new RangeError(`No step ${target}. The form has ${shown.length}.`)
     }
-    const to = all.indexOf(shown[target] as LayoutStep)
-    const from = index.value
-    if (target <= from) {
-      move(to)
+    const step = shown[target] as LayoutStep
+    if (target <= index.value) {
+      move(all.indexOf(step))
       return true
     }
+    return forward(() => list.value.indexOf(step))
+  }
+
+  /**
+   * Moves forward to the step at `target()` in `list`, read once the fills set their values, and
+   * validates every step on the way, stopping at the first with issues.
+   */
+  async function forward(target: () => number): Promise<boolean> {
     const here = at.value
     // Next goes on once the task that called it is over. A click runs its default action after its
     // handlers, and Vue can render in between: a Next button that turns into the submit button on
     // the last step would then submit the form as the user gets there.
     await afterTask()
-    // The values a fill is waiting for are validated, not the blanks they replace.
+    // The values a fill is waiting for are validated, not the blanks they replace, and the steps
+    // they show or hide are the ones on the way.
     await fills.settled()
-    // A step the user went to while it waited wins.
-    if (at.value !== here) return false
+    const shown = list.value
+    const from = index.value
+    const end = target()
+    // A step the user went to while it waited wins, and a step the fills hid isn't reached.
+    if (at.value !== here || end <= from || end >= shown.length) return false
     const { issues } = await validate(form)
     if (at.value !== here) return false
-    for (const step of shown.slice(from, target)) {
+    for (const step of shown.slice(from, end)) {
       const found = issuesOfStep(step, issues)
       if (found.length) {
         await stop(all.indexOf(step), found)
@@ -127,7 +139,7 @@ export function useJsonFormSteps(
       }
       failed.delete(all.indexOf(step))
     }
-    move(to)
+    move(all.indexOf(shown[end] as LayoutStep))
     return true
   }
 
@@ -195,7 +207,7 @@ export function useJsonFormSteps(
     get isLast() {
       return index.value === list.value.length - 1
     },
-    next: () => (steps.isLast ? Promise.resolve(false) : goTo(index.value + 1)),
+    next: () => (steps.isLast ? Promise.resolve(false) : forward(() => index.value + 1)),
     back: () => {
       if (index.value > 0) move(all.indexOf(list.value[index.value - 1] as LayoutStep))
     },

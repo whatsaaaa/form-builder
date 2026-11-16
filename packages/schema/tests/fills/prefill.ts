@@ -177,9 +177,13 @@ export function openForm(
       input = cleared(setIn(input, path.split('.'), value))
       run.update()
     },
-    /** Sets every field back to what it starts with, like Formisch's `reset`, then tells the fills. */
+    /**
+     * Sets every field back to what it starts with, like Formisch's `reset`, then resets the fills,
+     * and tells them of the change, as an adapter's watch does.
+     */
     reset() {
       input = start
+      run.reset()
       run.update()
     },
     /** Blanks what the conditions clear, as an adapter's watch does, then tells the fills. */

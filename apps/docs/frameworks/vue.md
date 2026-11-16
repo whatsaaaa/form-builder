@@ -36,7 +36,7 @@ Vue 3.5.2, `@formisch/vue` 1.1.1 and Valibot 1.4.1 or later are required. `@what
 
 <<< @/snippets/vue/SignUpForm.vue
 
-- `jsonForm.form` is a normal Formisch form, so every Formisch method works on it, like `reset` and `setInput`.
+- `jsonForm.form` is a normal Formisch form, so every Formisch method works on it, like `setInput`. Reset it with `jsonForm.reset()`, which takes the options of Formisch's `reset` for the whole form, and resets the [fills](#fills) with it.
 - The form element, the submit button and anything around them are yours.
 - A definition with issues throws the builder's `DefinitionError`. Run [`validate()`](/guide/checking-definitions) first when the definition comes from outside your code.
 - The definition is read once, when the component sets up. To show another one, give the component that calls `useJsonForm` a new `:key`. That makes a new form, without what the user typed: pass [`initialInput`](#initial-input) to start it with values.
@@ -57,7 +57,7 @@ A form starts with the defaults of its definition. To start it with other values
 
 - **It goes over the defaults.** A field it has no key for keeps its `default`, in groups and in the items of lists too. A key that is there wins, so `undefined` starts a field blank.
 - **It is read once**, with the definition. To edit another record, give the component a new `:key`, like the record's id.
-- **It is the form's initial input**, so Formisch's `reset` goes back to it, and `isDirty` compares with it.
+- **It is the form's initial input**, so `jsonForm.reset()` goes back to it, and `isDirty` compares with it.
 - **It keeps what the user typed** when you build the form again, like for [another language](/guide/messages#changing-the-language): pass the old form's input.
 
 [`UseJsonFormOptions`](/api/vue/UseJsonFormOptions#initial-input) has every rule: groups, lists, conditions and the types.
@@ -68,9 +68,9 @@ With the `fills` of the [fills package](/api/fills/) in its builder, a field's v
 
 <<< @/snippets/vue/ProfileForm.vue
 
-- **As the form starts**, a field that starts from its `default` fills in the others. The values of a `map` are in the form's initial input, on the first render. Those of a `source` come once the form is mounted, never on a server, and are set as the values the form starts with, so it isn't dirty and `reset` goes back to them.
+- **As the form starts**, a field that starts from its `default` fills in the others. The values of a `map` are in the form's initial input, on the first render. Those of a `source` come once the form is mounted, never on a server, and are set as the values the form starts with, so it isn't dirty and `jsonForm.reset()` goes back to them.
 - **A record in `initialInput` is left as it is.** A field it has a key for fills nothing as the form starts, and no fill sets a field it has a key for until the user picks another value.
-- **Formisch's `reset` starts the fills over.** The form goes back to what it started with, a record too, without calling a source, and the next value the user picks fills the fields again.
+- **`jsonForm.reset()` resets the fills with the form.** It fills nothing and calls no source, and the next value the user picks sets every field they haven't edited since. Formisch's own `reset` leaves the fills comparing the fields with what the last fill set, so a value it restores counts as the user's edit, and isn't filled.
 - **`jsonForm.fills`** says what is on its way: `pending` lists the fields whose fill waits for its values, and `isPending(path)` is true for those fields and every field they fill. Without fills, nothing is pending.
 - **Each value field gets `pending`**, so its component can show that a value is on its way. See [field components](/frameworks/field-components#value-fields).
 - **Errors go to `onFillError`**, with the field and its value, like a source that failed or a value its field can't hold. Without it, they are thrown like an uncaught error.

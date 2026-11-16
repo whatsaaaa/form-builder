@@ -3,6 +3,8 @@ import {
   type FormSchema,
   type FormStore,
   getInput,
+  reset,
+  type ResetFormConfig,
   setInput,
   useForm,
   type ValidationMode,
@@ -82,6 +84,12 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
    * and `isPending(path)` tells it for any field. Without fills, nothing is pending.
    */
   readonly fills: FillsState
+  /**
+   * Resets the whole form, like Formisch's `reset` with the same options, and its fills with it:
+   * the next value of a trigger sets every field the user hasn't edited since. Formisch's own
+   * `reset` leaves the fills comparing the fields with what the last fill set, as edits.
+   */
+  reset(config?: ResetFormConfig<TSchema>): void
 }
 
 /** Any form `useJsonForm` returns, typed or not: what the components take. */
@@ -147,6 +155,10 @@ export function useJsonForm(
     },
     get fills() {
       return fills.state.value
+    },
+    reset(config) {
+      reset(form, config ?? {})
+      fills.reset()
     },
   }
 }
