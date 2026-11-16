@@ -21,8 +21,10 @@ export interface Fills {
   /**
    * The input a form starts with: `input`, the defaults with the app's initial input over them,
    * with the values of each static fill, like a map, whose trigger starts from the definition with
-   * a value. They leave alone the fields `given`, the app's initial input, has a key for. Apply
-   * the conditions' `clear()` after it. The builder's `getInitialInput()` does all of it already.
+   * a value. They leave alone the fields `given`, the app's initial input, has a key for. It
+   * throws what the static fills' `values()` throw, and a TypeError when they give a promise, or no
+   * object of values. Apply the conditions' `clear()` after it. The builder's `getInitialInput()`
+   * does all of it already.
    */
   initialInput<T>(input: T, given: unknown): T
   /** Starts the fills of one form. Call `start()` on the run once the form is on the page. */
