@@ -1,6 +1,6 @@
 {
   "name": "@whatsaaaa/form-builder-fills",
-  "version": "0.0.0",
+  "version": "0.1.0-rc.0",
   "description": "Fill the fields of JSON form definitions from the value of another field, with values from the definition or from your own sources.",
   "keywords": [
     "fill",
