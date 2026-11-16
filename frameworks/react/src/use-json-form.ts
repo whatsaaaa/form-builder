@@ -2,6 +2,8 @@ import {
   type FormConfig,
   type FormSchema,
   type FormStore,
+  reset as resetForm,
+  type ResetFormConfig,
   setInput,
   useForm,
   type ValidationMode,
@@ -18,7 +20,7 @@ import {
   type TypedBuiltSchema,
   type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type JsonFormSteps, useJsonFormSteps } from './json-form-steps'
 import { mergeInitialInput } from './merge-initial-input'
@@ -83,6 +85,18 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
    * changes. Without fills, nothing is pending.
    */
   readonly fills: FillsState
+  /**
+   * Resets the whole form, like Formisch's `reset` with the same options but `keepInput`, and
+   * starts its fills again, as when the form was mounted: the fills of the triggers that start from
+   * their default run again, and the next value of a trigger sets every field the user hasn't
+   * edited since. A new `initialInput` goes over the definition's defaults, like the option's, and
+   * its fields and triggers are left alone as the form starts. Formisch's own `reset` leaves the
+   * fills comparing the fields with what the last fill set, as edits: with `keepInput`, which
+   * keeps the input, that is right, so use it to clear the touched state and the errors. The steps
+   * start again too: the form goes back to the first step, and keeps no errors of the steps the
+   * user left, or of a Next that failed.
+   */
+  reset(config?: Omit<ResetFormConfig<TSchema>, 'keepInput'>): void
 }
 
 /** Any form `useJsonForm` returns, typed or not: what the components take. */
@@ -140,14 +154,28 @@ export function useJsonForm(
     // The paths come from the definition at runtime, so the schema's types can't check them.
     for (const { path, input } of toClear) setInput(form, { path, input } as never)
   }, [form, toClear])
-  const { run, state: fills } = useFills(form, built.fills, options)
-  const steps = useJsonFormSteps(
+  const { run, state: fills, reset: resetFills } = useFills(form, built.fills, options)
+  const { steps, restart } = useJsonFormSteps(
     form,
     built.layout,
     options,
     visibility,
     built.visibility,
     run.settled,
+  )
+  const reset = useCallback(
+    (config: Omit<ResetFormConfig<BuiltSchema>, 'keepInput'> = {}) => {
+      if (Object.hasOwn(config, 'initialInput')) {
+        // Like the option, the input given goes over the definition's defaults.
+        const given = config.initialInput
+        const initialInput = mergeInitialInput(built.builder, built.definition, given)
+        resetFills(() => resetForm(form, { ...config, initialInput }), { given })
+      } else {
+        resetFills(() => resetForm(form, config))
+      }
+      restart()
+    },
+    [form, built, resetFills, restart],
   )
   const { components, layoutComponents } = options
   return useMemo(
@@ -162,7 +190,8 @@ export function useJsonForm(
       steps,
       visibility,
       fills,
+      reset,
     }),
-    [form, built, components, layoutComponents, steps, visibility, fills],
+    [form, built, components, layoutComponents, steps, visibility, fills, reset],
   )
 }

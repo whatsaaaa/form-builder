@@ -1,4 +1,4 @@
-import { Form, getInput, setInput } from '@formisch/react'
+import { Form, getInput, reset, setInput } from '@formisch/react'
 import { affects } from '@whatsaaaa/form-builder-affects'
 import { fills, type FillSource } from '@whatsaaaa/form-builder-fills'
 import {
@@ -205,6 +205,144 @@ describe('a fill with a map', () => {
     const { current, input } = mountFills(json)
     await update(() => setInput(current().form, { path: ['profile'], input: 'b' } as never))
     expect(input()).toMatchObject({ firstName: 'Jelena' })
+  })
+})
+
+describe('jsonForm.reset() with fills', () => {
+  const json = profileMap as unknown as JsonForm
+  const jelena = {
+    profile: 'b',
+    firstName: 'Jelena',
+    lastName: 'Jovanović',
+    address: { city: 'Novi Sad' },
+  }
+
+  it('fills every field again, so choosing Profile B again fills Jelena', async () => {
+    const { current, input } = mountFills(json)
+    await set('profile', 'b')
+    await update(() => current().reset())
+    expect(input()).toMatchObject({ profile: 'a', firstName: 'Marko' })
+    expect(current().form.isDirty).toBe(false)
+
+    await set('profile', 'b')
+    expect(input()).toEqual(jelena)
+  })
+
+  it('leaves a record as it is, and fills it on the next option', async () => {
+    const record = { profile: 'b', firstName: 'Ana', lastName: 'Ilić' }
+    const { current, input } = mountFills(json, { initialInput: record })
+    await set('profile', 'c')
+    await update(() => current().reset())
+    expect(input()).toEqual({ ...record, address: { city: undefined } })
+    expect(current().form.isDirty).toBe(false)
+
+    await set('profile', 'c')
+    expect(input()).toMatchObject({ profile: 'c', firstName: 'Nikola', lastName: 'Nikolić' })
+  })
+
+  it('fills the next option after a reset back to the option it already had', async () => {
+    const record = { profile: 'b', firstName: 'Ana', lastName: 'Ilić' }
+    const { current, input } = mountFills(json, { initialInput: record })
+    await set('profile', 'c')
+    await set('profile', 'b')
+    await update(() => current().reset())
+    expect(input()).toEqual({ ...record, address: { city: undefined } })
+
+    await set('profile', 'c')
+    expect(input()).toMatchObject({ firstName: 'Nikola', lastName: 'Nikolić' })
+  })
+
+  it('keeps a record whose trigger the reset clears', async () => {
+    // Formisch tells its watchers of the reset at once: the fills must not take the blank
+    // profile it goes back to as a cleared trigger, which would empty the record's fields.
+    const record = { profile: undefined, firstName: 'Ana', lastName: 'Ilić' }
+    const { current, input } = mountFills(json, { initialInput: record })
+    await set('profile', 'b')
+    expect(input()).toMatchObject({ firstName: 'Jelena' })
+
+    await update(() => current().reset())
+    expect(input()).toEqual({ ...record, address: { city: undefined } })
+    expect(current().form.isDirty).toBe(false)
+  })
+
+  it("takes the options of Formisch's reset, with an initial input like useJsonForm's", async () => {
+    const { current, input } = mountFills(json)
+    await update(() => current().reset({ initialInput: { profile: 'c', firstName: 'Ana' } }))
+    expect(input()).toEqual({
+      profile: 'c',
+      firstName: 'Ana',
+      lastName: undefined,
+      address: { city: undefined },
+    })
+    expect(current().form.isDirty).toBe(false)
+    await set('profile', 'b')
+    expect(input()).toMatchObject({ firstName: 'Jelena', lastName: 'Jovanović' })
+
+    await update(() => current().reset({ initialInput: { firstName: 'Ana' } }))
+    expect(input()).toEqual({
+      profile: 'a',
+      firstName: 'Ana',
+      lastName: 'Petrović',
+      address: { city: 'Beograd' },
+    })
+    expect(current().form.isDirty).toBe(false)
+  })
+
+  it('calls the source of its default again, and fills again after it', async () => {
+    const { source, calls } = waitingSource()
+    const { current, input } = mountFills(withSource({ default: 'a' }), { profiles: source })
+    await answer(() => calls[0]?.resolve(marko))
+    await set('profile', 'b')
+    await answer(() => calls[1]?.resolve({ firstName: 'Jelena', lastName: 'Jovanović' }))
+
+    await update(() => current().reset())
+    expect(calls.map(({ value }) => value)).toEqual(['a', 'b', 'a'])
+    await answer(() => calls[2]?.resolve(marko))
+    expect(input()).toEqual({
+      profile: 'a',
+      firstName: 'Marko',
+      lastName: 'Petrović',
+      address: { city: 'Beograd' },
+    })
+    expect(current().form.isDirty).toBe(false)
+
+    await set('profile', 'b')
+    await answer(() => calls[3]?.resolve({ firstName: 'Jelena', lastName: 'Jovanović' }))
+    expect(input()).toMatchObject({ firstName: 'Jelena', lastName: 'Jovanović' })
+  })
+
+  it("keeps a record a reset gives while its default's values are on their way", async () => {
+    const { source, calls } = waitingSource()
+    const { current, input } = mountFills(withSource({ default: 'a' }), { profiles: source })
+    const record = { profile: 'a', firstName: 'Ana', lastName: 'Ilić' }
+
+    await update(() => current().reset({ initialInput: record }))
+    expect(calls[0]?.signal.aborted).toBe(true)
+    await answer(() => calls[0]?.resolve(marko))
+    expect(calls).toHaveLength(1)
+    expect(input()).toEqual({ ...record, address: { city: undefined } })
+    expect(current().form.isDirty).toBe(false)
+  })
+
+  it("keeps the user's edits on Formisch's reset with keepInput, which jsonForm.reset() doesn't take", async () => {
+    const { source, calls } = waitingSource()
+    const { root, current, input } = mountFills(withSource({ default: 'a' }), {
+      profiles: source,
+    })
+    await answer(() => calls[0]?.resolve(marko))
+    type(root, 'firstName', 'Marta')
+
+    await update(() => reset(current().form, { keepInput: true }))
+    expect(calls).toHaveLength(1)
+    expect(input()).toMatchObject({ firstName: 'Marta' })
+
+    await set('profile', 'b')
+    await answer(() => calls[1]?.resolve({ firstName: 'Jelena', lastName: 'Jovanović' }))
+    expect(input()).toMatchObject({ firstName: 'Marta', lastName: 'Jovanović' })
+
+    // The type error is a test too: `pnpm type-check` fails when the line compiles.
+    // @ts-expect-error keepInput is for Formisch's own reset
+    void (() => current().reset({ keepInput: true }))
   })
 })
 
@@ -554,6 +692,44 @@ describe('steps with fills', () => {
     expect(await moveWhileFilling(current, calls[0]?.resolve, values, next)).toBe(true)
     expect(current().steps.current.step.id).toBe('where')
     expect(ids(current)).toEqual(['who', 'where'])
+  })
+
+  it('stay on the step the user goes to while Next waits', async () => {
+    const { source, calls } = waitingSource()
+    const { current } = mountFills(business('business'), { profiles: source })
+    await set('firstName', 'Ana')
+    await moveWhileFilling(current, undefined, null, (steps) => steps.next())
+    expect(current().steps.current.step.id).toBe('company')
+    await set('company', 'Petrović d.o.o.')
+    await update(() => setInput(current().form, { path: ['profile'], input: 'a' } as never))
+
+    let moved: boolean | undefined
+    await act(async () => {
+      const next = current().steps.next()
+      await new Promise((resolve) => setTimeout(resolve))
+      current().steps.back()
+      calls[0]?.resolve({ firstName: 'Marko', accountType: 'business' })
+      moved = await next
+    })
+    expect(moved).toBe(false)
+    expect(current().steps.current.step.id).toBe('who')
+  })
+
+  it('drop a Next that waits when the form is reset', async () => {
+    const { source, calls } = waitingSource()
+    const { current } = mountFills(json, { profiles: source })
+    await set('profile', 'a')
+
+    let moved: boolean | undefined
+    await act(async () => {
+      const next = current().steps.next()
+      await new Promise((resolve) => setTimeout(resolve))
+      current().reset()
+      expect(calls[0]?.signal.aborted).toBe(true)
+      moved = await next
+    })
+    expect(moved).toBe(false)
+    expect(current().steps.current.step.id).toBe('who')
   })
 
   it('stop goTo() at a step the pending fill shows on the way, with its issues', async () => {

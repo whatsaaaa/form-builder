@@ -36,7 +36,7 @@ React 18 or 19, `@formisch/react` 1.2 and Valibot 1.4.1 or later are required. `
 
 <<< @/snippets/react/SignUpForm.tsx
 
-- `jsonForm.form` is a normal Formisch form, so every Formisch method works on it, like `reset` and `setInput`.
+- `jsonForm.form` is a normal Formisch form, so every Formisch method works on it, like `setInput`. Reset it with `jsonForm.reset()`, which takes the options of Formisch's `reset` for the whole form but `keepInput`, and starts the [fills](#fills) again. Its `initialInput` goes over the definition's defaults, like [the option's](#initial-input), and the form goes back to its first step, with no errors kept from the steps the user left.
 - The form element, the submit button and anything around them are yours.
 - A definition with issues throws the builder's `DefinitionError` while rendering, so an error boundary can catch it. Run [`validate()`](/guide/checking-definitions) first when the definition comes from outside your code.
 - Like Formisch's `useForm`, `useJsonForm` reads the definition on the first render. To show another one, give the component that calls it a new `key`: `<SignUpForm key={id} definition={definition} />`. That makes a new form, without what the user typed: pass [`initialInput`](#initial-input) to start it with values.
@@ -59,7 +59,7 @@ A form starts with the defaults of its definition. To start it with other values
 
 - **It goes over the defaults.** A field it has no key for keeps its `default`, in groups and in the items of lists too. A key that is there wins, so `undefined` starts a field blank.
 - **It is read once**, with the definition. To edit another record, give the component a new `key`, like the record's id.
-- **It is the form's initial input**, so Formisch's `reset` goes back to it, and `isDirty` compares with it.
+- **It is the form's initial input**, so `jsonForm.reset()` goes back to it, and `isDirty` compares with it.
 - **It keeps what the user typed** when you build the form again, like for [another language](/guide/messages#changing-the-language): pass the old form's input.
 
 [`UseJsonFormOptions`](/api/react/UseJsonFormOptions#initial-input) has every rule: groups, lists, conditions and the types.
@@ -71,7 +71,8 @@ With [`fills()`](/api/fills/fills) in the builder, choosing a value of a field f
 <<< @/snippets/react/ProfileForm.tsx
 
 - **A fill runs on each new value of its trigger**, from the user or from code, and sets the fields the user hasn't changed since the last fill, or every one with `"overwrite": "always"`. A trigger that loses its value blanks every field its fill sets.
-- **As the form starts**, a fill runs only for a trigger that starts from its default. A trigger that `initialInput` has a key for, like a saved record, fills nothing, and a fill never sets a field it has a key for then. The values of a map are in the initial input, on the first render. Those of a source come once the form is mounted, as values the form starts with, so it isn't dirty.
+- **As the form starts**, a fill runs only for a trigger that starts from its default. A trigger that `initialInput` has a key for, like a saved record, fills nothing, and a fill never sets a field it has a key for then. The values of a map are in the initial input, on the first render. Those of a source come once the form is mounted, as values the form starts with, so it isn't dirty and `jsonForm.reset()` goes back to them.
+- **`jsonForm.reset()` starts the fills again**, as when the form was mounted. It aborts the calls of the sources, a trigger that starts from its default fills in the others again, and the next value the user picks sets every field they haven't edited since. A record in its `initialInput` is left as it is, like one in the option. Formisch's own `reset` leaves the fills comparing the fields with what the last fill set, so a value it restores counts as the user's edit, and isn't filled. To clear the touched state and the errors but keep the input, call Formisch's `reset` with `keepInput`: the input stays, and so does what the fills know of the user's edits.
 - **`jsonForm.fills`** says what waits for a source: `pending` lists the triggers, and `isPending(path)` tells it for any field. It is a new object only when that changes. Each field component gets it as its [`pending`](/frameworks/field-components#value-fields) prop, like the text input there shows.
 - **Submitting while a fill waits is yours to handle**: disable the submit button while `fills.pending` isn't empty, as above. With [steps](/frameworks/multi-step-forms), Next waits for the pending fills before it validates.
 - **`onFillError`** gets what a source threw, or a `TypeError` for a value its field can't hold, with the trigger and its value. Without it, the error is thrown like an uncaught one, so it shows in the console.

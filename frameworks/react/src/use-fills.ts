@@ -1,5 +1,11 @@
 import { type FormStore, reset, setInput } from '@formisch/react'
-import type { FillErrorInfo, Fills, FillsRun, FillsState } from '@whatsaaaa/form-builder-schema'
+import type {
+  FillErrorInfo,
+  Fills,
+  FillsRun,
+  FillsState,
+  OpenFillsOptions,
+} from '@whatsaaaa/form-builder-schema'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { readInput, watchInput } from './formisch-internals'
 
@@ -13,6 +19,19 @@ const formsWithFills = new WeakSet<FormStore>()
 /** True for a form `useJsonForm` made from a definition with fills. */
 export const hasFills = (form: FormStore): boolean => formsWithFills.has(form)
 
+/** The fills of a form, for `useJsonForm`. */
+export interface JsonFormFills {
+  readonly run: FillsRun
+  /** What is pending now. */
+  readonly state: FillsState
+  /**
+   * Resets the form with `resetForm`, like Formisch's `reset`, then starts the fills again on the
+   * input it holds, with `options` like the run's `reset()`. The fills don't see the input change
+   * as the form resets, so they neither run nor blank fields for the values it goes back to.
+   */
+  reset(resetForm: () => void, options?: Pick<OpenFillsOptions, 'given'>): void
+}
+
 /**
  * Runs the fills of the definition on `form`: once it is mounted, the fills of sources it starts
  * with, as the values it starts with, and then each new value of a trigger, wherever it comes
@@ -20,12 +39,8 @@ export const hasFills = (form: FormStore): boolean => formsWithFills.has(form)
  * re-renders only when what is pending changes. It reads the initial input on the first render, and
  * `onFillError` on every render. Without fills, it watches nothing.
  */
-export function useFills(
-  form: FormStore,
-  fills: Fills,
-  options: FillsOptions,
-): { run: FillsRun; state: FillsState } {
-  const [{ run, errors }] = useState(() => {
+export function useFills(form: FormStore, fills: Fills, options: FillsOptions): JsonFormFills {
+  const [{ run, errors, onInput, reset: resetFills }] = useState(() => {
     if (fills.active) formsWithFills.add(form)
     const errors = errorSink()
     // The paths come from the definition at runtime, so the schema's types can't check them.
@@ -37,7 +52,25 @@ export function useFills(
       },
       { given: options.initialInput, onError: errors.report },
     )
-    return { run, errors }
+    // Formisch tells its watchers of a reset at once, before the run hears of it: the fills would
+    // take the values it goes back to as changes, and blank the fields of a trigger it clears.
+    let resetting = false
+    return {
+      run,
+      errors,
+      onInput: () => {
+        if (!resetting) run.update()
+      },
+      reset(resetForm: () => void, resetOptions?: Pick<OpenFillsOptions, 'given'>) {
+        resetting = true
+        try {
+          resetForm()
+        } finally {
+          resetting = false
+        }
+        run.reset(resetOptions)
+      },
+    }
   })
   useEffect(() => {
     errors.use(options)
@@ -49,15 +82,15 @@ export function useFills(
     run.start()
     // A change between the first render and now, like a field a component set as it mounted.
     run.update()
-    const stop = watchInput(form, run.update)
+    const stop = watchInput(form, onInput)
     return () => {
       stop()
       run.stop()
     }
-  }, [form, fills, run])
+  }, [form, fills, run, onInput])
   const getState = () => run.state
   const state = useSyncExternalStore(run.subscribe, getState, getState)
-  return { run, state }
+  return { run, state, reset: resetFills }
 }
 
 /**

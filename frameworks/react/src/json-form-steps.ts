@@ -37,7 +37,8 @@ export interface JsonFormSteps {
    * Validates the whole form, and moves to the next step when the fields of this one have no
    * issues. Otherwise it stays, and focuses the first field with an issue, in layout order. With
    * fills, it waits for the pending ones first, so it validates the values they set, and moves
-   * among the steps on show for them. Resolves to whether it moved.
+   * among the steps on show for them. Resolves to whether it moved: a step the user goes to, or a
+   * reset, while it waits wins, and it resolves to false.
    */
   next(): Promise<boolean>
   /** Moves to the step before, without validating. */
@@ -79,7 +80,8 @@ interface Modes {
  * that fails because of an earlier step goes back to it. The steps the conditions hide are skipped:
  * those `visibility` hides in `list`, and those `conditions` hide for the input as it is when the
  * steps move. Moving forward waits for `settled()`, the pending fills, before it picks the steps.
- * Like Formisch's `useForm`, it reads the validation modes on the first render.
+ * `restart()` goes back to the first step as the form opened, for a reset. Like Formisch's
+ * `useForm`, it reads the validation modes on the first render.
  */
 export function useJsonFormSteps(
   form: FormStore,
@@ -88,7 +90,7 @@ export function useJsonFormSteps(
   visibility: VisibilityState,
   conditions: Visibility,
   settled: () => Promise<void>,
-): JsonFormSteps {
+): { steps: JsonFormSteps; restart: () => void } {
   const all = layout.steps
   // The current step, by its index in `all`, as are the steps in `state` below.
   const [index, setIndex] = useState(0)
@@ -103,6 +105,8 @@ export function useJsonFormSteps(
     focus: undefined as FieldPath | undefined,
     // Whether a submit on the last step is on its way through Formisch.
     submitting: false,
+    // How many times the current step was set, so that a Next that waited knows of a move meanwhile.
+    moves: 0,
     modes,
   })
 
@@ -137,6 +141,7 @@ export function useJsonFormSteps(
     async function forward(
       pick: (list: readonly LayoutStep[]) => LayoutStep | undefined,
     ): Promise<boolean> {
+      const before = at.moves
       // Next goes on once the task that called it is over. A click runs its default action after its
       // handlers, and React can render in between: a Next button that turns into the submit button on
       // the last step would then submit the form as the user gets there.
@@ -144,12 +149,15 @@ export function useJsonFormSteps(
       // The values of pending fills are validated once they are there, not the blanks before, and
       // the steps they show or hide count.
       await settled()
+      // A step the user went to while it waited wins, as does a reset.
+      if (at.moves !== before) return false
       const list = shown()
       const from = position(list)
       const to = pick(list)
       const target = to ? list.indexOf(to) : -1
       if (target <= from) return false
       const { issues } = await validate(form)
+      if (at.moves !== before) return false
       for (const step of list.slice(from, target)) {
         const found = issuesOfStep(step, issues)
         if (found.length) {
@@ -174,7 +182,18 @@ export function useJsonFormSteps(
         setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
       }
       at.index = target
+      at.moves++
       setIndex(target)
+    }
+
+    /** Goes back to the first step, with no step left or failed yet, as the form opened. */
+    function restart() {
+      at.left.clear()
+      at.failed.clear()
+      at.focus = undefined
+      at.index = 0
+      at.moves++
+      setIndex(0)
     }
 
     /** Keeps the errors of the current step, for when the user comes back to it. */
@@ -213,6 +232,7 @@ export function useJsonFormSteps(
       leave()
       at.focus = path
       at.index = target
+      at.moves++
       setIndex(target)
     }
 
@@ -246,7 +266,7 @@ export function useJsonFormSteps(
       const before = list[position(list) - 1]
       if (before) move(all.indexOf(before))
     }
-    return { goTo, next, back, isLast, events, afterSubmit }
+    return { goTo, next, back, isLast, events, afterSubmit, restart }
   }, [form, all, conditions, settled])
 
   // The field a step was stopped on, once the step has rendered.
@@ -289,7 +309,7 @@ export function useJsonFormSteps(
     if (!form.isValid) methods.afterSubmit()
   })
 
-  return useMemo(() => {
+  const steps = useMemo(() => {
     const list = all.filter((step, i) => i === index || !visibility.isStepHidden(step))
     const current = all[index] as LayoutStep
     const at = list.indexOf(current)
@@ -304,6 +324,7 @@ export function useJsonFormSteps(
       goTo: methods.goTo,
     }
   }, [all, index, visibility, methods])
+  return { steps, restart: methods.restart }
 }
 
 /** Resolves once the task that called it is over, and the browser is done with its event. */

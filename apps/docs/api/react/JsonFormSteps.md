@@ -20,7 +20,7 @@ The steps of a form, from its layout. A form without `steps` in its layout has o
 
 ### Explanation
 
-See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate. Moving forward with `next()` or `goTo()` waits for the [fills](/frameworks/react#fills) that are pending first, so it validates the values they set, not the blanks before them, and moves among the steps on show for them. `back()` doesn't wait.
+See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate. Moving forward with `next()` or `goTo()` waits for the [fills](/frameworks/react#fills) that are pending first, so it validates the values they set, not the blanks before them, and moves among the steps on show for them. A step the user goes to while it waits wins, as does a reset, and it resolves to `false`. `back()` doesn't wait. [`jsonForm.reset()`](/api/react/JsonFormInstance) goes back to the first step, and keeps no errors of the steps the user left, or of a Next that failed.
 
 ## Example
 
