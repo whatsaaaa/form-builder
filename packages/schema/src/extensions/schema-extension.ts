@@ -90,7 +90,8 @@ export interface ExtensionContext {
    * none, reports fills that set each other in a loop as `cycle`, and runs them through
    * `getFills()`. Throws a TypeError for a fill no form can run: a trigger without a string,
    * number, boolean or date value, a field to set that is no field with a value, or is a file,
-   * either inside a list's items, or a field to set twice.
+   * either inside a list's items, a field to set twice, or an `overwrite` other than `'unedited'`
+   * or `'always'`.
    */
   fill(trigger: FieldTarget, fill: TargetFill): void
 }

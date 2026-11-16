@@ -346,6 +346,34 @@ describe('the fields with conditions', () => {
     form.type('kind', 'company')
     expect(form.input).toMatchObject({ company: true, vat: 'RS2', note: 'Firm' })
   })
+
+  it('blank a trigger they clear, and its fields, when its fill is what clears it', () => {
+    const json: JsonForm = {
+      version: '1',
+      fields: [
+        {
+          name: 'profile',
+          type: 'select',
+          options,
+          hideWhen: { field: 'company', equals: true, clear: true },
+          prefill: { map: { a: { company: true } } },
+        },
+        { name: 'company', type: 'checkbox' },
+      ],
+    } as never
+    // Like the adapters, which blank what the conditions clear in a watch, after the change.
+    const later = openForm(builder, json, { clearLater: true })
+    later.type('profile', 'a')
+    expect(later.input).toEqual({ profile: 'a', company: true })
+    later.clear()
+    expect(later.input).toEqual({})
+    expect(later.log).toEqual(['set company true', 'set company undefined'])
+
+    const now = openForm(builder, json)
+    now.type('profile', 'a')
+    expect(now.input).toEqual({})
+    expect(now.log).toEqual(['set company true', 'set company undefined'])
+  })
 })
 
 describe('a fill with a source', () => {
@@ -566,32 +594,35 @@ describe('errors', () => {
 })
 
 describe('the form as it starts', () => {
-  it('throws a TypeError for a static fill that gives a promise, or no object of values', () => {
-    const giving = (values: unknown) =>
-      createSchemaBuilder({
-        extensions: [
-          {
-            name: 'test',
-            check(ctx) {
-              const [trigger, field] = ctx.targets
-              ctx.fill(trigger as never, {
-                fields: [{ field: ctx.resolve('b', trigger as never) as never, at: [] }],
-                overwrite: 'unedited',
-                static: true,
-                values: () => values as never,
-              })
-              void field
-              return new Map()
-            },
+  /** A builder whose static fill on `a`, which starts with a value, sets `b` to `values()`. */
+  const staticFill = (values: () => unknown) =>
+    createSchemaBuilder({
+      extensions: [
+        {
+          name: 'test',
+          check(ctx) {
+            const [trigger] = ctx.targets
+            ctx.fill(trigger as never, {
+              fields: [{ field: ctx.resolve('b', trigger as never) as never, at: [] }],
+              overwrite: 'unedited',
+              static: true,
+              values: values as never,
+            })
+            return new Map()
           },
-        ],
-      }).getInitialInput({
-        version: '1',
-        fields: [
-          { name: 'a', type: 'text', default: 'x' },
-          { name: 'b', type: 'text' },
-        ],
-      })
+        },
+      ],
+    })
+  const startsFilled: JsonForm = {
+    version: '1',
+    fields: [
+      { name: 'a', type: 'text', default: 'x' },
+      { name: 'b', type: 'text' },
+    ],
+  }
+
+  it('throws a TypeError for a static fill that gives a promise, or no object of values', () => {
+    const giving = (values: unknown) => staticFill(() => values).getInitialInput(startsFilled)
     expect(() => giving(Promise.resolve({}))).toThrow(
       new TypeError('The fill of "a" is static, so its values() can\'t give a promise'),
     )
@@ -599,6 +630,24 @@ describe('the form as it starts', () => {
       new TypeError('The fill of "a" gave "y", not an object of values'),
     )
     expect(giving({ b: 'y' })).toEqual({ a: 'x', b: 'y' })
+  })
+
+  it('runs the values() of a static fill only for getInitialInput()', () => {
+    const values = vi.fn(() => 'not values')
+    const broken = staticFill(values)
+    expect(broken.validate(startsFilled)).toEqual({ success: true, issues: [] })
+    expect([...broken.walkFields(startsFilled)].map(({ dataPath }) => dataPath)).toEqual([
+      ['a'],
+      ['b'],
+    ])
+    broken.build(startsFilled)
+    broken.getFieldTree(startsFilled)
+    broken.getLayout(startsFilled)
+    broken.getVisibility(startsFilled)
+    expect(broken.getFills(startsFilled).active).toBe(true)
+    expect(values).not.toHaveBeenCalled()
+    expect(() => broken.getInitialInput(startsFilled)).toThrow(TypeError)
+    expect(values).toHaveBeenCalledOnce()
   })
 
   it("starts with a map's values for the trigger's default, not edited", () => {

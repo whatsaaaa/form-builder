@@ -112,10 +112,11 @@ export interface SchemaBuilder<
    * Formisch's `initialInput`: each field's `default`, nested the way the value is, your own
    * container types included. A container of kind `object` gives an object, and one of kind
    * `array` without a default gives `[]`. Other fields without a default, and display elements,
-   * are left out. It never throws, and leaves out a field with issues, but a field whose only
-   * issue is its default still gets that default. A field that conditions clear when the form
-   * starts starts blank. With fills, it has the values of the fills written in the definition,
-   * like a map, for each trigger that starts with its default.
+   * are left out. It leaves out a field with issues, but a field whose only issue is its default
+   * still gets that default. A field that conditions clear when the form starts starts blank. With
+   * fills, it has the values of the fills written in the definition, like a map, for each trigger
+   * that starts with its default. It throws what their `values()` throw, and a TypeError when they
+   * give a promise, or no object of values.
    */
   getInitialInput(json: JsonForm): Record<string, unknown>
   /**
@@ -233,7 +234,11 @@ export function createSchemaBuilder(options: SchemaBuilderOptions = {}): SchemaB
   }
 
   function getInitialInput(json: JsonForm): Record<string, unknown> {
-    return compileDefinition(json, registry, messages).initialInput
+    const { initialInput, engine, fills } = compileDefinition(json, registry, messages)
+    // The values of the fills written in the definition, for the triggers that start with a value.
+    const filled = createFills(fills, engine).initialInput(initialInput, undefined)
+    // A field its conditions clear when the form starts starts blank, without its default.
+    return createVisibility(engine).clear(filled)
   }
 
   function getItemInput(field: JsonField): unknown {

@@ -94,6 +94,8 @@ const copies: SchemaExtension = {
         const field = ctx.resolve(String(path), target)
         if (typeof field === 'string') {
           ctx.issue('unknown_field', [...at, i], field)
+        } else if (paths.indexOf(path) < i) {
+          ctx.issue('invalid_shape', [...at, i], `Lists "${path}" twice`)
         } else if (field && isText(field)) {
           fields.push({ field, at: [...at, i] })
         } else if (field) {
@@ -173,6 +175,20 @@ if (
   }).success
 ) {
   throw new Error('An unknown field was not reported')
+}
+const twice = shop.validate({
+  ...definition,
+  fields: [
+    { name: 'a', type: 'text', copyTo: ['b', 'b'] },
+    { name: 'b', type: 'text' },
+  ],
+}).issues
+if (
+  twice.length !== 1 ||
+  twice[0]?.code !== 'invalid_shape' ||
+  twice[0].path.join('.') !== 'fields.0.copyTo.1'
+) {
+  throw new Error('A path listed twice was not reported')
 }
 if (
   shop.validate({

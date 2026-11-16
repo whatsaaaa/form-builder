@@ -131,8 +131,10 @@ export function createFills(plan: FillPlan | undefined, engine: Engine | undefin
 /** True for a field its conditions clear for `input`: it is about to be blank. */
 type IsCleared = (field: FillField) => boolean
 
+const NONE_CLEARED: IsCleared = () => false
+
 function clearedIn(engine: Engine | undefined, input: unknown): IsCleared {
-  if (!engine) return () => false
+  if (!engine) return NONE_CLEARED
   const evaluation = engine.evaluate(input)
   return (field) => {
     const unit = engine.unitAt(field.definitionPath)
@@ -316,7 +318,10 @@ function openFills(
         const input = form.getInput()
         const isCleared = clearedIn(engine, input)
         for (const trigger of byTrigger.keys()) {
-          const value = triggerValue(trigger, input, isCleared)
+          const value = triggerValue(trigger, input, NONE_CLEARED)
+          // A trigger its conditions clear changes once it is blank: blanking its fields could
+          // end the clear, and it would fill them again.
+          if (value !== undefined && isCleared(trigger)) continue
           if (same(value, seen.get(trigger))) continue
           change(trigger, value, 'change')
           changed = true

@@ -117,18 +117,23 @@ export interface TestFormOptions extends OpenFillsOptions {
    * synchronously, instead of only after `type()`.
    */
   readonly watchSync?: boolean
+  /**
+   * Blanks what the conditions clear only on `clear()`, like an adapter that does it in a watch
+   * after the change, instead of in each `setInput`.
+   */
+  readonly clearLater?: boolean
 }
 
 /**
  * A form in memory, like Formisch's, with the definition's fills open on it. It starts with the
  * builder's initial input, with `given` over it as the adapters merge it, and blanks what the
- * conditions clear after each change, as the adapters do. `log` lists every input the fills set:
- * `set` for a change, `start` for an input the form starts with.
+ * conditions clear with each change, or only on `clear()` with `clearLater`. `log` lists every
+ * input the fills set: `set` for a change, `start` for an input the form starts with.
  */
 export function openForm(
   builder: SchemaBuilder,
   json: JsonForm,
-  { watchSync = false, ...options }: TestFormOptions = {},
+  { watchSync = false, clearLater = false, ...options }: TestFormOptions = {},
 ) {
   const fills = builder.getFills(json)
   const visibility = builder.getVisibility(json)
@@ -138,8 +143,11 @@ export function openForm(
       ? builder.getInitialInput(json)
       : visibility.clear(fills.initialInput(mergeFields(builder.getFieldTree(json), given), given))
   const log: string[] = []
+  const cleared = (next: unknown) => (clearLater ? next : visibility.clear(next))
   const write = (kind: string, path: readonly (string | number)[], value: unknown) => {
-    input = visibility.clear(setIn(input, path, value))
+    // Fills that set each other's fields forever fail the test instead of hanging it.
+    if (log.length >= 1000) throw new Error('The fills set inputs in a loop')
+    input = cleared(setIn(input, path, value))
     log.push(`${kind} ${path.join('.')} ${JSON.stringify(value) ?? 'undefined'}`)
   }
   const form: FillsForm = {
@@ -160,7 +168,12 @@ export function openForm(
     },
     /** Sets a field as the user would, then tells the fills. */
     type(path: string, value: unknown) {
-      input = visibility.clear(setIn(input, path.split('.'), value))
+      input = cleared(setIn(input, path.split('.'), value))
+      run.update()
+    },
+    /** Blanks what the conditions clear, as an adapter's watch does, then tells the fills. */
+    clear() {
+      input = visibility.clear(input)
       run.update()
     },
   }
