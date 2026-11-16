@@ -45,7 +45,7 @@ Run `validate()` when you save a definition, and again before you render one you
 | `unplaced_field`      | a field placed nowhere in the layout                                                                      |
 | `duplicate_id`        | two layout nodes with the same `id`                                                                       |
 | `invalid_span`        | a layout `span` that is no whole number from 1 to 12, or outside a row, or spans that don't fit their row |
-| `invalid_value`       | a value in a condition that the field can't hold                                                          |
+| `invalid_value`       | a value in a condition or in a fill's map that the field can't hold                                       |
 | `cycle`               | conditions that depend on each other, or fills that set each other's triggers                             |
 
 ### Codes are API, messages are not

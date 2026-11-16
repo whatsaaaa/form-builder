@@ -71,7 +71,7 @@ form-builder is for the other case: the form is data. Someone edits it without a
 
 ## Status
 
-The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects package stays before 1.0 for now. See [stability](/guide/stability) for what is covered, [supported versions](/guide/support) for the versions of the peers, and [migrating to 1.0](/guide/migrating-to-1.0) to update. Each package's changelog lists what changed.
+The schema, Vue and React packages follow semantic versioning from 1.0: the JSON format, the exports, and the codes and paths of issues only break in a major release. The affects and fills packages stay before 1.0 for now. See [stability](/guide/stability) for what is covered, [supported versions](/guide/support) for the versions of the peers, and [migrating to 1.0](/guide/migrating-to-1.0) to update. Each package's changelog lists what changed.
 
 ## Feedback
 
