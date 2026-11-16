@@ -51,4 +51,4 @@ packageExtensions:
 # The docs theme's design-system release was installed before it was a day old, pnpm's minimum
 # release age.
 minimumReleaseAgeExclude:
-  - '@whatsaaaa/design-system@0.6.1'
+  - '@whatsaaaa/design-system@0.8.0'
