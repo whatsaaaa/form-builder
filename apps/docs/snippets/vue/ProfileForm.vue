@@ -2,7 +2,7 @@
 import { Form } from '@formisch/vue'
 import type { JsonForm } from '@whatsaaaa/form-builder-schema'
 import { JsonFields, useJsonForm } from '@whatsaaaa/form-builder-vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 // The builder with fills({ sources: { profiles } }).
 import { builder } from '../schema/fills'
 import { components } from './fields'
@@ -19,6 +19,13 @@ const jsonForm = useJsonForm(definition, {
       "Couldn't load the profile. Fill in the fields yourself."
   },
 })
+// The next profile on its way replaces the error.
+watch(
+  () => jsonForm.fills.pending.length > 0,
+  (loading) => {
+    if (loading) fillError.value = undefined
+  },
+)
 
 function save(output: unknown) {
   // { profile: 'a', firstName: 'Marko', lastName: 'Petrović', address: { city: 'Beograd' } }

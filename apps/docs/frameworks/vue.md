@@ -70,6 +70,7 @@ With the `fills` of the [fills package](/api/fills/) in its builder, a field's v
 
 - **As the form starts**, a field that starts from its `default` fills in the others. The values of a `map` are in the form's initial input, on the first render. Those of a `source` come once the form is mounted, never on a server, and are set as the values the form starts with, so it isn't dirty and `reset` goes back to them.
 - **A record in `initialInput` is left as it is.** A field it has a key for fills nothing as the form starts, and no fill sets a field it has a key for until the user picks another value.
+- **Formisch's `reset` starts the fills over.** The form goes back to what it started with, a record too, without calling a source, and the next value the user picks fills the fields again.
 - **`jsonForm.fills`** says what is on its way: `pending` lists the fields whose fill waits for its values, and `isPending(path)` is true for those fields and every field they fill. Without fills, nothing is pending.
 - **Each value field gets `pending`**, so its component can show that a value is on its way. See [field components](/frameworks/field-components#value-fields).
 - **Errors go to `onFillError`**, with the field and its value, like a source that failed or a value its field can't hold. Without it, they are thrown like an uncaught error.

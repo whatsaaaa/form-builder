@@ -53,6 +53,7 @@ What a running fill does is the same for every extension:
 
 - **It runs when its trigger gets a new value**, from the user or from code. As the form starts, it runs only when the trigger starts from its default: a trigger the app's initial input has a key for, like a saved record, fills nothing, and a fill never sets a field that input has a key for.
 - **It sets the fields the user hasn't edited.** A field is edited when it holds something other than what it started with, or than the last fill set. An empty field is never edited. With `'always'`, it sets them all.
+- **A reset starts it over.** A trigger that holds what it started with again, and so does every field it sets, like after Formisch's `reset`, runs nothing, and those fields count as unedited again.
 - **It sets every field it names.** A field its values leave out, or give `null` for, is set blank.
 - **Values are fitted to their field**, like typed input: `'5'` becomes `5` for a number, and `11000` becomes `'11000'` for text. A value of a type the field can't hold, like `'abc'` for a number, is set blank and reported as a `TypeError`. A value that only breaks a rule, like an email without `@`, is set, and the form shows its error.
 - **The newest value wins.** A new value of the trigger aborts the call before it, and its values are dropped.

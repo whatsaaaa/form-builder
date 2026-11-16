@@ -20,7 +20,7 @@ The steps of a form, from its layout. A form without `steps` in its layout has o
 
 ### Explanation
 
-See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate. With [fills](/frameworks/vue#fills), moving forward waits until no fill is pending, so it validates the values they set, not the blanks they replace.
+See [multi-step forms](/frameworks/multi-step-forms) for how the steps validate. With [fills](/frameworks/vue#fills), moving forward waits until no fill is pending, so it validates the values they set, not the blanks they replace. A step the user goes to while it waits wins, and it resolves to `false`.
 
 ## Example
 

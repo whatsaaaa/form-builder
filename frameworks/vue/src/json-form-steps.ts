@@ -35,7 +35,8 @@ export interface JsonFormSteps {
   /**
    * Waits for the fills that are pending, then validates the whole form, and moves to the next step
    * when the fields of this one have no issues. Otherwise it stays, and focuses the first field
-   * with an issue, in layout order. Resolves to whether it moved.
+   * with an issue, in layout order. Resolves to whether it moved: a step the user goes to while it
+   * waits wins, and it resolves to false.
    */
   next(): Promise<boolean>
   /** Moves to the step before, without validating. */
@@ -102,18 +103,23 @@ export function useJsonFormSteps(
       throw new RangeError(`No step ${target}. The form has ${shown.length}.`)
     }
     const to = all.indexOf(shown[target] as LayoutStep)
-    if (target <= index.value) {
+    const from = index.value
+    if (target <= from) {
       move(to)
       return true
     }
+    const here = at.value
     // Next goes on once the task that called it is over. A click runs its default action after its
     // handlers, and Vue can render in between: a Next button that turns into the submit button on
     // the last step would then submit the form as the user gets there.
     await afterTask()
     // The values a fill is waiting for are validated, not the blanks they replace.
     await fills.settled()
+    // A step the user went to while it waited wins.
+    if (at.value !== here) return false
     const { issues } = await validate(form)
-    for (const step of shown.slice(index.value, target)) {
+    if (at.value !== here) return false
+    for (const step of shown.slice(from, target)) {
       const found = issuesOfStep(step, issues)
       if (found.length) {
         await stop(all.indexOf(step), found)

@@ -26,7 +26,6 @@ const inputTypes: Record<string, string> = {
       :placeholder="field.placeholder"
       :required="required"
       :aria-busy="pending || undefined"
-      :readonly="pending"
       @input="setInput(($event.target as HTMLInputElement).value)"
     />
     <small v-if="errors">{{ errors[0] }}</small>

@@ -19,7 +19,7 @@ The fills of one open form, as [`Fills`](/api/schema/Fills)' `open()` gives them
 ### Explanation
 
 - **`start()`**: call it once the form is on the page, never on a server. After `stop()`, it runs again the fills the form starts with that didn't finish, so a renderer that starts, stops and starts again, like React's StrictMode, still fills the form.
-- **`update()`**: call it after the form's input changes, like in a watcher of the fields of [`Fills`](/api/schema/Fills)' `triggers`. A trigger with a new value runs its fill, and a trigger that lost its value blanks every field its fill sets. It is safe to call from inside a `setInput` the fills make.
+- **`update()`**: call it after the form's input changes, like in a watcher of the fields of [`Fills`](/api/schema/Fills)' `triggers`. A trigger with a new value runs its fill, and a trigger that lost its value blanks every field its fill sets. A trigger that holds what it started with again, and so does every field its fill sets, like after Formisch's `reset`, runs nothing, and those fields count as unedited again. It is safe to call from inside a `setInput` the fills make.
 - **`settled()`**: wait for it before you validate values that may still be on their way, like before the next step of a form.
 - **`stop()`**: call it when the form closes. It aborts the signal of each pending call, and nothing they give is set.
 
