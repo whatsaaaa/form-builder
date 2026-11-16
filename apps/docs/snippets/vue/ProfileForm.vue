@@ -5,7 +5,7 @@ import { JsonFields, useJsonForm } from '@whatsaaaa/form-builder-vue'
 import { ref, watch } from 'vue'
 // The builder with fills({ sources: { profiles } }).
 import { builder } from '../schema/fills'
-import { components } from './fields'
+import { components } from './all-fields'
 
 const { definition } = defineProps<{ definition: JsonForm }>()
 const fillError = ref<string>()
