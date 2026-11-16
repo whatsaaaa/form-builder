@@ -25,6 +25,9 @@ export function useOrderForm(
     // When a field is validated the first time, and again after that, as in Formisch.
     validate: 'blur',
     revalidate: 'input',
+    // Each error of a fill, like a source that failed. Without it, it is thrown.
+    onFillError: (error, { trigger }) =>
+      console.error(`The fill of ${trigger} failed`, error),
   })
   // #endregion options
   return jsonForm

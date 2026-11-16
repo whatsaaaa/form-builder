@@ -4,6 +4,8 @@ export type {
   FieldNode,
   FieldPath,
   FieldRole,
+  FillErrorInfo,
+  FillsState,
   FormLayout,
   BuiltSchema,
   LayoutNode,

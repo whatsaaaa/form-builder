@@ -33,16 +33,17 @@ export interface JsonFormSteps {
   readonly isFirst: boolean
   readonly isLast: boolean
   /**
-   * Validates the whole form, and moves to the next step when the fields of this one have no
-   * issues. Otherwise it stays, and focuses the first field with an issue, in layout order.
-   * Resolves to whether it moved.
+   * Waits for the fills that are pending, then validates the whole form, and moves to the next step
+   * when the fields of this one have no issues. Otherwise it stays, and focuses the first field
+   * with an issue, in layout order. Resolves to whether it moved.
    */
   next(): Promise<boolean>
   /** Moves to the step before, without validating. */
   back(): void
   /**
-   * Moves to the step at `index`. Back is free, and forward validates every step on the way, like
-   * `next()`, and stops at the first with issues. Resolves to whether it got there.
+   * Moves to the step at `index`. Back is free, and forward waits for pending fills and validates
+   * every step on the way, like `next()`, and stops at the first with issues. Resolves to whether
+   * it got there.
    */
   goTo(index: number): Promise<boolean>
 }
@@ -68,7 +69,8 @@ export const fieldEventsOf = (form: FormStore): FieldEvents | undefined => field
  * The steps of `layout`, for `useJsonForm`. With more than one, a step shows the errors it had
  * when the user left it, and none the first time they get to it, a step that failed Next
  * revalidates as the user fixes it, a submit before the last step moves on like Next, and a submit
- * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped.
+ * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped,
+ * and moving forward waits until `fills` are settled, so it validates the values they set.
  */
 export function useJsonFormSteps(
   form: FormStore,
@@ -78,6 +80,7 @@ export function useJsonFormSteps(
     revalidate?: Exclude<ValidationMode, 'initial'> | undefined
   },
   visibility: { readonly value: VisibilityState },
+  fills: { settled(): Promise<void> },
 ): JsonFormSteps {
   const all = layout.steps
   // The current step, by its index in `all`, as are the steps of the maps and sets below.
@@ -107,6 +110,8 @@ export function useJsonFormSteps(
     // handlers, and Vue can render in between: a Next button that turns into the submit button on
     // the last step would then submit the form as the user gets there.
     await afterTask()
+    // The values a fill is waiting for are validated, not the blanks they replace.
+    await fills.settled()
     const { issues } = await validate(form)
     for (const step of shown.slice(index.value, target)) {
       const found = issuesOfStep(step, issues)

@@ -8,6 +8,7 @@ import {
 import { type Component, defineComponent, h, type PropType } from 'vue'
 import type { ValueFieldProps } from './field-components'
 import { fieldEventsOf } from './json-form-steps'
+import { fillsOf } from './use-fills'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 /** Connects a field with a value to Formisch, and renders your component for it. */
@@ -28,6 +29,9 @@ export const ValueField = defineComponent({
 
     // In a form with steps, a step that failed Next revalidates on these events too.
     const events = fieldEventsOf(props.of.form)
+    // Only a form with fills passes `pending`, so a component that doesn't declare it renders the
+    // same as before, without it as an attribute.
+    const fills = fillsOf(props.of.form)
     const setInput = (input: unknown) => {
       field.input = coerceInput(input, props.node) as never
       events?.('input')
@@ -67,6 +71,7 @@ export const ValueField = defineComponent({
         inputProps,
         setInput,
       }
+      if (fills) fieldProps.pending = fills.state.value.isPending(props.path)
       return h(props.component, fieldProps)
     }
   },

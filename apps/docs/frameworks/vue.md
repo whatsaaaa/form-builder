@@ -62,6 +62,22 @@ A form starts with the defaults of its definition. To start it with other values
 
 [`UseJsonFormOptions`](/api/vue/UseJsonFormOptions#initial-input) has every rule: groups, lists, conditions and the types.
 
+## Fills
+
+With the `fills` of the [fills package](/api/fills/) in its builder, a field's value fills in other fields, like a profile that sets the name. `useJsonForm` runs them on the form: each new value of a field with `fills` sets the fields it names, with Formisch's `setInput`. The app shows what is loading and what failed:
+
+<<< @/snippets/vue/ProfileForm.vue
+
+- **As the form starts**, a field that starts from its `default` fills in the others. The values of a `map` are in the form's initial input, on the first render. Those of a `source` come once the form is mounted, never on a server, and are set as the values the form starts with, so it isn't dirty and `reset` goes back to them.
+- **A record in `initialInput` is left as it is.** A field it has a key for fills nothing as the form starts, and no fill sets a field it has a key for until the user picks another value.
+- **`jsonForm.fills`** says what is on its way: `pending` lists the fields whose fill waits for its values, and `isPending(path)` is true for those fields and every field they fill. Without fills, nothing is pending.
+- **Each value field gets `pending`**, so its component can show that a value is on its way. See [field components](/frameworks/field-components#value-fields).
+- **Errors go to `onFillError`**, with the field and its value, like a source that failed or a value its field can't hold. Without it, they are thrown like an uncaught error.
+- **Next waits** for the fills that are pending, then validates the values they set. Submitting is yours: disable the submit button while `jsonForm.fills.pending` isn't empty.
+- **Unmounting the form** aborts the calls of its sources, and nothing is set after it.
+
+[Extensions](/guide/extensions#fills) has every rule of a running fill: which fields it sets, how it fits values, and what clearing a field does.
+
 ## Not included
 
 - Labels and display text reach your components as written in the definition. The builder's `resolveMessage` only changes what goes into the schema, so translate `field.label` in your components.

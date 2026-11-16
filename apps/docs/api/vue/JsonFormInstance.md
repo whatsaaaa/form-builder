@@ -1,5 +1,5 @@
 ---
-description: 'What useJsonForm returns in Vue: the Formisch form, the layout, the steps and the visibility.'
+description: 'What useJsonForm returns in Vue: the Formisch form, the layout, the steps, the visibility and the pending fills.'
 ---
 
 # JsonFormInstance
@@ -22,10 +22,13 @@ What [`useJsonForm`](/api/vue/useJsonForm) returns. Pass it to `<JsonFields>` an
   - `layout` <code>[FormLayout](/api/schema/FormLayout)</code>: the definition's layout
   - `steps` <code>[JsonFormSteps](/api/vue/JsonFormSteps)</code>: the current step, and Next, Back and Go to
   - `visibility` <code>[VisibilityState](/api/schema/Visibility#visibilitystate)</code>: what the conditions hide for the form's input now
+  - `fills` <code>[FillsState](/api/schema/FillsState)</code>: what the fills are waiting for now. Without fills, nothing is pending
 
 ### Explanation
 
 `AnyJsonFormInstance` is any form `useJsonForm` returns, typed or not: what the components take.
+
+`visibility` and `fills` are reactive: a template or a `computed` that reads them updates when they change. `fills.pending` lists the trigger of each fill that waits for its values, so disable the submit button while it isn't empty. See [fills](/frameworks/vue#fills).
 
 ## Related
 
@@ -33,3 +36,4 @@ What [`useJsonForm`](/api/vue/useJsonForm) returns. Pass it to `<JsonFields>` an
 
 - [JsonFormSteps](/api/vue/JsonFormSteps)
 - [Visibility](/api/schema/Visibility)
+- [FillsState](/api/schema/FillsState)
