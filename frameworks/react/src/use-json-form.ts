@@ -2,6 +2,8 @@ import {
   type FormConfig,
   type FormSchema,
   type FormStore,
+  reset as resetForm,
+  type ResetFormConfig,
   setInput,
   useForm,
   type ValidationMode,
@@ -9,6 +11,8 @@ import {
 import {
   createSchemaBuilder,
   type FieldNode,
+  type FillErrorInfo,
+  type FillsState,
   type FormLayout,
   type JsonForm,
   type BuiltSchema,
@@ -16,10 +20,11 @@ import {
   type TypedBuiltSchema,
   type VisibilityState,
 } from '@whatsaaaa/form-builder-schema'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type JsonFormSteps, useJsonFormSteps } from './json-form-steps'
 import { mergeInitialInput } from './merge-initial-input'
+import { useFills } from './use-fills'
 import { useVisibility } from './use-visibility'
 
 /** The options of `useJsonForm`. `TSchema` is the form's schema, which types `initialInput`. */
@@ -43,6 +48,12 @@ export interface UseJsonFormOptions<TSchema extends FormSchema = BuiltSchema> {
   validate?: ValidationMode
   /** When a field is validated again after that, as in Formisch. */
   revalidate?: Exclude<ValidationMode, 'initial'>
+  /**
+   * Called with each error of the definition's fills, like the `fills` of
+   * `@whatsaaaa/form-builder-fills`: what a source threw, or a TypeError for values that don't fit,
+   * with the trigger and its value. Without it, the error is thrown like an uncaught one.
+   */
+  onFillError?(error: unknown, info: FillErrorInfo): void
 }
 
 /** What `useJsonForm` returns. Pass it to `<JsonFields>`. */
@@ -68,6 +79,24 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
    * re-renders for that, not for every keystroke. Without conditions, it hides nothing.
    */
   readonly visibility: VisibilityState
+  /**
+   * What the definition's fills are waiting for now: `pending` lists the triggers whose values
+   * haven't come yet, and `isPending(path)` tells it for any field. A new object only when that
+   * changes. Without fills, nothing is pending.
+   */
+  readonly fills: FillsState
+  /**
+   * Resets the whole form, like Formisch's `reset` with the same options but `keepInput`, and
+   * starts its fills again, as when the form was mounted: the fills of the triggers that start from
+   * their default run again, and the next value of a trigger sets every field the user hasn't
+   * edited since. A new `initialInput` goes over the definition's defaults, like the option's, and
+   * its fields and triggers are left alone as the form starts. Formisch's own `reset` leaves the
+   * fills comparing the fields with what the last fill set, as edits: with `keepInput`, which
+   * keeps the input, that is right, so use it to clear the touched state and the errors. The steps
+   * start again too: the form goes back to the first step, and keeps no errors of the steps the
+   * user left, or of a Next that failed.
+   */
+  reset(config?: Omit<ResetFormConfig<TSchema>, 'keepInput'>): void
 }
 
 /** Any form `useJsonForm` returns, typed or not: what the components take. */
@@ -79,8 +108,11 @@ export type AnyJsonFormInstance = JsonFormInstance<FormSchema>
  * `DefinitionError`, so run `validate()` first when it comes from outside your code. Like
  * Formisch's `useForm`, it reads the definition, the builder, the initial input and the validation
  * modes on the first render: give the component a new `key` to use another definition. The
- * components and layout components are read on every render. With conditions, it clears the fields
- * they clear as soon as they do, with Formisch's `setInput`, wherever the fields are rendered.
+ * components, the layout components and `onFillError` are read on every render. With conditions,
+ * it clears the fields they clear as soon as they do, with Formisch's `setInput`, wherever the
+ * fields are rendered. With fills, each new value of a trigger sets the fields of its fill, and a
+ * trigger that loses its value blanks them, with Formisch's `setInput`. The fills of sources the
+ * form starts with run once it is mounted, as the values it starts with.
  */
 export function useJsonForm(definition: JsonForm, options?: UseJsonFormOptions): JsonFormInstance
 /**
@@ -106,6 +138,7 @@ export function useJsonForm(
       fields: builder.getFieldTree(definition),
       layout: builder.getLayout(definition),
       visibility: builder.getVisibility(definition),
+      fills: builder.getFills(definition),
     }
   })
   const form = useForm({
@@ -121,7 +154,29 @@ export function useJsonForm(
     // The paths come from the definition at runtime, so the schema's types can't check them.
     for (const { path, input } of toClear) setInput(form, { path, input } as never)
   }, [form, toClear])
-  const steps = useJsonFormSteps(form, built.layout, options, visibility)
+  const { run, state: fills, reset: resetFills } = useFills(form, built.fills, options)
+  const { steps, restart } = useJsonFormSteps(
+    form,
+    built.layout,
+    options,
+    visibility,
+    built.visibility,
+    run.settled,
+  )
+  const reset = useCallback(
+    (config: Omit<ResetFormConfig<BuiltSchema>, 'keepInput'> = {}) => {
+      if (Object.hasOwn(config, 'initialInput')) {
+        // Like the option, the input given goes over the definition's defaults.
+        const given = config.initialInput
+        const initialInput = mergeInitialInput(built.builder, built.definition, given)
+        resetFills(() => resetForm(form, { ...config, initialInput }), { given })
+      } else {
+        resetFills(() => resetForm(form, config))
+      }
+      restart()
+    },
+    [form, built, resetFills, restart],
+  )
   const { components, layoutComponents } = options
   return useMemo(
     () => ({
@@ -134,7 +189,9 @@ export function useJsonForm(
       layout: built.layout,
       steps,
       visibility,
+      fills,
+      reset,
     }),
-    [form, built, components, layoutComponents, steps, visibility],
+    [form, built, components, layoutComponents, steps, visibility, fills, reset],
   )
 }

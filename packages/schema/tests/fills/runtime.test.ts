@@ -464,6 +464,40 @@ describe('a fill with a source', () => {
     expect(form.log).toEqual([])
   })
 
+  it('runs a change again on start() after stop() cancelled it, while its trigger keeps the value', async () => {
+    const { calls, source } = handSource()
+    const form = openForm(
+      createSchemaBuilder({ extensions: [prefill({ profiles: source })] }),
+      sourceForm(),
+    )
+    form.run.start()
+    form.type('profile', 'b')
+    form.run.stop()
+    form.run.start()
+    expect(calls.map(({ value, signal }) => [value, signal.aborted])).toEqual([
+      ['b', true],
+      ['b', false],
+    ])
+    expect(form.run.state.pending).toEqual(['profile'])
+    calls[1]?.settle.resolve(profiles.b)
+    await form.run.settled()
+    expect(form.log).toEqual([
+      'set firstName "Jelena"',
+      'set lastName "Jovanović"',
+      'set address.city "Novi Sad"',
+    ])
+
+    // The trigger changes while the run is stopped: start() leaves the old value, and update()
+    // runs the new one.
+    form.type('profile', 'c')
+    form.run.stop()
+    ;(form.input as Record<string, unknown>)['profile'] = 'a'
+    form.run.start()
+    expect(calls).toHaveLength(3)
+    form.run.update()
+    expect(calls.map(({ value }) => value)).toEqual(['b', 'b', 'c', 'a'])
+  })
+
   it('settles without waiting for a call a new value dropped', async () => {
     const { calls, source } = handSource()
     const form = openForm(

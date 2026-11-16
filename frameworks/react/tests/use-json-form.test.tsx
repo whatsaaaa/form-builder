@@ -1,4 +1,4 @@
-import { getErrors, getInput } from '@formisch/react'
+import { getErrors, getInput, isDirty, setInput } from '@formisch/react'
 import {
   createSchemaBuilder,
   DefinitionError,
@@ -8,7 +8,7 @@ import {
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
 import { type FieldComponents, useJsonForm } from '@whatsaaaa/form-builder-react'
-import { useEffect, useState } from 'react'
+import { act, useEffect, useState } from 'react'
 import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import { TestInput } from './components'
@@ -32,6 +32,23 @@ describe('useJsonForm', () => {
     const { form: store } = withHook(() => useJsonForm(fixtures.array as JsonForm))
 
     expect(getInput(store)).toEqual({ tags: ['new'], lines: [] })
+  })
+
+  it("resets the form like Formisch's reset, with its options", () => {
+    const jsonForm = withHook(() =>
+      useJsonForm(form({ name: 'name', type: 'text', default: 'Ana' })),
+    )
+    act(() => setInput(jsonForm.form, { path: ['name'], input: 'Marta' } as never))
+    act(() => jsonForm.reset())
+    expect(getInput(jsonForm.form)).toEqual({ name: 'Ana' })
+
+    act(() => jsonForm.reset({ initialInput: { name: 'Jelena' } }))
+    expect(getInput(jsonForm.form)).toEqual({ name: 'Jelena' })
+    expect(isDirty(jsonForm.form)).toBe(false)
+
+    // Like the option, a new initial input goes over the defaults.
+    act(() => jsonForm.reset({ initialInput: {} }))
+    expect(getInput(jsonForm.form)).toEqual({ name: 'Ana' })
   })
 
   it('throws a DefinitionError for a definition with issues', () => {

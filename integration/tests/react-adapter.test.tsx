@@ -2,10 +2,12 @@
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
 import { focus, Form, type FormStore, getInput, setErrors } from '@formisch/react'
 import { affects } from '@whatsaaaa/form-builder-affects'
+import { fills, type FillSource } from '@whatsaaaa/form-builder-fills'
 import {
   createSchemaBuilder,
   defaultFieldTypes,
   type FieldTypeDef,
+  type FillResult,
   type JsonField,
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
@@ -22,11 +24,13 @@ import {
   useJsonForm,
   type ValueFieldProps,
 } from '@whatsaaaa/form-builder-react'
-import { act, type ReactNode, useEffect } from 'react'
+import { act, type ReactNode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { describe, onTestFinished } from 'vitest'
+import { describe, expect, it, onTestFinished } from 'vitest'
+import profileSource from '../../fixtures/fills/profile-source.json'
+import { runFillsInitialInputCases, runFillsScenarios } from './fills-cases'
 import { runInitialInputCases } from './initial-input-cases'
-import { type RenderedForm, runScenarios } from './run-scenarios'
+import { controlAt, type RenderedForm, runScenarios } from './run-scenarios'
 import { runServerErrorsCases, type ServerIssue } from './server-errors-cases'
 
 // Tells React that tests wrap their updates in act().
@@ -34,8 +38,27 @@ import { runServerErrorsCases, type ServerIssue } from './server-errors-cases'
 
 type Option = { value: string | number | boolean; label: string }
 
-// The fixtures with conditions need the affects extension. The others render the same with it.
-const builder = createSchemaBuilder({ extensions: [affects()] })
+/** The calls of the `profiles` source, each waiting for the test to answer it. */
+const profileCalls: {
+  value: unknown
+  answer: (values: FillResult | PromiseLike<FillResult>) => void
+}[] = []
+const profiles: FillSource = (value) =>
+  new Promise<FillResult>((answer) => profileCalls.push({ value, answer }))
+
+// The fixtures with conditions need the affects extension, and the forms with fills the fills
+// extension, with the sources they name. The others render the same with them.
+const builder = createSchemaBuilder({
+  extensions: [
+    affects(),
+    fills({
+      sources: {
+        profiles,
+        cities: () => null,
+      },
+    }),
+  ],
+})
 
 const optionsOf = (field: JsonField) => (field.options ?? []) as Option[]
 const dotPath = (path: FieldPath) => path.join('.')
@@ -318,19 +341,110 @@ describe("a server's errors in a form with steps, in @whatsaaaa/form-builder-rea
   runServerErrorsCases(render)
 })
 
+/** The input a form starts with in @whatsaaaa/form-builder-react, for the `initialInput`. */
+function startInput(json: JsonForm, initialInput: unknown): unknown {
+  const start: { input?: unknown } = {}
+  function Start() {
+    const { form } = useJsonForm(json, { builder, initialInput } as never)
+    useEffect(() => {
+      start.input = getInput(form)
+    })
+    return null
+  }
+  const root = createRoot(document.createElement('div'))
+  act(() => root.render(<Start />))
+  act(() => root.unmount())
+  return start.input
+}
+
 describe('initialInput in @whatsaaaa/form-builder-react', () => {
-  runInitialInputCases((json, initialInput) => {
-    const start: { input?: unknown } = {}
-    function Start() {
-      const { form } = useJsonForm(json, { builder, initialInput } as never)
-      useEffect(() => {
-        start.input = getInput(form)
-      })
-      return null
+  runInitialInputCases(startInput)
+})
+
+describe('fills in @whatsaaaa/form-builder-react', () => {
+  runFillsScenarios(render)
+  runFillsInitialInputCases(startInput)
+})
+
+/**
+ * A form with fills the way the guide shows it: the submit button is disabled while a fill waits,
+ * and the app shows the error of a fill.
+ */
+function FillsView(props: { json: JsonForm }) {
+  const [fillError, setFillError] = useState<string>()
+  const jsonForm = useJsonForm(props.json, {
+    builder,
+    components,
+    onFillError: () => setFillError("Couldn't load the profile. Fill in the fields yourself."),
+  })
+  return (
+    <Form of={jsonForm.form} onSubmit={() => {}}>
+      <JsonFields of={jsonForm} />
+      {fillError && <p role="alert">{fillError}</p>}
+      <button type="submit" disabled={jsonForm.fills.pending.length > 0}>
+        Save
+      </button>
+    </Form>
+  )
+}
+
+describe('fills with a source in @whatsaaaa/form-builder-react', () => {
+  function renderFills(json: unknown) {
+    const root = document.createElement('div')
+    document.body.append(root)
+    const reactRoot = createRoot(root)
+    act(() => reactRoot.render(<FillsView json={json as JsonForm} />))
+    onTestFinished(() => {
+      act(() => reactRoot.unmount())
+      root.remove()
+    })
+    const element = <T extends Element>(selector: string) => root.querySelector(selector) as T
+    return {
+      names: () =>
+        ['firstName', 'lastName', 'address.city'].map((path) => controlAt(root, path).value),
+      saveDisabled: () => element<HTMLButtonElement>('button[type="submit"]').disabled,
+      alert: () => root.querySelector('[role="alert"]')?.textContent ?? null,
+      async update(change: () => void) {
+        await act(async () => {
+          change()
+          await new Promise((resolve) => setTimeout(resolve))
+        })
+      },
+      choose(label: string) {
+        const select = controlAt(root, 'profile') as HTMLSelectElement
+        for (const option of select.options) option.selected = option.text === label
+        select.dispatchEvent(new Event('change', { bubbles: true }))
+      },
     }
-    const root = createRoot(document.createElement('div'))
-    act(() => root.render(<Start />))
-    act(() => root.unmount())
-    return start.input
+  }
+
+  it('waits for a source with the submit disabled, then fills', async () => {
+    profileCalls.length = 0
+    const form = renderFills(profileSource)
+    expect(form.saveDisabled()).toBe(false)
+    await form.update(() => form.choose('Profile A'))
+    expect(profileCalls.map(({ value }) => value)).toEqual(['a'])
+    expect(form.saveDisabled()).toBe(true)
+
+    await form.update(() =>
+      profileCalls[0]?.answer({
+        firstName: 'Marko',
+        lastName: 'Petrović',
+        'address.city': 'Beograd',
+        id: 7,
+      }),
+    )
+    expect(form.names()).toEqual(['Marko', 'Petrović', 'Beograd'])
+    expect(form.saveDisabled()).toBe(false)
+  })
+
+  it('shows what the app makes of an error of a source', async () => {
+    profileCalls.length = 0
+    const form = renderFills(profileSource)
+    await form.update(() => form.choose('Profile B'))
+    await form.update(() => profileCalls[0]?.answer(Promise.reject(new Error('Down'))))
+    expect(form.alert()).toBe("Couldn't load the profile. Fill in the fields yourself.")
+    expect(form.names()).toEqual(['', '', ''])
+    expect(form.saveDisabled()).toBe(false)
   })
 })

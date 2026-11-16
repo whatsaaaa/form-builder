@@ -8,6 +8,7 @@ import {
 import { type ComponentType, type ReactElement, useCallback } from 'react'
 import type { ValueFieldProps } from './field-components'
 import { fieldEventsOf } from './json-form-steps'
+import { hasFills } from './use-fills'
 import type { AnyJsonFormInstance } from './use-json-form'
 
 interface ValueFieldConnectionProps {
@@ -54,6 +55,8 @@ export function ValueField({
           },
         }
       : field.props
+  // Left out without fills, so a component that spreads its props on an element gets no new one.
+  const pending = hasFills(form) ? { pending: of.fills.isPending(path) } : {}
 
   return (
     <Component
@@ -65,6 +68,7 @@ export function ValueField({
       errors={field.errors}
       inputProps={inputProps}
       setInput={setInput}
+      {...pending}
     />
   )
 }
