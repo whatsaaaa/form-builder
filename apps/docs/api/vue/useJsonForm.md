@@ -25,7 +25,7 @@ const jsonForm = useJsonForm<TInput, TOutput>(definition, options)
 
 A definition with issues throws the builder's `DefinitionError`, so run `validate()` first when it comes from outside your code. The definition and the initial input are read once, when the component sets up: give the component a new `:key` to use another definition, or to start again with other values.
 
-With conditions, it clears the fields they clear as soon as they do, with Formisch's `setInput`, wherever the fields are rendered. With your input type, and your output type when it differs, the form is typed, so Formisch checks paths and values. See [TypeScript](/guide/typescript#typing-the-form).
+With conditions, it clears the fields they clear as soon as they do, with Formisch's `setInput`, wherever the fields are rendered. With [fills](/frameworks/vue#fills), each new value of a field with `fills` sets the fields it names, and those that run as the form starts set their values once it is mounted. With your input type, and your output type when it differs, the form is typed, so Formisch checks paths and values. See [TypeScript](/guide/typescript#typing-the-form).
 
 ## Returns
 

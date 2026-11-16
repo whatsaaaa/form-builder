@@ -28,6 +28,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@whatsaaaa/form-builder-affects": "workspace:*",
+    "@whatsaaaa/form-builder-fills": "workspace:*",
     "@whatsaaaa/form-builder-react": "workspace:*",
     "@whatsaaaa/form-builder-schema": "workspace:*",
     "@whatsaaaa/form-builder-vue": "workspace:*",

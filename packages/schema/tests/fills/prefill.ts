@@ -128,7 +128,8 @@ export interface TestFormOptions extends OpenFillsOptions {
  * A form in memory, like Formisch's, with the definition's fills open on it. It starts with the
  * builder's initial input, with `given` over it as the adapters merge it, and blanks what the
  * conditions clear with each change, or only on `clear()` with `clearLater`. `log` lists every
- * input the fills set: `set` for a change, `start` for an input the form starts with.
+ * input the fills set: `set` for a change, `start` for an input the form starts with, which
+ * `reset()` goes back to.
  */
 export function openForm(
   builder: SchemaBuilder,
@@ -142,6 +143,8 @@ export function openForm(
     given === undefined
       ? builder.getInitialInput(json)
       : visibility.clear(fills.initialInput(mergeFields(builder.getFieldTree(json), given), given))
+  // The input `reset()` goes back to, with each input the fills set as one the form starts with.
+  let start = input
   const log: string[] = []
   const cleared = (next: unknown) => (clearLater ? next : visibility.clear(next))
   const write = (kind: string, path: readonly (string | number)[], value: unknown) => {
@@ -156,7 +159,10 @@ export function openForm(
       write('set', path, value)
       if (watchSync) run.update()
     },
-    setStartInput: (path, value) => write('start', path, value),
+    setStartInput(path, value) {
+      start = setIn(start, path, value)
+      write('start', path, value)
+    },
   }
   const run = fills.open(form, options)
   return {
@@ -169,6 +175,15 @@ export function openForm(
     /** Sets a field as the user would, then tells the fills. */
     type(path: string, value: unknown) {
       input = cleared(setIn(input, path.split('.'), value))
+      run.update()
+    },
+    /**
+     * Sets every field back to what it starts with, like Formisch's `reset`, then resets the fills,
+     * and tells them of the change, as an adapter's watch does.
+     */
+    reset() {
+      input = start
+      run.reset()
       run.update()
     },
     /** Blanks what the conditions clear, as an adapter's watch does, then tells the fills. */

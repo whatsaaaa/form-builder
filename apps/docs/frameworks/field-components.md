@@ -50,6 +50,7 @@ A value field gets the field from the definition, its state in Formisch, and a s
 - `input` is the field's current input, and `errors` its messages, or `null`. `input` is `unknown`, so make it a string for an element's value, with `String(input ?? '')`.
 - `inputProps` are Formisch's element props: the field's name, a ref, and its focus, change and blur handlers. Bind them to the input element, so Formisch knows when the field is touched and can focus it after a failed submit. A field with several elements, like a radio, binds them to each one.
 - `required` is true when the definition makes the field required, like for an asterisk. The schema does the checking.
+- `pending` is true while a [fill](/frameworks/vue#fills) waits for the field's value, as the field that fills or as one it fills in, like to show a spinner. Make the input read-only only for a field it fills in, never for the field that fills: the user may still be typing in it, like a ZIP code that looks up the city. In Vue, only a form with fills passes it, so declare it with the other props, as `defineProps<ValueFieldProps>()` does, or Vue adds it to the element as an attribute.
 
 A `textarea` takes the same props on a `<textarea>`:
 

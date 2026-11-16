@@ -3,6 +3,8 @@ import {
   type FormSchema,
   type FormStore,
   getInput,
+  reset,
+  type ResetFormConfig,
   setInput,
   useForm,
   type ValidationMode,
@@ -10,6 +12,8 @@ import {
 import {
   createSchemaBuilder,
   type FieldNode,
+  type FillErrorInfo,
+  type FillsState,
   type FormLayout,
   type JsonForm,
   type BuiltSchema,
@@ -21,6 +25,7 @@ import { computed, watch } from 'vue'
 import type { FieldComponents, LayoutComponents } from './field-components'
 import { type JsonFormSteps, useJsonFormSteps } from './json-form-steps'
 import { mergeInitialInput } from './merge-initial-input'
+import { useFills } from './use-fills'
 
 /** The options of `useJsonForm`. `TSchema` is the form's schema, which types `initialInput`. */
 export interface UseJsonFormOptions<TSchema extends FormSchema = BuiltSchema> {
@@ -43,6 +48,12 @@ export interface UseJsonFormOptions<TSchema extends FormSchema = BuiltSchema> {
   validate?: ValidationMode
   /** When a field is validated again after that, as in Formisch. */
   revalidate?: Exclude<ValidationMode, 'initial'>
+  /**
+   * Called with each error of the definition's fills, like the `fills` of
+   * `@whatsaaaa/form-builder-fills`: what a source threw, or a TypeError for values that don't fit,
+   * with the trigger and its value. Without it, the error is thrown like an uncaught one.
+   */
+  onFillError?(error: unknown, info: FillErrorInfo): void
 }
 
 /** What `useJsonForm` returns. Pass it to `<JsonFields>`. */
@@ -67,6 +78,24 @@ export interface JsonFormInstance<TSchema extends FormSchema = BuiltSchema> {
    * Read it in your own renderers. Without conditions, it hides nothing.
    */
   readonly visibility: VisibilityState
+  /**
+   * What the definition's fills are waiting for now, like the `fills` of
+   * `@whatsaaaa/form-builder-fills`: `pending` lists the triggers whose values haven't come yet,
+   * and `isPending(path)` tells it for any field. Without fills, nothing is pending.
+   */
+  readonly fills: FillsState
+  /**
+   * Resets the whole form, like Formisch's `reset` with the same options but `keepInput`, and
+   * starts its fills again, as when the form opened: the fills of the triggers that start from
+   * their default run again, and the next value of a trigger sets every field the user hasn't
+   * edited since. A new `initialInput` goes over the definition's defaults, like the option's, and
+   * its fields and triggers are left alone as the form starts. Formisch's own `reset` leaves the
+   * fills comparing the fields with what the last fill set, as edits: with `keepInput`, which
+   * keeps the input, that is right, so use it to clear the touched state and the errors. The steps
+   * start again too: the form goes back to the first step, and keeps no errors of the steps the
+   * user left, or of a Next that failed.
+   */
+  reset(config?: Omit<ResetFormConfig<TSchema>, 'keepInput'>): void
 }
 
 /** Any form `useJsonForm` returns, typed or not: what the components take. */
@@ -78,7 +107,8 @@ export type AnyJsonFormInstance = JsonFormInstance<FormSchema>
  * `DefinitionError`, so run `validate()` first when it comes from outside your code. The
  * definition and the initial input are read once: give the form a new `:key` to use another one.
  * With conditions, it clears the fields they clear as soon as they do, with Formisch's `setInput`,
- * wherever the fields are rendered.
+ * wherever the fields are rendered. With fills, each new value of a trigger sets the fields of its
+ * fill, and those that run as the form starts set their values once it is mounted.
  */
 export function useJsonForm(definition: JsonForm, options?: UseJsonFormOptions): JsonFormInstance
 /**
@@ -116,6 +146,8 @@ export function useJsonForm(
       },
     )
   }
+  const fills = useFills(form, builder, definition, options)
+  const { steps, restart } = useJsonFormSteps(form, layout, options, state, fills)
   return {
     form,
     definition,
@@ -124,9 +156,23 @@ export function useJsonForm(
     layoutComponents: options.layoutComponents,
     fields: builder.getFieldTree(definition),
     layout,
-    steps: useJsonFormSteps(form, layout, options, state),
+    steps,
     get visibility() {
       return state.value
+    },
+    get fills() {
+      return fills.state.value
+    },
+    reset(config = {}) {
+      if (Object.hasOwn(config, 'initialInput')) {
+        const given = config.initialInput
+        reset(form, { ...config, initialInput: mergeInitialInput(builder, definition, given) })
+        fills.reset({ given })
+      } else {
+        reset(form, config)
+        fills.reset()
+      }
+      restart()
     },
   }
 }

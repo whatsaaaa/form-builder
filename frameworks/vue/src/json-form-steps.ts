@@ -33,16 +33,19 @@ export interface JsonFormSteps {
   readonly isFirst: boolean
   readonly isLast: boolean
   /**
-   * Validates the whole form, and moves to the next step when the fields of this one have no
-   * issues. Otherwise it stays, and focuses the first field with an issue, in layout order.
-   * Resolves to whether it moved.
+   * Waits for the fills that are pending, then validates the whole form, and moves to the next
+   * step, the one after this among the steps on show once the fills set their values, when the
+   * fields of this one have no issues. Otherwise it stays, and focuses the first field with an
+   * issue, in layout order. Resolves to whether it moved: a step the user goes to, or a reset,
+   * while it waits wins, and it resolves to false.
    */
   next(): Promise<boolean>
   /** Moves to the step before, without validating. */
   back(): void
   /**
-   * Moves to the step at `index`. Back is free, and forward validates every step on the way, like
-   * `next()`, and stops at the first with issues. Resolves to whether it got there.
+   * Moves to the step at `index`. Back is free, and forward waits for pending fills and validates
+   * every step on the way once they set their values, like `next()`, and stops at the first with
+   * issues. Resolves to whether it got there: not to a step the fills hid meanwhile.
    */
   goTo(index: number): Promise<boolean>
 }
@@ -68,7 +71,9 @@ export const fieldEventsOf = (form: FormStore): FieldEvents | undefined => field
  * The steps of `layout`, for `useJsonForm`. With more than one, a step shows the errors it had
  * when the user left it, and none the first time they get to it, a step that failed Next
  * revalidates as the user fixes it, a submit before the last step moves on like Next, and a submit
- * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped.
+ * that fails because of an earlier step goes back to it. The steps `visibility` hides are skipped,
+ * and moving forward waits until `fills` are settled, so it validates the values they set.
+ * `restart()` goes back to the first step as the form opened, for a reset.
  */
 export function useJsonFormSteps(
   form: FormStore,
@@ -78,7 +83,8 @@ export function useJsonFormSteps(
     revalidate?: Exclude<ValidationMode, 'initial'> | undefined
   },
   visibility: { readonly value: VisibilityState },
-): JsonFormSteps {
+  fills: { settled(): Promise<void> },
+): { steps: JsonFormSteps; restart(): void } {
   const all = layout.steps
   // The current step, by its index in `all`, as are the steps of the maps and sets below.
   const at = ref(0)
@@ -92,23 +98,44 @@ export function useJsonFormSteps(
   const left = new Map<number, Map<string, Errors>>()
   // The steps that failed Next, and haven't passed since.
   const failed = new Set<number>()
+  // How many times the current step was set, so that a Next that waited knows of a move meanwhile.
+  let moves = 0
 
   async function goTo(target: number): Promise<boolean> {
     const shown = list.value
     if (!Number.isInteger(target) || target < 0 || target >= shown.length) {
       throw new RangeError(`No step ${target}. The form has ${shown.length}.`)
     }
-    const to = all.indexOf(shown[target] as LayoutStep)
+    const step = shown[target] as LayoutStep
     if (target <= index.value) {
-      move(to)
+      move(all.indexOf(step))
       return true
     }
+    return forward(() => list.value.indexOf(step))
+  }
+
+  /**
+   * Moves forward to the step at `target()` in `list`, read once the fills set their values, and
+   * validates every step on the way, stopping at the first with issues.
+   */
+  async function forward(target: () => number): Promise<boolean> {
+    const before = moves
     // Next goes on once the task that called it is over. A click runs its default action after its
     // handlers, and Vue can render in between: a Next button that turns into the submit button on
     // the last step would then submit the form as the user gets there.
     await afterTask()
+    // The values a fill is waiting for are validated, not the blanks they replace, and the steps
+    // they show or hide are the ones on the way.
+    await fills.settled()
+    const shown = list.value
+    const from = index.value
+    const end = target()
+    // A step the user went to while it waited wins, as does a reset, and a step the fills hid
+    // isn't reached.
+    if (moves !== before || end <= from || end >= shown.length) return false
     const { issues } = await validate(form)
-    for (const step of shown.slice(index.value, target)) {
+    if (moves !== before) return false
+    for (const step of shown.slice(from, end)) {
       const found = issuesOfStep(step, issues)
       if (found.length) {
         await stop(all.indexOf(step), found)
@@ -116,7 +143,7 @@ export function useJsonFormSteps(
       }
       failed.delete(all.indexOf(step))
     }
-    move(to)
+    move(all.indexOf(shown[end] as LayoutStep))
     return true
   }
 
@@ -132,6 +159,15 @@ export function useJsonFormSteps(
       setErrors(form, { path, errors: errors?.get(JSON.stringify(path)) ?? null } as never)
     }
     at.value = target
+    moves++
+  }
+
+  /** Goes back to the first step, with no step left or failed yet, as the form opened. */
+  function restart() {
+    left.clear()
+    failed.clear()
+    at.value = 0
+    moves++
   }
 
   /** Keeps the errors of the current step, for when the user comes back to it. */
@@ -162,6 +198,7 @@ export function useJsonFormSteps(
     failed.add(target)
     if (target !== at.value) leave()
     at.value = target
+    moves++
     await nextTick()
     // A group or an array has no element: the first field that has one gets the focus.
     const first = found.find((issue) => issue.field.role === 'value')
@@ -184,14 +221,14 @@ export function useJsonFormSteps(
     get isLast() {
       return index.value === list.value.length - 1
     },
-    next: () => (steps.isLast ? Promise.resolve(false) : goTo(index.value + 1)),
+    next: () => (steps.isLast ? Promise.resolve(false) : forward(() => index.value + 1)),
     back: () => {
       if (index.value > 0) move(all.indexOf(list.value[index.value - 1] as LayoutStep))
     },
     goTo,
   }
   if (all.length > 1) watchSteps()
-  return steps
+  return { steps, restart }
 
   function watchSteps() {
     fieldEvents.set(form, (event) => {

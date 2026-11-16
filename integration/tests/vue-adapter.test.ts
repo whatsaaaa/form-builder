@@ -2,6 +2,7 @@
 // shows: they call `setInput` with what the element gives, and choices come from the definition.
 import { focus, Form, type FormStore, getInput, setErrors } from '@formisch/vue'
 import { affects } from '@whatsaaaa/form-builder-affects'
+import { fills } from '@whatsaaaa/form-builder-fills'
 import {
   createSchemaBuilder,
   defaultFieldTypes,
@@ -30,14 +31,16 @@ import {
   type PropType,
 } from 'vue'
 import { describe, onTestFinished } from 'vitest'
+import { runFillsInitialInputCases, runFillsScenarios } from './fills-cases'
 import { runInitialInputCases } from './initial-input-cases'
 import { type RenderedForm, runScenarios } from './run-scenarios'
 import { runServerErrorsCases, type ServerIssue } from './server-errors-cases'
 
 type Option = { value: string | number | boolean; label: string }
 
-// The fixtures with conditions need the affects extension. The others render the same with it.
-const builder = createSchemaBuilder({ extensions: [affects()] })
+// The fixtures with conditions need the affects extension, and the forms with fills the fills
+// extension. The others render the same with them.
+const builder = createSchemaBuilder({ extensions: [affects(), fills()] })
 
 const optionsOf = (field: JsonField) => (field.options ?? []) as Option[]
 const dotPath = (path: FieldPath) => path.join('.')
@@ -323,17 +326,25 @@ describe("a server's errors in a form with steps, in @whatsaaaa/form-builder-vue
   runServerErrorsCases(render)
 })
 
-describe('initialInput in @whatsaaaa/form-builder-vue', () => {
-  runInitialInputCases((json, initialInput) => {
-    let input: unknown
-    const app = createApp({
-      setup() {
-        input = getInput(useJsonForm(json, { builder, initialInput } as never).form)
-        return () => null
-      },
-    })
-    app.mount(document.createElement('div'))
-    app.unmount()
-    return input
+/** The input a form starts with in Vue, for the `initialInput` of `useJsonForm`. */
+function startOf(json: JsonForm, initialInput: unknown): unknown {
+  let input: unknown
+  const app = createApp({
+    setup() {
+      input = getInput(useJsonForm(json, { builder, initialInput } as never).form)
+      return () => null
+    },
   })
+  app.mount(document.createElement('div'))
+  app.unmount()
+  return input
+}
+
+describe('initialInput in @whatsaaaa/form-builder-vue', () => {
+  runInitialInputCases(startOf)
+})
+
+describe('fills in @whatsaaaa/form-builder-vue', () => {
+  runFillsScenarios(render)
+  runFillsInitialInputCases(startOf)
 })

@@ -427,6 +427,9 @@ importers:
       '@whatsaaaa/form-builder-affects':
         specifier: workspace:^
         version: link:../../packages/affects
+      '@whatsaaaa/form-builder-fills':
+        specifier: workspace:^
+        version: link:../../packages/fills
       '@whatsaaaa/form-builder-schema':
         specifier: workspace:^
         version: link:../../packages/schema
@@ -514,6 +517,9 @@ importers:
       '@whatsaaaa/form-builder-affects':
         specifier: workspace:*
         version: link:../packages/affects
+      '@whatsaaaa/form-builder-fills':
+        specifier: workspace:*
+        version: link:../packages/fills
       '@whatsaaaa/form-builder-react':
         specifier: workspace:*
         version: link:../frameworks/react

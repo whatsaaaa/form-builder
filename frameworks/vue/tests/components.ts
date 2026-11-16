@@ -29,16 +29,20 @@ const id = (path: readonly (string | number)[]) => path.join('.')
 
 /** A plain input for any value field. */
 export const TestInput = defineComponent({
-  props: propsOf<ValueFieldProps>(
-    'field',
-    'path',
-    'kind',
-    'required',
-    'input',
-    'errors',
-    'inputProps',
-    'setInput',
-  ),
+  props: {
+    ...propsOf<ValueFieldProps>(
+      'field',
+      'path',
+      'kind',
+      'required',
+      'input',
+      'errors',
+      'inputProps',
+      'setInput',
+    ),
+    // Optional, and undefined when it is left out, where Vue would make a boolean prop false.
+    pending: { type: Boolean, default: undefined },
+  },
   setup(props) {
     return () => {
       values.set(id(props.path), { ...props })
@@ -48,6 +52,7 @@ export const TestInput = defineComponent({
           value:
             typeof props.input === 'string' || typeof props.input === 'number' ? props.input : '',
           'aria-required': props.required,
+          'aria-busy': props.pending || undefined,
           onInput: (event: Event) => props.setInput((event.target as HTMLInputElement).value),
         }),
         props.errors ? h('small', props.errors[0]) : null,

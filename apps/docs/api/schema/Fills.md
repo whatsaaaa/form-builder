@@ -17,7 +17,7 @@ The fills of a definition's extensions, as the builder's [`getFills()`](/api/sch
 ### Explanation
 
 - **`initialInput(input, given)`** takes the defaults with the app's initial input `given` over them. A static fill, like a map written in the definition, sets its fields there when its trigger starts with a value and `given` has no key for the trigger. It leaves alone every field `given` has a key for. A field the conditions clear, as the form starts or for those values, is blank, even when a later value ends the clear, and a trigger they clear keeps none of its fills' values, as in an open form, whatever the order of the fields. It throws what a static fill's `values()` throws, and a `TypeError` when it gives a promise, or no object of values. Apply the conditions' [`clear()`](/api/schema/Visibility) after it. The builder's [`getInitialInput()`](/api/schema/SchemaBuilder#getinitialinput) does both already, with nothing given.
-- **`open(form, options)`** has no side effects, so it can run on a server. Call `start()` on the run once the form is on the page, `update()` after each change of the input, and `stop()` when the form closes.
+- **`open(form, options)`** has no side effects, so it can run on a server. [`FillsRun`](/api/schema/FillsRun) says when to call each method of the run it gives, like `start()` once the form is on the page.
 
 How a running fill behaves is in [extensions](/guide/extensions#fills).
 

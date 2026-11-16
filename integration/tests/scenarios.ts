@@ -49,7 +49,11 @@ export interface Scenario {
 
 export const fill = (path: DotPath, text: string): Step => ({ do: 'fill', path, text })
 const check = (path: DotPath, option?: string): Step => ({ do: 'check', path, option })
-const choose = (path: DotPath, ...options: string[]): Step => ({ do: 'choose', path, options })
+export const choose = (path: DotPath, ...options: string[]): Step => ({
+  do: 'choose',
+  path,
+  options,
+})
 const upload = (path: DotPath, ...files: [name: string, type: string, size: number][]): Step => ({
   do: 'upload',
   path,

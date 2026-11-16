@@ -164,6 +164,7 @@ set(['billingName'], 'Marko Petrović') // the user types
 run.update() // after each change of a field of fills.triggers
 // input.shipping: { name: 'Marko Petrović' }
 
+run.reset() // after a reset, with { given } for a new initial input
 run.stop() // when the form closes
 // #endregion run
 
