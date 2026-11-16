@@ -1,5 +1,11 @@
 # @whatsaaaa/form-builder-schema
 
+## 1.0.0-rc.1
+
+### Minor Changes
+
+- [#71](https://github.com/whatsaaaa/form-builder/pull/71) [`34bf706`](https://github.com/whatsaaaa/form-builder/commit/34bf7066eed14d01cac945b3b865bd56a425120b) Thanks [@whatsaaaa](https://github.com/whatsaaaa)! - Extensions can fill fields from the value of another: `ctx.fill(trigger, fill)` adds a fill on a field, and each new value of that field sets the fields the fill names, with values the definition holds, like a map, or that come later, like from a server. `builder.getFills(json)` runs them in a form, in any framework: `open()` them on the form's `getInput`, `setInput` and `setStartInput`, `start()` the run once the form is on the page, and call `update()` after each change of the input. A fill sets only the fields the user hasn't edited since the last fill, unless its `overwrite` is `'always'`, and fits each value to its field. A new value of the trigger aborts the call before it through its `AbortSignal`, and a trigger that loses its value blanks every field its fill sets. As the form starts, a fill runs only for a trigger that starts from its default, never for one the app's initial input gives, so a saved record keeps its values, and `getInitialInput()` has the values of the fills written in the definition. `run.state` says what is pending, and errors go to `onError`. Fills that set each other's triggers in a loop are a `cycle` issue, and the new issue code `unknown_source` is for a source of values an extension doesn't know. `ResolvedField` has the field's `role`. The new types are `Fills`, `FillsForm`, `FillsRun`, `FillsState`, `OpenFillsOptions`, `FillErrorInfo`, `TargetFill`, `FillContext`, `FillResult` and `FillTriggerValue`. Every rule is in https://whatsaaaa.github.io/form-builder/guide/extensions#fills.
+
 ## 1.0.0-rc.0
 
 ### Major Changes
