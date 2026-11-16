@@ -749,7 +749,7 @@ describe('the form as it starts', () => {
     })
   })
 
-  it('starts blank with a trigger its conditions clear as it starts, whatever the order', () => {
+  it('starts blank with a field its conditions clear as it starts, whatever the order', () => {
     type Field = Record<string, unknown>
     const json = (fields: Field[]): JsonForm => ({ version: '1', fields }) as never
     const tier = {
@@ -770,17 +770,24 @@ describe('the form as it starts', () => {
       prefill: { map: { a: sets } },
     })
     const discount = { name: 'discount', type: 'number' }
+    // A field like tier, but no trigger.
+    const note = {
+      name: 'note',
+      type: 'text',
+      default: 'hello',
+      hideWhen: { field: 'vip', clear: true },
+    }
     const vip = { name: 'vip', type: 'checkbox' }
     const student = { name: 'student', type: 'checkbox' }
     const cases: [fields: Field[], expected: Field][] = [
       // vip starts ticked, which clears tier, and the profile unticks it.
       [
-        [tier, discount, profile({ vip: false }), { ...vip, default: true }],
+        [tier, discount, note, profile({ vip: false }), { ...vip, default: true }],
         { profile: 'a', vip: false },
       ],
       // plan ticks vip, which clears tier, and the profile clears plan, which unticks vip.
       [
-        [plan, tier, discount, profile({ student: true }), vip, student],
+        [plan, tier, discount, note, profile({ student: true }), vip, student],
         { profile: 'a', student: true },
       ],
     ]
@@ -801,6 +808,9 @@ describe('the form as it starts', () => {
         open.clear()
       }
       expect(open.input).toEqual(expected)
+      // A field the app gives keeps its value, as the conditions don't clear it once settled.
+      const saved = openForm(builder, json(starting), { given: { note: 'mine' } })
+      expect(saved.input).toEqual({ ...expected, note: 'mine' })
     }
   })
 

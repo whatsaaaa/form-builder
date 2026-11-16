@@ -21,11 +21,11 @@ export interface Fills {
   /**
    * The input a form starts with: `input`, the defaults with the app's initial input over them,
    * with the values of each static fill, like a map, whose trigger starts from the definition with
-   * a value. They leave alone the fields `given`, the app's initial input, has a key for. A trigger
-   * the conditions clear, as the form starts or for those values, is blank, and keeps none of its
-   * fills' values, whatever the order of the fields. It throws what the static fills' `values()`
-   * throw, and a TypeError when they give a promise, or no
-   * object of values. Apply the conditions' `clear()` after it. The builder's `getInitialInput()`
+   * a value. They leave alone the fields `given`, the app's initial input, has a key for. A field
+   * the conditions clear, as the form starts or for those values, is blank, even when a later
+   * value ends the clear, and a trigger they clear keeps none of its fills' values, whatever the
+   * order of the fields. It throws what the static fills' `values()` throw, and a TypeError when
+   * they give a promise, or no object of values. Apply the conditions' `clear()` after it. The builder's `getInitialInput()`
    * does all of it already.
    */
   initialInput<T>(input: T, given: unknown): T
@@ -206,10 +206,11 @@ function same(a: unknown, b: unknown): boolean {
 /**
  * The input a form starts with, with the values of each static fill whose trigger has a value, as
  * an open form settles them. Nothing is edited yet, so they set every field `given` has no key
- * for. Each pass, a trigger its conditions clear loses its value, as an open form clears it, and
- * each fill whose trigger has another value than the one it last handled runs again: with a value
- * it sets its fields, and without one it blanks them. A trigger that starts without a value blanks
- * nothing. Every fill reads the input as the pass began, so the order of the fields doesn't matter.
+ * for. Each pass, every field its conditions clear loses its value, as an open form clears it,
+ * unless `given` has a key for it, and each fill whose trigger has another value than the one it
+ * last handled runs again: with a value it sets its fields, and without one it blanks them. A
+ * trigger that starts without a value blanks nothing. Every fill reads the input as the pass
+ * began, so the order of the fields doesn't matter.
  */
 function fillInitialInput<T>(
   plan: FillPlan,
@@ -227,11 +228,9 @@ function fillInitialInput<T>(
   // blanks it, so the input settles within this many passes.
   for (let pass = 0; pass < 2 * fills.length + 2; pass++) {
     const start = current
-    const isCleared = clearedIn(engine, current)
-    for (const { trigger } of fills) {
-      if (triggerValue(trigger, current, NONE_CLEARED) !== undefined && isCleared(trigger)) {
-        current = setAt(current, trigger.path, blankOf(trigger))
-      }
+    if (engine) {
+      const toClear = engine.evaluate(current).toClear.filter(({ path }) => !isGiven(given, path))
+      current = clearFields(current, toClear)
     }
     const read = current
     for (const fill of fills) {
