@@ -333,7 +333,10 @@ function firstSettable(
   return undefined
 }
 
-/** Adds an issue when the field can't hold a value a map gives it. A blank one always fits. */
+/**
+ * Adds an issue when the field can't hold a value a map gives it. `null` always fits, and so does
+ * a value its kind counts as empty, like `""` for text or `[]` for a list.
+ */
 function checkValue(
   value: FillMapValue,
   field: ResolvedField,

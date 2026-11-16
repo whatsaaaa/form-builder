@@ -108,7 +108,7 @@ With the [fills package](/api/fills/), `validate()` checks every `fills` too, af
 | A path to no field with a value: a typo, a display element, or a field inside a list's items                         | `unknown_field`  |
 | A path to a group or a list, rather than to the fields inside it, or to a file field                                 | `kind_mismatch`  |
 | A key of `map` the field can't hold, like an option it doesn't have, `"01"` for a number, or `"yes"` for a checkbox  | `invalid_value`  |
-| A value of `map` its field can't hold, rules included, like a `default`. `null` and `""` are blank and always fit    | `invalid_value`  |
+| A map value its field can't hold, like a `default`. `null` always fits; `""` fits text, numbers, dates; `[]` lists   | `invalid_value`  |
 | A fill that sets the field it is on, or fills that set each other's triggers in a loop                               | `cycle`          |
 
 Each issue has its full path, like `['fields', 0, 'fills', 'map', 'a', 'address.city']`. Without `sources`, as on a server that only validates, the names of sources aren't checked.
