@@ -81,7 +81,7 @@ The builder's `getFills()` runs them while a form is open, in any framework. Wit
 
 ## Documentation
 
-- [Extensions guide](https://whatsaaaa.github.io/form-builder/guide/extensions#fills): when a fill runs, what it sets, and how a renderer runs it
+- [Fills guide](https://whatsaaaa.github.io/form-builder/guide/fills): how to write fills, when they run, what they set, and how to show what is loading
 - [API reference](https://whatsaaaa.github.io/form-builder/api/fills/)
 
 ## Related packages
