@@ -23,7 +23,10 @@ export const cities: FillSource = async (zip, { signal }) => {
     { signal },
   )
   // No city for this ZIP code: the city is set blank.
-  if (!response.ok) return null
+  if (response.status === 404) return null
+  if (!response.ok) {
+    throw new Error(`ZIP code ${zip}: HTTP ${response.status}`)
+  }
   const { city } = (await response.json()) as { city: string }
   return { 'address.city': city }
 }
