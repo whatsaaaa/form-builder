@@ -44,6 +44,11 @@ const router = createRouter({
       name: 'conditional-steps',
       component: () => import('../views/ConditionalStepsView.vue'),
     },
+    {
+      path: '/fills/:example?',
+      name: 'fills',
+      component: () => import('../views/FillsView.vue'),
+    },
   ],
 })
 

@@ -35,6 +35,7 @@ The package also ships `definition.schema.json`, the JSON Schema of definitions 
 
 ### Guides
 
+- [Fills](/guide/fills)
 - [Extensions](/guide/extensions#fills)
 - [Checking definitions](/guide/checking-definitions#fills)
 

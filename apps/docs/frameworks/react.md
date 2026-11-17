@@ -78,7 +78,7 @@ With [`fills()`](/api/fills/fills) in the builder, choosing a value of a field f
 - **`onFillError`** gets what a source threw, or a `TypeError` for a value its field can't hold, with the trigger and its value. Without it, the error is thrown like an uncaught one, so it shows in the console.
 - **The newest value wins.** A new value of the trigger aborts the call before it through its `signal`, and so does unmounting the form. In development, StrictMode mounts the form twice, so a source the form starts with is called twice, and the first call is aborted.
 
-[`fills()`](/api/fills/fills) has the syntax and the sources, and [extensions](/guide/extensions#fills) every rule of when a fill runs and what it sets.
+[Fills](/guide/fills) has the syntax, the sources, and every rule of when a fill runs and what it sets.
 
 ## Not included
 

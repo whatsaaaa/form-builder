@@ -4,7 +4,7 @@ description: 'The API of the fills package: the extension that fills fields from
 
 # @whatsaaaa/form-builder-fills
 
-Fills that set fields from the value of another, with values from the definition or from your own sources. See [fills](/guide/extensions#fills).
+Fills that set fields from the value of another, with values from the definition or from your own sources. See [fills](/guide/fills).
 
 ## Functions
 

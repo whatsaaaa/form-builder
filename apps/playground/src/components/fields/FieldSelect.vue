@@ -15,8 +15,14 @@ const select = (event: Event) =>
 </script>
 
 <template>
-  <FieldShell :field="field" :required="required" :errors="errors">
-    <select v-if="options.length" v-bind="inputProps" :required="required" @change="select">
+  <FieldShell :field="field" :required="required" :errors="errors" :pending="pending">
+    <select
+      v-if="options.length"
+      v-bind="inputProps"
+      :required="required"
+      :aria-busy="pending || undefined"
+      @change="select"
+    >
       <option :selected="input === undefined">Choose…</option>
       <option
         v-for="option in options"
@@ -33,6 +39,7 @@ const select = (event: Event) =>
       :type="kind === 'number' ? 'number' : 'text'"
       :value="input ?? ''"
       :required="required"
+      :aria-busy="pending || undefined"
       @input="setInput(($event.target as HTMLInputElement).value)"
     />
   </FieldShell>

@@ -51,11 +51,24 @@ export const definition = builder.defineForm({
       required: true,
       affects: [{ effect: 'hideAndClear', when: { field: 'accountType', notEquals: 'business' } }],
     },
+    {
+      name: 'profile',
+      type: 'select',
+      label: 'Profile',
+      default: 'marko',
+      options: [{ value: 'marko', label: 'Marko' }],
+      fills: { map: { marko: { fullName: 'Marko Petrović' } } },
+    },
+    { name: 'fullName', type: 'text', label: 'Full name' },
     { name: 'budget', type: 'money', label: 'Budget', currency: 'EUR', rules: [{ rule: 'even' }] },
   ],
   layout: {
     steps: [
-      { id: 'you', label: 'You', items: ['email', 'accountType', 'company'] },
+      {
+        id: 'you',
+        label: 'You',
+        items: ['email', 'accountType', 'company', 'profile', 'fullName'],
+      },
       { id: 'budget', label: 'Budget', items: ['budget'] },
     ],
   },
@@ -85,6 +98,10 @@ export function checkServer(): void {
     ],
   })
   if (issues[0]?.code !== 'unknown_source') throw new Error('an unknown source should be reported')
+  // The map fills in the name for the profile's default, before any render.
+  if (builder.getInitialInput(definition)['fullName'] !== 'Marko Petrović') {
+    throw new Error('the map should fill the initial input')
+  }
 
   try {
     builder.build({ version: '1', fields: [{ name: 'a', type: 'nope' }] })

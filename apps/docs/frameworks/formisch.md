@@ -115,6 +115,17 @@ For the [conditions](/guide/conditions) of the affects package, read what is hid
 
 A builder without the extension, or a definition without conditions, hides nothing, so the same renderer renders every definition.
 
+## Fills
+
+For the [fills](/guide/fills) of the fills package, run them with `builder.getFills(json)`, next to `getVisibility()`:
+
+- `builder.getInitialInput(json)` already has the values of the maps, for each trigger that starts from its default. With an initial input of the app's, merge it over the defaults, pass the result and that input to `fills.initialInput(input, given)`, then apply the conditions' `clear()`.
+- `fills.open(form, { given, onError })` takes how to read and set the form: `getInput(form)`, `setInput(form, { path, input })`, and `reset(form, { path, initialInput })` for the values a source gives as the form starts, so it isn't dirty.
+- Call `run.start()` once the form is mounted, never on a server, `run.update()` in an effect after each change of a field of `fills.triggers`, `run.reset()` after a reset, and `run.stop()` when the form unmounts.
+- `run.state` says what is pending, and `run.subscribe()` tells when it changes, to pass `pending` to the fields and disable submit.
+
+A builder without the extension, or a definition without fills, fills nothing: `fills.active` is false, and the run does nothing.
+
 ## Placing fields
 
 To render a field away from the rest, in code rather than in the layout, find it in `builder.getFieldTree(json)` by its dot path, and leave it out where you render the rest:

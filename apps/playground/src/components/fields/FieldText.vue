@@ -23,7 +23,7 @@ const autocomplete: Record<string, string> = {
 
 <template>
   <!-- A number input gives a string; setInput turns it into a number. -->
-  <FieldShell :field="field" :required="required" :errors="errors">
+  <FieldShell :field="field" :required="required" :errors="errors" :pending="pending">
     <input
       v-bind="inputProps"
       :type="inputTypes[field.type] ?? (kind === 'number' ? 'number' : 'text')"
@@ -31,6 +31,7 @@ const autocomplete: Record<string, string> = {
       :placeholder="field.placeholder"
       :required="required"
       :autocomplete="autocomplete[field.type]"
+      :aria-busy="pending || undefined"
       @input="setInput(($event.target as HTMLInputElement).value)"
     />
   </FieldShell>
