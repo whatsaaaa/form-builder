@@ -235,8 +235,8 @@ The package ships a [JSON Schema](/guide/json-schema#using-the-shipped-schema) w
 
 The Vue and React adapters run the fills for you. A renderer of your own, like one of the [Formisch bindings](/frameworks/formisch#fills), runs them with the builder's [`getFills()`](/api/schema/Fills):
 
-- **Start the form with the values of the maps.** `builder.getInitialInput(json)` has them. With an initial input of the app's, merge it over the defaults, pass the result and that input to `fills.initialInput(input, given)`, then apply the conditions' `clear()`.
-- **Open the fills on the form** with how to read and set its input: Formisch's `getInput`, `setInput`, and `reset(form, { path, initialInput })` for values the form starts with.
+- **Start the form with the values of the maps.** `builder.getInitialInput(json)` has them. With an initial input of the app's, merge it over each field's `default`, not over `getInitialInput()`: that has the fills of the defaults, which a record with another value must not get. Pass the result and that input to `fills.initialInput(input, given)`, then apply the conditions' `clear()`.
+- **Open the fills on the form** with a [`FillsForm`](/api/schema/FillsForm), how to read and set its input: `getInput()`, `setInput(path, input)`, and `setStartInput(path, input)` for values the form starts with. With Formisch, they are `getInput`, `setInput` and `reset(form, { path, initialInput })`.
 - **Call `start()`** once the form is on the page, `update()` after each change of a field of `fills.triggers`, `reset()` after the form is reset, and `stop()` when it closes.
 - **Read `run.state`** for what is pending, and `subscribe()` to it.
 

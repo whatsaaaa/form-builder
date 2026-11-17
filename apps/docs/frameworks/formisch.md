@@ -119,8 +119,8 @@ A builder without the extension, or a definition without conditions, hides nothi
 
 For the [fills](/guide/fills) of the fills package, run them with `builder.getFills(json)`, next to `getVisibility()`:
 
-- `builder.getInitialInput(json)` already has the values of the maps, for each trigger that starts from its default. With an initial input of the app's, merge it over the defaults, pass the result and that input to `fills.initialInput(input, given)`, then apply the conditions' `clear()`.
-- `fills.open(form, { given, onError })` takes how to read and set the form: `getInput(form)`, `setInput(form, { path, input })`, and `reset(form, { path, initialInput })` for the values a source gives as the form starts, so it isn't dirty.
+- `builder.getInitialInput(json)` already has the values of the maps, for each trigger that starts from its default. With an initial input of the app's, merge it over each field's `default`, not over `getInitialInput()`: that has the fills of the defaults, which a record with another value must not get. Pass the result and that input to `fills.initialInput(input, given)`, then apply the conditions' `clear()`.
+- `fills.open({ getInput, setInput, setStartInput }, { given, onError })` takes a [`FillsForm`](/api/schema/FillsForm), how to read and set the form. Back `getInput()` with Formisch's `getInput(form)`, `setInput(path, input)` with `setInput(form, { path, input })`, and `setStartInput(path, input)` with `reset(form, { path, initialInput })`. The values a source gives as the form starts go through `setStartInput`, so the form isn't dirty.
 - Call `run.start()` once the form is mounted, never on a server, `run.update()` in an effect after each change of a field of `fills.triggers`, `run.reset()` after a reset, and `run.stop()` when the form unmounts.
 - `run.state` says what is pending, and `run.subscribe()` tells when it changes, to pass `pending` to the fields and disable submit.
 

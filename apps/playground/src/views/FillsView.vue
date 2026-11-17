@@ -6,7 +6,7 @@ import {
   type FillErrorInfo,
   type JsonForm,
 } from '@whatsaaaa/form-builder-schema'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import profileMap from '../../../../fixtures/fills/profile-map.json'
 import profileSource from '../../../../fixtures/fills/profile-source.json'
@@ -112,6 +112,10 @@ const name = computed(() =>
 )
 // TypeScript reads `version` in a JSON file as any string.
 const definition = computed(() => examples[name.value].definition as unknown as JsonForm)
+watch(name, () => {
+  calls.value = []
+  fillError.value = undefined
+})
 </script>
 
 <template>
