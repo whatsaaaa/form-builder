@@ -77,7 +77,7 @@ With the `fills` of the [fills package](/api/fills/) in its builder, a field's v
 - **Next waits** for the fills that are pending, then validates the values they set. Submitting is yours: disable the submit button while `jsonForm.fills.pending` isn't empty.
 - **Unmounting the form** aborts the calls of its sources, and nothing is set after it.
 
-[Extensions](/guide/extensions#fills) has every rule of a running fill: which fields it sets, how it fits values, and what clearing a field does.
+[Fills](/guide/fills) has how to write fills and every rule of when they run and what they set.
 
 ## Not included
 

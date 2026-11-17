@@ -14,6 +14,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/stepped-signup">Stepped sign-up</RouterLink>
       <RouterLink to="/conditions">Conditions</RouterLink>
       <RouterLink to="/conditional-steps">Conditional steps</RouterLink>
+      <RouterLink to="/fills">Fills</RouterLink>
     </nav>
   </header>
 

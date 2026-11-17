@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Form } from '@formisch/vue'
-import type { JsonForm, SchemaBuilder } from '@whatsaaaa/form-builder-schema'
-import { JsonFields, useJsonForm } from '@whatsaaaa/form-builder-vue'
+import type { FillsState, JsonForm, SchemaBuilder } from '@whatsaaaa/form-builder-schema'
+import { JsonFields, useJsonForm, type UseJsonFormOptions } from '@whatsaaaa/form-builder-vue'
 import { fieldComponents } from './fields/field-components'
 import { layoutComponents } from './layout/layout-components'
 
-const { definition, builder } = defineProps<{ definition: JsonForm; builder?: SchemaBuilder }>()
+const { definition, builder, onFillError } = defineProps<{
+  definition: JsonForm
+  builder?: SchemaBuilder
+  onFillError?: UseJsonFormOptions['onFillError']
+}>()
+defineSlots<{ status?(props: { fills: FillsState }): unknown }>()
 
-const jsonForm = useJsonForm(definition, { builder, layoutComponents })
+const jsonForm = useJsonForm(definition, { builder, layoutComponents, onFillError })
 const submitted = ref<unknown>()
 </script>
 
@@ -19,8 +24,10 @@ const submitted = ref<unknown>()
       <Form class="form" :of="jsonForm.form" @submit="(output) => (submitted = output)">
         <JsonFields :of="jsonForm" :components="fieldComponents" />
 
-        <button type="submit">Submit</button>
+        <!-- A fill still on its way would submit its fields blank. -->
+        <button type="submit" :disabled="jsonForm.fills.pending.length > 0">Submit</button>
       </Form>
+      <slot name="status" :fills="jsonForm.fills" />
     </div>
 
     <div class="panel">
@@ -77,6 +84,11 @@ button {
   color: var(--color-text);
   cursor: pointer;
   background: var(--color-background-mute);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 pre {

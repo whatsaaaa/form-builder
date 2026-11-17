@@ -23,6 +23,7 @@ const guide: DefaultTheme.SidebarItem[] = [
       { text: 'Layout', link: '/guide/layout' },
       { text: 'Steps', link: '/guide/steps' },
       { text: 'Conditions', link: '/guide/conditions' },
+      { text: 'Fills', link: '/guide/fills' },
     ],
   },
   {

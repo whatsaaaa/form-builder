@@ -41,8 +41,8 @@ const select = (event: Event) => {
     <small v-if="errors" class="error">{{ errors[0] }}</small>
   </fieldset>
 
-  <FieldShell v-else :field="field" :required="required" :errors="errors">
-    <select v-bind="inputProps" multiple @change="select">
+  <FieldShell v-else :field="field" :required="required" :errors="errors" :pending="pending">
+    <select v-bind="inputProps" multiple :aria-busy="pending || undefined" @change="select">
       <option
         v-for="option in options"
         :key="String(option.value)"

@@ -29,7 +29,7 @@ type Fill<TSource extends string = string> =
 - **The keys of a map** must be values the trigger can hold, like the value of one of a select's options.
 - **The values of a map** must be values their field can hold, rules included, like a `default`. `null` always fits, and so does `""` for a text, number or date field, or `[]` for a multiselect.
 
-What a running fill does, like when it fires and which fields it leaves alone, is in [fills](/guide/extensions#fills).
+What a running fill does, like when it fires and which fields it leaves alone, is in [fills](/guide/fills#when-a-fill-runs).
 
 ## FillOverwrite
 

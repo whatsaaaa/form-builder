@@ -4,7 +4,7 @@ description: How extensions add keys of their own to definitions, like the condi
 
 # Extensions
 
-An extension is a feature from another package that reads keys of its own on fields, and on the layout's steps and sections. The [affects package](/guide/conditions) is one: its `affects` hide and clear fields by conditions. An extension can also fill fields from the value of another, like the `fills` of the [fills package](/api/fills/). Below you will learn what extensions do, and how to write one.
+An extension is a feature from another package that reads keys of its own on fields, and on the layout's steps and sections. The [affects package](/guide/conditions) is one: its `affects` hide and clear fields by conditions. An extension can also fill fields from the value of another, like the [fills](/guide/fills) of the fills package. Below you will learn what extensions do, and how to write one.
 
 ## Using extensions
 
@@ -34,7 +34,7 @@ The builder does the rest: groups, lists, sections and steps hide what is in the
 
 ## Adding fills from an extension {#fills}
 
-This section shows how an extension adds fills. To use fills in a form, see the [fills package](/api/fills/fills). How a running fill behaves, below, holds for every fill.
+This section shows how an extension adds fills. To use fills in a form, see [fills](/guide/fills). How a running fill behaves, below, holds for every fill.
 
 A fill sets fields from the value of another, its trigger: choosing a profile fills in the name, say. The [fills package](/api/fills/) adds them from `fills` in the definition, with values from a map or from a source of yours. An extension adds one with `ctx.fill(target, fill)`, where `fill` is a [`TargetFill`](/api/schema/TargetFill). This one adds `copyTo`, which copies a text field to others while the user hasn't changed them:
 

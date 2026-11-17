@@ -4,7 +4,7 @@ description: Show, hide and clear fields, sections and steps by the values of ot
 
 # Conditions
 
-The affects package adds conditions to definitions: a field, a section or a step shows, hides, or hides and clears its value, by the values of other fields. A hidden field isn't validated, in every Formisch package and in a plain `v.parse`. Below you will learn how to write conditions and what they do.
+The affects package adds conditions to definitions: a field, a section or a step shows, hides, or hides and clears its value, by the values of other fields. A hidden field isn't validated, in every Formisch package and in a plain `v.parse`. To set fields from the value of another instead, like a name from a picked profile, see [fills](/guide/fills). Below you will learn how to write conditions and what they do.
 
 ## Adding the extension
 
