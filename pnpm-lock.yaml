@@ -489,7 +489,7 @@ importers:
         version: 1.3.0(@preact/signals@2.11.4(preact@11.2.0))(preact@11.2.0)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@formisch/qwik':
         specifier: ^1.3.0
-        version: 1.3.0(@qwik.dev/core@2.0.0-rc.4(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5))(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
+        version: 1.3.0(@qwik.dev/core@2.0.0-rc.5(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5))(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@formisch/react':
         specifier: ^1.2.0
         version: 1.2.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
@@ -506,8 +506,8 @@ importers:
         specifier: ^2.11.4
         version: 2.11.4(preact@11.2.0)
       '@qwik.dev/core':
-        specifier: 2.0.0-rc.4
-        version: 2.0.0-rc.4(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5)
+        specifier: 2.0.0-rc.5
+        version: 2.0.0-rc.5(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^7.3.1
         version: 7.3.1(svelte@5.57.3(@typescript-eslint/types@8.72.0))(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))
@@ -2868,8 +2868,8 @@ packages:
   '@quansync/fs@1.1.0':
     resolution: {integrity: sha512-qAPG/t3HqML1TlN7sY/pTbEjzFVAKsMjNNMGheyDosro+kT4iw2KCUoHcVdmliwWjorm4elZbgNQyU2eD97eDg==}
 
-  '@qwik.dev/core@2.0.0-rc.4':
-    resolution: {integrity: sha512-z6M5WHPHD0IlCOFWCfuwk8ngUyQYQkkVdIlWBFWr5S9uTIVkYm8rugdF6JE06ICCh+08OHJsxjsuG0QA5wSVmw==}
+  '@qwik.dev/core@2.0.0-rc.5':
+    resolution: {integrity: sha512-Gr6LS2fcXM6Yazh3rUzd+efB82eEkDZ2c/lqWmx3h5rqH8mgu0g6b8BnJALuc3Hxs+zU3QkQEfAdFMXVRTWjZQ==}
     engines: {node: ^20.3.0 || >=21.0.0}
     hasBin: true
     peerDependencies:
@@ -2882,8 +2882,8 @@ packages:
       vitest:
         optional: true
 
-  '@qwik.dev/optimizer@2.1.0-rc.10':
-    resolution: {integrity: sha512-0yI+yY15xSEbBG0LSK5SYQSGU7EVXysHhea/BWb4yy0sGwThZsT6k4D7CgUrwVcuhfHPfBqSXALLvO8O5tc92Q==}
+  '@qwik.dev/optimizer@2.1.0-rc.11':
+    resolution: {integrity: sha512-8djnR+6zgLPSTpR7jcwb3V6DtfmgDgpQ5cndPNrLq0VRhsWD5ySX4uAySOIeTo90Ye3NT8MpC9R1VppandB79Q==}
     engines: {node: ^20.3.0 || >=21.0.0}
 
   '@rolldown/binding-android-arm-eabi@1.2.15':
@@ -7578,9 +7578,9 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  '@formisch/qwik@1.3.0(@qwik.dev/core@2.0.0-rc.4(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5))(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))':
+  '@formisch/qwik@1.3.0(@qwik.dev/core@2.0.0-rc.5(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5))(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))':
     dependencies:
-      '@qwik.dev/core': 2.0.0-rc.4(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5)
+      '@qwik.dev/core': 2.0.0-rc.5(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5)
       valibot: 1.5.0(typescript@6.0.3)
     optionalDependencies:
       typescript: 6.0.3
@@ -8306,11 +8306,11 @@ snapshots:
     dependencies:
       quansync: 1.0.0
 
-  '@qwik.dev/core@2.0.0-rc.4(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5)':
+  '@qwik.dev/core@2.0.0-rc.5(@oxc-project/types@0.155.0)(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vitest@5.0.5)':
     dependencies:
       '@emnapi/core': 1.11.3
       '@emnapi/runtime': 1.11.3
-      '@qwik.dev/optimizer': 2.1.0-rc.10
+      '@qwik.dev/optimizer': 2.1.0-rc.11
       csstype: 3.2.3
       launch-editor: 2.14.2
       magic-regexp: 0.11.2(esbuild@0.28.2)(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))
@@ -8335,7 +8335,7 @@ snapshots:
       - unloader
       - webpack
 
-  '@qwik.dev/optimizer@2.1.0-rc.10': {}
+  '@qwik.dev/optimizer@2.1.0-rc.11': {}
 
   '@rolldown/binding-android-arm-eabi@1.2.15':
     optional: true
