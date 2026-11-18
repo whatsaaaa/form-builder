@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,7 +15,14 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  check:
+  # The checks are named `ci / check`, which the main ruleset requires: format:check, lint with
+  # the guard against what it auto-fixed, type-check, test and build.
+  ci:
+    uses: whatsaaaa/template/.github/workflows/node-ci.yml@v1
+
+  # The schema, affects, fills and adapter tests again with coverage, which vitest.config.ts holds
+  # to its thresholds, and the coverage uploaded to Codecov.
+  coverage:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,12 +36,6 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
-      - name: Fail if lint auto-fixed anything
-        run: git diff --exit-code
-      - run: pnpm type-check
-      - run: pnpm -r --filter '!@whatsaaaa/form-builder-schema' --filter '!@whatsaaaa/form-builder-affects' --filter '!@whatsaaaa/form-builder-fills' --filter '!@whatsaaaa/form-builder-vue' --filter '!@whatsaaaa/form-builder-react' test
       - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills --filter @whatsaaaa/form-builder-vue --filter @whatsaaaa/form-builder-react test:coverage
       # Codecov maps each flag to its package by path, so every lcov path must start with that
       # package's directory.
@@ -88,11 +90,35 @@ jobs:
           files: frameworks/react/coverage/lcov.info
           disable_search: true
           fail_ci_if_error: false
+
+  # The generated reference pages are up to date, and the docs site builds.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills --filter docs docs:gen
       - name: Fail if the generated files are out of date
         run: git diff --exit-code
-      - run: pnpm build
       - run: pnpm docs:build
+
+  # The published packages: publint and Are the Types Wrong on what each one packs, and their size.
+  packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - run: pnpm -r --filter "./packages/*" --filter "./frameworks/*" lint:pkg
       - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills --filter @whatsaaaa/form-builder-react size
 
@@ -163,7 +189,8 @@ jobs:
       - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} type-check
 
   # The schema, affects and fills tests on Node 22, the lowest Node Vitest supports, as they run on
-  # servers. The check job runs them on Node 24. pnpm installs with Node 24, and the tests run on 22.
+  # servers. The ci / check job runs them on Node 24. pnpm installs with Node 24, and the tests run
+  # on 22.
   node-22:
     runs-on: ubuntu-latest
     steps:
