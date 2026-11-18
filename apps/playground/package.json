@@ -21,11 +21,11 @@
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
-    "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vitejs/plugin-vue-jsx": "^5.1.6",
     "@vue/tsconfig": "^0.9.1",
+    "@whatsaaaa/tsconfig": "catalog:",
     "npm-run-all2": "^9.0.3",
     "typescript": "catalog:",
     "vite": "^8.2.2",

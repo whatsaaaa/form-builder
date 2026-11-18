@@ -1,19 +1,12 @@
 // The React snippets.
 {
+  "extends": "@whatsaaaa/tsconfig/bundler.json",
   "include": ["."],
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "preserve",
-    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "types": [],
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "noEmit": true
+    // The shared config turns these on; this code has never been held to them.
+    "allowImportingTsExtensions": false,
+    "erasableSyntaxOnly": false
   }
 }
