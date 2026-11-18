@@ -20,3 +20,7 @@ coverage
 
 # Packed by lint:package for attw to check
 .attw
+
+# VitePress
+**/.vitepress/cache
+**/.vitepress/dist

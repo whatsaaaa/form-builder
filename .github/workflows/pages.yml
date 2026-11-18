@@ -1,8 +1,15 @@
+# Builds the VitePress site in apps/docs and deploys it to GitHub Pages at
+# https://whatsaaaa.github.io/form-builder/, through the shared pages workflow.
 name: Pages
 
 on:
   push:
     branches: [main]
+    paths:
+      - apps/docs/**
+      # The framework pages show these renderers as they are.
+      - integration/examples/**
+      - .github/workflows/pages.yml
   workflow_dispatch:
 
 permissions: {}
@@ -20,4 +27,7 @@ jobs:
       pages: write
       id-token: write
     with:
-      artifact-path: apps/docs/dist
+      build-script: docs:build
+      artifact-path: apps/docs/.vitepress/dist
+      # lastUpdated reads each page's time from the git history.
+      fetch-depth: 0

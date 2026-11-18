@@ -11,9 +11,222 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # A run on main uploads that commit's coverage, which Codecov compares pull requests against.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # The checks are named `ci / check`, which the main ruleset requires
   ci:
     uses: whatsaaaa/template/.github/workflows/node-ci.yml@v1
+
+  # The schema, affects, fills and adapter tests again with coverage, which vitest.config.ts holds
+  # to its thresholds, and the coverage uploaded to Codecov.
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Codecov takes the coverage uploads by OIDC, with no token.
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills --filter @whatsaaaa/form-builder-vue --filter @whatsaaaa/form-builder-react test:coverage
+      # Codecov maps each flag to its package by path, so every lcov path must start with that
+      # package's directory.
+      - name: Check the lcov paths are from the repo root
+        run: |
+          for package in packages/schema packages/affects packages/fills frameworks/vue frameworks/react; do
+            report="$package/coverage/lcov.info"
+            grep -q '^SF:' "$report" || { echo "$report has no SF lines"; exit 1; }
+            if grep '^SF:' "$report" | grep -v "^SF:$package/"; then
+              echo "$report has paths outside $package/"
+              exit 1
+            fi
+          done
+      - name: Upload schema coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          use_oidc: true
+          flags: schema
+          files: packages/schema/coverage/lcov.info
+          disable_search: true
+          # Coverage is a report, not a gate: the thresholds in vitest.config.ts are.
+          fail_ci_if_error: false
+      - name: Upload affects coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          use_oidc: true
+          flags: affects
+          files: packages/affects/coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: false
+      - name: Upload fills coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          use_oidc: true
+          flags: fills
+          files: packages/fills/coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: false
+      - name: Upload vue coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          use_oidc: true
+          flags: vue
+          files: frameworks/vue/coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: false
+      - name: Upload react coverage to Codecov
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        with:
+          use_oidc: true
+          flags: react
+          files: frameworks/react/coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: false
+
+  # The generated reference pages are up to date, and the docs site builds.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills --filter docs docs:gen
+      - name: Fail if the generated files are out of date
+        run: git diff --exit-code
+      - run: pnpm docs:build
+
+  # The published packages: publint and Are the Types Wrong on what each one packs, and their size.
+  packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm -r --filter "./packages/*" --filter "./frameworks/*" lint:pkg
+      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills --filter @whatsaaaa/form-builder-react size
+
+  # The schema, affects and fills tests again, with the lowest Valibot and @valibot/to-json-schema the
+  # peer ranges allow.
+  valibot-min:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install with Valibot 1.3.0 and @valibot/to-json-schema 1.6.0
+        run: |
+          for package in packages/schema packages/affects packages/fills; do
+            (cd "$package" && npm pkg set devDependencies.valibot=1.3.0 devDependencies.@valibot/to-json-schema=1.6.0)
+          done
+          pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills test:coverage
+
+  # The React adapter's tests and types again, with React 18, the lowest major its peer range allows.
+  react-18:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install with React 18
+        working-directory: frameworks/react
+        run: |
+          npm pkg set devDependencies.react=18.3.1 devDependencies.react-dom=18.3.1
+          npm pkg set devDependencies.@types/react=^18.3.0 devDependencies.@types/react-dom=^18.3.0
+          pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-react test:coverage
+      - run: pnpm --filter @whatsaaaa/form-builder-react type-check
+
+  # Each adapter's tests and types again, with the lowest Formisch, Valibot and Vue its peer ranges
+  # allow. The overrides make every package in the workspace use that one copy.
+  adapters-min:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - adapter: vue
+            overrides: '{ vue: 3.5.2, "@formisch/vue": 1.1.1, valibot: 1.4.1 }'
+          - adapter: react
+            overrides: '{ "@formisch/react": 1.2.0, valibot: 1.4.1 }'
+    name: adapters-min (${{ matrix.adapter }})
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install with the lowest peers
+        run: |
+          echo 'overrides: ${{ matrix.overrides }}' >> pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} ls --depth 0
+      - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} test
+      - run: pnpm --filter @whatsaaaa/form-builder-${{ matrix.adapter }} type-check
+
+  # The schema, affects and fills tests on Node 22, the lowest Node Vitest supports, as they run on
+  # servers. The ci / check job runs them on Node 24. pnpm installs with Node 24, and the tests run
+  # on 22.
+  node-22:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - run: node --version
+      - working-directory: packages/schema
+        run: node node_modules/vitest/vitest.mjs run
+      - working-directory: packages/affects
+        run: node node_modules/vitest/vitest.mjs run
+      - working-directory: packages/fills
+        run: node node_modules/vitest/vitest.mjs run
+
+  # The packed packages in a new npm project, with the lowest TypeScript and peers they support:
+  # a type-check of their published types with skipLibCheck off, then an ES import, a server render
+  # with each adapter and a CommonJS require() on Node 24 and on Node 20.19, the lowest Node that
+  # requires ES modules without a flag. latest-peers.yml runs it with the latest peers.
+  consumer-smoke-min:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6 # use the latest major
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 20.19.0
+      - run: echo "NODE_20=$(command -v node)" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: consumer-smoke/run.sh min node "$NODE_20"

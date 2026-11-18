@@ -1,3 +1,226 @@
 import whatsaaaa from '@whatsaaaa/eslint-config'
+import pluginBoundaries from 'eslint-plugin-boundaries'
+import pluginReactHooks from 'eslint-plugin-react-hooks'
 
-export default whatsaaaa({ vue: true })
+// The feature folders under each package's src/, and the features each one may import.
+// A feature missing from this list can't be imported by any other feature.
+const packageFeatures: Record<string, Record<string, string[]>> = {
+  schema: {
+    shared: [],
+    errors: ['shared'],
+    kinds: ['shared'],
+    definition: ['shared', 'errors'],
+    rules: ['shared', 'definition'],
+    'field-types': ['shared', 'kinds', 'definition', 'errors'],
+    render: ['shared', 'definition', 'errors'],
+    extensions: ['shared', 'errors', 'kinds', 'definition'],
+    visibility: ['shared', 'errors', 'definition', 'render', 'extensions'],
+    fills: ['shared', 'errors', 'kinds', 'definition', 'render', 'extensions', 'visibility'],
+    builder: [
+      'shared',
+      'errors',
+      'kinds',
+      'definition',
+      'rules',
+      'field-types',
+      'render',
+      'extensions',
+      'visibility',
+      'fills',
+    ],
+    'json-schema': ['shared', 'definition', 'rules', 'field-types', 'extensions'],
+  },
+  affects: {
+    definition: [],
+    evaluate: ['definition'],
+    check: ['definition', 'evaluate'],
+  },
+  fills: {
+    definition: [],
+    values: ['definition'],
+    check: ['definition', 'values'],
+  },
+}
+
+// The packages each package builds on, by their public entry, like an app uses them.
+const packageDependencies: Record<string, string[]> = {
+  affects: ['schema'],
+  fills: ['schema'],
+}
+
+// UI frameworks belong in frameworks/ and apps/, never in the core packages.
+const uiFrameworks = ['vue', '@vue/*', 'react', 'react-dom', 'react/*', '@angular/*', 'svelte']
+
+export default whatsaaaa(
+  { vue: true, ignores: ['**/dist-ssr/**', '**/.vitepress/cache/**'] },
+
+  {
+    name: 'app/vue',
+    rules: {
+      // An optional TypeScript prop is undefined when it's left out; no default to set.
+      'vue/require-default-prop': 'off',
+    },
+  },
+
+  {
+    name: 'app/vue-tests',
+    files: ['packages/*/tests/**', 'frameworks/*/tests/**', 'integration/**'],
+    rules: {
+      // Tests define the small components they mount next to the test that uses them.
+      'vue/one-component-per-file': 'off',
+    },
+  },
+
+  {
+    // The rules of hooks and the React Compiler's checks, for the React code.
+    ...pluginReactHooks.configs.flat.recommended,
+    name: 'app/react',
+    files: ['frameworks/react/**/*.{ts,tsx}', 'integration/tests/react*.tsx'],
+    rules: {
+      ...pluginReactHooks.configs.flat.recommended.rules,
+      'react-hooks/exhaustive-deps': 'error',
+    },
+  },
+
+  {
+    name: 'app/boundaries',
+    plugins: { boundaries: pluginBoundaries },
+    settings: {
+      'import/resolver': {
+        typescript: { project: '**/tsconfig*.json', noWarnOnMultipleProjects: true },
+      },
+      'boundaries/elements': [
+        { type: 'app', pattern: 'apps/*', capture: ['app'] },
+        { type: 'framework', pattern: 'frameworks/*', capture: ['framework'] },
+        { type: 'package-feature', pattern: 'packages/*/src/*', capture: ['pkg', 'feature'] },
+        // Files directly in src/ (index.ts) that are not inside a feature folder.
+        { type: 'package-entry', pattern: 'packages/*/src', capture: ['pkg'] },
+        { type: 'package-tests', pattern: 'packages/*/tests', capture: ['pkg'] },
+        // Tests that run the packages in Formisch's own bindings, the way an app uses them.
+        { type: 'integration', pattern: 'integration' },
+        // Sample JSON forms that tests and apps share.
+        { type: 'fixtures', pattern: 'fixtures' },
+      ],
+    },
+    rules: {
+      'boundaries/dependencies': [
+        'error',
+        {
+          default: 'disallow',
+          checkAllOrigins: true,
+          policies: [
+            { allow: { to: { module: { origin: ['external', 'core'] } } } },
+            {
+              from: { element: { type: 'app' } },
+              allow: {
+                to: [
+                  {
+                    element: { type: 'app', captured: { app: '{{ from.element.captured.app }}' } },
+                  },
+                  { element: { types: ['framework', 'package-entry'] } },
+                ],
+              },
+            },
+            {
+              from: { element: { type: 'framework' } },
+              allow: {
+                to: [
+                  {
+                    element: {
+                      type: 'framework',
+                      captured: { framework: '{{ from.element.captured.framework }}' },
+                    },
+                  },
+                  { element: { type: 'package-entry' } },
+                ],
+              },
+            },
+            {
+              from: { element: { type: 'package-entry' } },
+              allow: {
+                to: {
+                  element: {
+                    type: 'package-feature',
+                    captured: { pkg: '{{ from.element.captured.pkg }}' },
+                  },
+                },
+              },
+            },
+            ...Object.entries(packageFeatures).flatMap(([pkg, features]) =>
+              Object.entries(features).map(([feature, imports]) => ({
+                from: { element: { type: 'package-feature', captured: { pkg, feature } } },
+                allow: {
+                  to: {
+                    element: {
+                      type: 'package-feature',
+                      captured: { pkg, feature: [feature, ...imports] },
+                    },
+                  },
+                },
+              })),
+            ),
+            ...Object.entries(packageDependencies).map(([pkg, dependencies]) => ({
+              from: {
+                element: {
+                  types: ['package-entry', 'package-feature', 'package-tests'],
+                  captured: { pkg },
+                },
+              },
+              allow: {
+                to: { element: { type: 'package-entry', captured: { pkg: dependencies } } },
+              },
+            })),
+            {
+              from: { element: { type: 'package-tests' } },
+              allow: {
+                to: {
+                  element: {
+                    types: ['package-entry', 'package-tests'],
+                    captured: { pkg: '{{ from.element.captured.pkg }}' },
+                  },
+                },
+              },
+            },
+            {
+              from: { element: { type: 'integration' } },
+              allow: {
+                to: { element: { types: ['integration', 'framework', 'package-entry'] } },
+              },
+            },
+            {
+              from: { element: { types: ['app', 'framework', 'package-tests', 'integration'] } },
+              allow: { to: { element: { type: 'fixtures' } } },
+            },
+            {
+              from: { element: { types: ['package-entry', 'package-feature'] } },
+              disallow: {
+                to: [
+                  { module: { origin: 'core' } },
+                  { module: { origin: 'external', source: uiFrameworks } },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
+    name: 'app/package-tests',
+    files: ['packages/*/tests/**', 'frameworks/*/tests/**', 'integration/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/src', '**/src/**'],
+              message: 'Import the package by its name, the way its users do.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+)

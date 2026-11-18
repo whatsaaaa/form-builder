@@ -1,5 +1,14 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "extends": ["./node_modules/@whatsaaaa/oxlint-config/vue.json"],
-  "ignorePatterns": ["**/dist"]
+  "ignorePatterns": ["**/dist"],
+  "overrides": [
+    {
+      // The shared config adds Node's globals; the code here has only ever had the browser's.
+      "files": ["**/*"],
+      "env": {
+        "node": false
+      }
+    }
+  ]
 }
