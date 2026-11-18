@@ -15,8 +15,7 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  # The checks are named `ci / check`, which the main ruleset requires: format:check, lint with
-  # the guard against what it auto-fixed, type-check, test and build.
+  # The checks are named `ci / check`, which the main ruleset requires
   ci:
     uses: whatsaaaa/template/.github/workflows/node-ci.yml@v1
 

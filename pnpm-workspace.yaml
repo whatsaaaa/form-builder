@@ -1,14 +1,21 @@
 packages:
+  - packages/*
   - apps/*
   - frameworks/*
   - integration
-  - packages/*
 
-# Install scripts that may run. The postinstalls of unrs-resolver and esbuild (used by
-# size-limit), and of @parcel/watcher, lmdb and msgpackr-extract (used by @angular/build in the
-# integration tests), only re-download, check or build the native binding, which pnpm already
-# installs through their optional platform packages.
+# pnpm installs no package younger than a day (minimumReleaseAge). Our own packages are let in
+# as soon as they are published, so a project can take a release of them right away.
+minimumReleaseAgeExclude:
+  - '@whatsaaaa/*'
+
+# A dependency's install script runs only when allowBuilds lists it: true to run it, false to
+# skip it, each with a comment that says why.
 allowBuilds:
+  # The postinstalls of unrs-resolver and esbuild (used by size-limit), and of @parcel/watcher,
+  # lmdb and msgpackr-extract (used by @angular/build in the integration tests), only
+  # re-download, check or build the native binding, which pnpm already installs through their
+  # optional platform packages
   '@parcel/watcher': false
   esbuild: false
   lmdb: false
@@ -47,8 +54,3 @@ packageExtensions:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-# The docs theme's design-system release was installed before it was a day old, pnpm's minimum
-# release age.
-minimumReleaseAgeExclude:
-  - '@whatsaaaa/*'

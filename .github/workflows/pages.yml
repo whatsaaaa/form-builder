@@ -14,7 +14,7 @@ on:
 
 permissions: {}
 
-# One deployment at a time, and an in-progress deployment is never cancelled.
+# One deployment at a time, and an in-progress deployment is never cancelled
 concurrency:
   group: pages
   cancel-in-progress: false

@@ -4,6 +4,10 @@ import whatsaaaa from '@whatsaaaa/format-config/oxfmt'
 export default defineConfig({
   ...whatsaaaa,
   ignorePatterns: [
+    'pnpm-lock.yaml',
+    '.github/assets',
+    // Copier writes it, and wraps the long description in a style oxfmt would change.
+    '.copier-answers.yml',
     'packages/schema/definition.schema.json',
     'apps/docs/api/schema/field-types.md',
     'apps/docs/api/schema/rules.md',
