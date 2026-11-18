@@ -14,7 +14,6 @@
   "devDependencies": {
     "@formisch/react": "^1.2.0",
     "@formisch/vue": "^1.1.1",
-    "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "^19.3.0",
     "@valibot/to-json-schema": "^1.8.0",
@@ -24,6 +23,7 @@
     "@whatsaaaa/form-builder-react": "workspace:*",
     "@whatsaaaa/form-builder-schema": "workspace:*",
     "@whatsaaaa/form-builder-vue": "workspace:*",
+    "@whatsaaaa/tsconfig": "catalog:",
     "jiti": "^2.7.0",
     "react": "^19.3.1",
     "typescript": "catalog:",

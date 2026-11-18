@@ -54,6 +54,7 @@
     "@valibot/to-json-schema": "^1.8.0",
     "@vitest/coverage-v8": "^5.0.5",
     "@whatsaaaa/form-builder-schema": "workspace:^",
+    "@whatsaaaa/tsconfig": "catalog:",
     "ajv": "^8.18.0",
     "jiti": "^2.7.0",
     "publint": "^0.3.25",

@@ -164,12 +164,12 @@ settings:
 
 catalogs:
   default:
-    '@tsconfig/node24':
-      specifier: ^24.0.5
-      version: 24.0.6
     '@types/node':
       specifier: ^24.13.4
       version: 24.19.2
+    '@whatsaaaa/tsconfig':
+      specifier: ^1.0.0
+      version: 1.0.0
     typescript:
       specifier: ~6.0.3
       version: 6.0.3
@@ -192,36 +192,33 @@ importers:
       '@changesets/cli':
         specifier: ^3.0.3
         version: 3.0.3
-      '@tsconfig/node24':
-        specifier: 'catalog:'
-        version: 24.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
-      '@vue/eslint-config-typescript':
-        specifier: ^14.9.0
-        version: 14.9.0(eslint-plugin-vue@10.12.1(@typescript-eslint/parser@8.72.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(vue-eslint-parser@10.4.2(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
+      '@whatsaaaa/eslint-config':
+        specifier: ^1.0.0
+        version: 1.0.0(@typescript-eslint/parser@8.72.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(oxlint@1.94.0)(supports-color@7.2.0)(typescript@6.0.3)
+      '@whatsaaaa/format-config':
+        specifier: ^1.0.0
+        version: 1.0.0(oxfmt@0.78.0(svelte@5.57.3(@typescript-eslint/types@8.72.0)))
+      '@whatsaaaa/oxlint-config':
+        specifier: ^1.0.0
+        version: 1.0.0(oxlint@1.94.0)
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       eslint:
         specifier: ^10.14.0
         version: 10.15.0(jiti@2.7.0)(supports-color@7.2.0)
-      eslint-config-prettier:
-        specifier: ^10.1.8
-        version: 10.1.8(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))
       eslint-import-resolver-typescript:
         specifier: ^4.4.5
         version: 4.4.5(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
       eslint-plugin-boundaries:
         specifier: ^7.2.0
         version: 7.2.0(@typescript-eslint/parser@8.72.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint-import-resolver-typescript@4.4.5(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
-      eslint-plugin-oxlint:
-        specifier: ^1.93.0
-        version: 1.94.0(oxlint@1.94.0)
       eslint-plugin-react-hooks:
         specifier: ^7.1.1
         version: 7.1.1(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
-      eslint-plugin-vue:
-        specifier: ^10.12.1
-        version: 10.12.1(@typescript-eslint/parser@8.72.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(vue-eslint-parser@10.4.2(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0))
       jiti:
         specifier: ^2.7.0
         version: 2.7.0
@@ -237,9 +234,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
-      vue-eslint-parser:
-        specifier: ^10.4.2
-        version: 10.4.2(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
 
   apps/docs:
     devDependencies:
@@ -249,9 +243,6 @@ importers:
       '@formisch/vue':
         specifier: ^1.1.1
         version: 1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
-      '@tsconfig/node24':
-        specifier: 'catalog:'
-        version: 24.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -279,6 +270,9 @@ importers:
       '@whatsaaaa/form-builder-vue':
         specifier: workspace:*
         version: link:../../frameworks/vue
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       jiti:
         specifier: ^2.7.0
         version: 2.7.0
@@ -331,9 +325,6 @@ importers:
         specifier: ^5.3.1
         version: 5.4.0(@vue/compiler-sfc@3.5.44)(esbuild@0.28.2)(pinia@4.1.0(@vue/devtools-api@8.2.1)(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3)))(rolldown@1.2.15)(rollup@4.68.1)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(sass-embedded@1.104.1)(sass@1.104.1)(yaml@2.9.1))(vue@3.5.44(typescript@6.0.3))
     devDependencies:
-      '@tsconfig/node24':
-        specifier: 'catalog:'
-        version: 24.0.6
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -346,6 +337,9 @@ importers:
       '@vue/tsconfig':
         specifier: ^0.9.1
         version: 0.9.1(typescript@6.0.3)(vue@3.5.44(typescript@6.0.3))
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       npm-run-all2:
         specifier: ^9.0.3
         version: 9.0.4
@@ -391,6 +385,9 @@ importers:
       '@whatsaaaa/form-builder-schema':
         specifier: workspace:^
         version: link:../../packages/schema
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       happy-dom:
         specifier: ^20.0.0
         version: 20.14.6
@@ -439,6 +436,9 @@ importers:
       '@whatsaaaa/form-builder-schema':
         specifier: workspace:^
         version: link:../../packages/schema
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       happy-dom:
         specifier: ^20.0.0
         version: 20.14.6
@@ -535,6 +535,9 @@ importers:
       '@whatsaaaa/form-builder-vue':
         specifier: workspace:*
         version: link:../frameworks/vue
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       jsdom:
         specifier: ^31.0.0
         version: 31.0.1
@@ -592,6 +595,9 @@ importers:
       '@whatsaaaa/form-builder-schema':
         specifier: workspace:^
         version: link:../schema
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       ajv:
         specifier: ^8.18.0
         version: 8.20.0
@@ -634,6 +640,9 @@ importers:
       '@whatsaaaa/form-builder-schema':
         specifier: workspace:^
         version: link:../schema
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       ajv:
         specifier: ^8.18.0
         version: 8.20.0
@@ -673,6 +682,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
+      '@whatsaaaa/tsconfig':
+        specifier: 'catalog:'
+        version: 1.0.0(@types/node@24.19.2)(typescript@6.0.3)
       ajv:
         specifier: ^8.18.0
         version: 8.20.0
@@ -3499,8 +3511,8 @@ packages:
   '@terrazzo/token-types@2.10.0':
     resolution: {integrity: sha512-93HnrQPUFsZv0k9Z2L0zsxwd2IVLmoI78TwfnHhKPDnGrE+hVyzYRlFi/5ihspNFIbfnXMHW1EmxeiF9m6UPiQ==}
 
-  '@tsconfig/node24@24.0.6':
-    resolution: {integrity: sha512-/SK4JuydRQLGSCq7+hbiQ8fdAVR4Suv5EcBvkIAG3zo3GbXQvGoSclz4olL12Ar4OpH8gwGYJ67P4wwQqBRxKw==}
+  '@tsconfig/node22@22.0.7':
+    resolution: {integrity: sha512-xnYM5q+HTeLm+jRBIB7Mu61OyOmNpgzPmJuhwPODSyITDPIWVK2TXxn/+O5fJ4n/P0u/gPsgSyPw/Dl3Cz/L4g==}
 
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
@@ -4018,6 +4030,33 @@ packages:
       vitepress:
         optional: true
       vue:
+        optional: true
+
+  '@whatsaaaa/eslint-config@1.0.0':
+    resolution: {integrity: sha512-Vh4mt+43HwAmvNCafd7eLGHdlP4OBeFbUReHCI+gu9bqwLRY2zHkp++AhnjJ6He6FY/3dQUCahj8nfmt7nPA7Q==}
+    engines: {node: ^22.18.0 || >=24.12.0}
+    peerDependencies:
+      eslint: ^10.0.0
+      typescript: '>=5.8.0'
+
+  '@whatsaaaa/format-config@1.0.0':
+    resolution: {integrity: sha512-KUHTZBG9JEDJBe8AsE+Q4k5QJlMxybMSJqhkt/6m6bXyXMrErlXf8HgWNwApFORPTewq7E9sNqLWMd2tWvPVQw==}
+    engines: {node: ^22.18.0 || >=24.12.0}
+    peerDependencies:
+      oxfmt: '>=0.73.0'
+
+  '@whatsaaaa/oxlint-config@1.0.0':
+    resolution: {integrity: sha512-AjqR6Jfu15i1Fdxlyocvh860o6Pn7kL4aGonu8X5q1bIEDUYA8M+360G7NGVjj+Iv0m5b+AquBbQ/b99lTpADQ==}
+    peerDependencies:
+      oxlint: ^1.93.0
+
+  '@whatsaaaa/tsconfig@1.0.0':
+    resolution: {integrity: sha512-mPUjDhbylEewJmlXwtY5c+u28XES5pWX49E7CFu1ksS3/YRLoGQm92ePuyTAGZbQIL35jxmtKHJbMiYoB82x7g==}
+    peerDependencies:
+      '@types/node': '*'
+      typescript: '>=6.0.0'
+    peerDependenciesMeta:
+      '@types/node':
         optional: true
 
   '@yuku-toolchain/darwin-arm64@0.28.1':
@@ -8768,7 +8807,7 @@ snapshots:
 
   '@terrazzo/token-types@2.10.0': {}
 
-  '@tsconfig/node24@24.0.6': {}
+  '@tsconfig/node22@22.0.7': {}
 
   '@tybys/wasm-util@0.10.4':
     dependencies:
@@ -9311,6 +9350,37 @@ snapshots:
     optionalDependencies:
       vitepress: 1.6.4(@algolia/client-search@5.61.0)(@types/node@24.19.2)(@types/react@19.3.0)(lightningcss@1.33.0)(postcss@8.5.31)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass-embedded@1.104.1)(sass@1.104.1)(search-insights@2.17.3)(typescript@6.0.3)
       vue: 3.5.44(typescript@6.0.3)
+
+  '@whatsaaaa/eslint-config@1.0.0(@typescript-eslint/parser@8.72.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(oxlint@1.94.0)(supports-color@7.2.0)(typescript@6.0.3)':
+    dependencies:
+      '@vue/eslint-config-typescript': 14.9.0(eslint-plugin-vue@10.12.1(@typescript-eslint/parser@8.72.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(vue-eslint-parser@10.4.2(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
+      eslint: 10.15.0(jiti@2.7.0)(supports-color@7.2.0)
+      eslint-config-prettier: 10.1.8(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))
+      eslint-plugin-oxlint: 1.94.0(oxlint@1.94.0)
+      eslint-plugin-react-hooks: 7.1.1(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
+      eslint-plugin-vue: 10.12.1(@typescript-eslint/parser@8.72.0(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(vue-eslint-parser@10.4.2(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0))
+      typescript: 6.0.3
+      vue-eslint-parser: 10.4.2(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)
+    transitivePeerDependencies:
+      - '@stylistic/eslint-plugin'
+      - '@typescript-eslint/parser'
+      - oxlint
+      - supports-color
+
+  '@whatsaaaa/format-config@1.0.0(oxfmt@0.78.0(svelte@5.57.3(@typescript-eslint/types@8.72.0)))':
+    dependencies:
+      oxfmt: 0.78.0(svelte@5.57.3(@typescript-eslint/types@8.72.0))
+
+  '@whatsaaaa/oxlint-config@1.0.0(oxlint@1.94.0)':
+    dependencies:
+      oxlint: 1.94.0
+
+  '@whatsaaaa/tsconfig@1.0.0(@types/node@24.19.2)(typescript@6.0.3)':
+    dependencies:
+      '@tsconfig/node22': 22.0.7
+      typescript: 6.0.3
+    optionalDependencies:
+      '@types/node': 24.19.2
 
   '@yuku-toolchain/darwin-arm64@0.28.1':
     optional: true

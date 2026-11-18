@@ -1,15 +1,6 @@
-import { globalIgnores } from 'eslint/config'
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
-import pluginVue from 'eslint-plugin-vue'
-import pluginOxlint from 'eslint-plugin-oxlint'
+import whatsaaaa from '@whatsaaaa/eslint-config'
 import pluginBoundaries from 'eslint-plugin-boundaries'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
-import skipFormatting from 'eslint-config-prettier/flat'
-
-// To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
-// import { configureVueProject } from '@vue/eslint-config-typescript'
-// configureVueProject({ scriptLangs: ['ts', 'tsx'] })
-// More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
 
 // The feature folders under each package's src/, and the features each one may import.
 // A feature missing from this list can't be imported by any other feature.
@@ -60,16 +51,8 @@ const packageDependencies: Record<string, string[]> = {
 // UI frameworks belong in frameworks/ and apps/, never in the core packages.
 const uiFrameworks = ['vue', '@vue/*', 'react', 'react-dom', 'react/*', '@angular/*', 'svelte']
 
-export default defineConfigWithVueTs(
-  {
-    name: 'app/files-to-lint',
-    files: ['**/*.{vue,ts,mts,tsx}'],
-  },
-
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/.vitepress/cache/**']),
-
-  ...pluginVue.configs['flat/recommended'],
-  vueTsConfigs.recommended,
+export default whatsaaaa(
+  { vue: true, ignores: ['**/dist-ssr/**', '**/.vitepress/cache/**'] },
 
   {
     name: 'app/vue',
@@ -240,8 +223,4 @@ export default defineConfigWithVueTs(
       ],
     },
   },
-
-  ...pluginOxlint.buildFromOxlintConfigFile('.oxlintrc.json'),
-
-  skipFormatting,
 )

@@ -57,6 +57,7 @@
     "@size-limit/preset-small-lib": "^14.3.0",
     "@valibot/to-json-schema": "^1.8.0",
     "@vitest/coverage-v8": "^5.0.5",
+    "@whatsaaaa/tsconfig": "catalog:",
     "ajv": "^8.18.0",
     "jiti": "^2.7.0",
     "publint": "^0.3.25",
