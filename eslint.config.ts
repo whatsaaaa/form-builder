@@ -68,8 +68,25 @@ export default defineConfigWithVueTs(
 
   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/.vitepress/cache/**']),
 
-  ...pluginVue.configs['flat/essential'],
+  ...pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,
+
+  {
+    name: 'app/vue',
+    rules: {
+      // An optional TypeScript prop is undefined when it's left out; no default to set.
+      'vue/require-default-prop': 'off',
+    },
+  },
+
+  {
+    name: 'app/vue-tests',
+    files: ['packages/*/tests/**', 'frameworks/*/tests/**', 'integration/**'],
+    rules: {
+      // Tests define the small components they mount next to the test that uses them.
+      'vue/one-component-per-file': 'off',
+    },
+  },
 
   {
     // The rules of hooks and the React Compiler's checks, for the React code.
