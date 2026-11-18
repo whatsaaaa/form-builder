@@ -1,24 +1,5 @@
-// TSConfig for workspace-level config files (e.g. eslint.config.ts).
-// Each workspace package has its own tsconfig and is type-checked separately.
+// The configs and the tests at the root. Each package has its own.
 {
-  "extends": "@whatsaaaa/tsconfig/bundler.json",
-  "include": ["*.config.*"],
-  "compilerOptions": {
-    // What Node 24 runs, as @tsconfig/node24 set it before.
-    "target": "es2024",
-    "lib": [
-      "es2024",
-      "esnext.array",
-      "esnext.collection",
-      "esnext.error",
-      "es2025.iterator",
-      "es2025.promise"
-    ],
-    "types": ["node"],
-    // The shared config turns these on; the config files have never been held to them.
-    "noUncheckedIndexedAccess": false,
-    "verbatimModuleSyntax": false,
-    "isolatedModules": false,
-    "erasableSyntaxOnly": false
-  }
+  "extends": "@whatsaaaa/tsconfig/node.json",
+  "include": ["tests", "*.config.ts"]
 }

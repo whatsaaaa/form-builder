@@ -1,26 +1,7 @@
-// TSConfig for the code that runs in Node.js: the VitePress config, the generator and the tests.
-// The theme, which runs in the browser, has its own project in .vitepress/theme, and the snippets
-// the pages show have a project each in snippets/.
 {
   "extends": "@whatsaaaa/tsconfig/bundler.json",
-  "include": [".vitepress/config.ts", "scripts", "tests"],
   "compilerOptions": {
-    // What Node 24 runs, as @tsconfig/node24 set it before.
-    "target": "es2024",
-    "lib": [
-      "es2024",
-      "esnext.array",
-      "esnext.collection",
-      "esnext.error",
-      "es2025.iterator",
-      "es2025.promise"
-    ],
-    "types": ["node"],
-    // The shared config turns these on; this code has never been held to them.
-    "allowImportingTsExtensions": false,
-    "noUncheckedIndexedAccess": false,
-    "verbatimModuleSyntax": false,
-    "isolatedModules": false,
-    "erasableSyntaxOnly": false
-  }
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src", "*.config.ts"]
 }

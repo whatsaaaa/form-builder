@@ -14,9 +14,7 @@ jobs:
   release:
     uses: whatsaaaa/template/.github/workflows/changesets-release.yml@v1
     # The version job starts ci.yml on the Version Packages pull request, through its
-    # workflow_dispatch trigger, since GitHub starts no pull_request run for it. The publish job
-    # runs in the npm environment, which the trusted publisher names, and each package's prepack
-    # builds it. Pre mode (.changeset/pre.json) picks the rc dist-tag.
+    # workflow_dispatch trigger, since GitHub starts no pull_request run for it
     permissions:
       actions: write # starts CI on the Version Packages pull request
       contents: write # Version Packages pull request, git tags and GitHub releases

@@ -1,0 +1,20 @@
+# Written by Copier: never edit this file by hand. `copier update` reads it.
+_commit: v1.3.1
+_src_path: https://github.com/whatsaaaa/template.git
+agents_md: false
+brand_kit: form-builder
+browser_tests: false
+copyright_year: 2026
+description: Define Formisch forms in JSON, render them with your own components,
+    or compile them to typed Valibot code.
+design_system: false
+framework: vue
+kind: library
+license: MIT
+name: form-builder
+pages: true
+publish: true
+stack: typescript
+starter: false
+visibility: public
+workspace: monorepo

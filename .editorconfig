@@ -1,8 +1,16 @@
-[*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue,css,scss,sass,less,styl}]
+root = true
+
+[*]
 charset = utf-8
+end_of_line = lf
 indent_size = 2
 indent_style = space
 insert_final_newline = true
 trim_trailing_whitespace = true
-end_of_line = lf
+
+[*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue,astro,css,html,json,jsonc,yml,yaml,sh}]
 max_line_length = 100
+
+# Two trailing spaces are a line break in Markdown
+[*.md]
+trim_trailing_whitespace = false
