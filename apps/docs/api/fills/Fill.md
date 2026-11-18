@@ -43,7 +43,11 @@ Which fields a fill sets. With `'unedited'`, the default, it sets only the field
 
 ```ts
 type FillMapValue =
-  string | number | boolean | null | readonly (string | number | boolean)[]
+  | string
+  | number
+  | boolean
+  | null
+  | readonly (string | number | boolean)[]
 ```
 
 A value a map gives a field: one value, a list of them for a multiselect, or `null` for blank.
