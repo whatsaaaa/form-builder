@@ -253,8 +253,8 @@ importers:
         specifier: ^1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@6.0.3))
       '@whatsaaaa/design-system':
-        specifier: ^0.8.2
-        version: 0.8.2(vitepress@1.6.4(@algolia/client-search@5.61.0)(@types/node@24.19.2)(@types/react@19.3.0)(lightningcss@1.33.0)(postcss@8.5.31)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass-embedded@1.104.1)(sass@1.104.1)(search-insights@2.17.3)(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
+        specifier: ^0.14.0
+        version: 0.14.0(vitepress@1.6.4(@algolia/client-search@5.61.0)(@types/node@24.19.2)(@types/react@19.3.0)(lightningcss@1.33.0)(postcss@8.5.31)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass-embedded@1.104.1)(sass@1.104.1)(search-insights@2.17.3)(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
       '@whatsaaaa/form-builder-affects':
         specifier: workspace:*
         version: link:../../packages/affects
@@ -4017,14 +4017,26 @@ packages:
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
 
-  '@whatsaaaa/design-system@0.8.2':
-    resolution: {integrity: sha512-lzReZwzzW9lQ8FKXWOAMETFP/8wYoUU/JuS1ds+ksT+8Ay1oJeBDkOe4oSvTkFhp6V59fGWcxFZbLAuowHhj7A==}
+  '@whatsaaaa/design-system@0.14.0':
+    resolution: {integrity: sha512-BJy8XLfCfSK1zaILS3Dt2UFpYRZFw1oC1eZhM/AgKwKKKpMbDUlTCH1Yn5GtyvRlmu0Q5O82xfSGhXaiNHZANg==}
     engines: {node: ^22.18.0 || >=24.12.0}
     peerDependencies:
+      '@playwright/test': ^1.50.0
+      stylelint: ^18.0.0
+      stylelint-config-standard: ^41.0.0
+      stylelint-value-no-unknown-custom-properties: ^6.1.1
       tailwindcss: ^4.3.5
       vitepress: ^1.6.4
       vue: ^3.5.0
     peerDependenciesMeta:
+      '@playwright/test':
+        optional: true
+      stylelint:
+        optional: true
+      stylelint-config-standard:
+        optional: true
+      stylelint-value-no-unknown-custom-properties:
+        optional: true
       tailwindcss:
         optional: true
       vitepress:
@@ -9344,7 +9356,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@whatsaaaa/design-system@0.8.2(vitepress@1.6.4(@algolia/client-search@5.61.0)(@types/node@24.19.2)(@types/react@19.3.0)(lightningcss@1.33.0)(postcss@8.5.31)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass-embedded@1.104.1)(sass@1.104.1)(search-insights@2.17.3)(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))':
+  '@whatsaaaa/design-system@0.14.0(vitepress@1.6.4(@algolia/client-search@5.61.0)(@types/node@24.19.2)(@types/react@19.3.0)(lightningcss@1.33.0)(postcss@8.5.31)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(sass-embedded@1.104.1)(sass@1.104.1)(search-insights@2.17.3)(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))':
     dependencies:
       '@terrazzo/token-types': 2.10.0
     optionalDependencies:
