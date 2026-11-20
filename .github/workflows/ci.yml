@@ -49,7 +49,7 @@ jobs:
             fi
           done
       - name: Upload schema coverage to Codecov
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
           flags: schema
@@ -58,7 +58,7 @@ jobs:
           # Coverage is a report, not a gate: the thresholds in vitest.config.ts are.
           fail_ci_if_error: false
       - name: Upload affects coverage to Codecov
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
           flags: affects
@@ -66,7 +66,7 @@ jobs:
           disable_search: true
           fail_ci_if_error: false
       - name: Upload fills coverage to Codecov
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
           flags: fills
@@ -74,7 +74,7 @@ jobs:
           disable_search: true
           fail_ci_if_error: false
       - name: Upload vue coverage to Codecov
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
           flags: vue
@@ -82,7 +82,7 @@ jobs:
           disable_search: true
           fail_ci_if_error: false
       - name: Upload react coverage to Codecov
-        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           use_oidc: true
           flags: react
