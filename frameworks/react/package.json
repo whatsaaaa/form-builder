@@ -41,7 +41,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
-    "lint:pkg": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only",
+    "lint:package": "publint && pnpm pack --pack-destination .attw && attw .attw/*.tgz --profile esm-only",
     "size": "size-limit"
   },
   "devDependencies": {

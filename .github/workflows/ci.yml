@@ -118,7 +118,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: pnpm -r --filter "./packages/*" --filter "./frameworks/*" lint:pkg
+      - run: pnpm -r --filter "./packages/*" --filter "./frameworks/*" lint:package
       - run: pnpm --filter @whatsaaaa/form-builder-schema --filter @whatsaaaa/form-builder-affects --filter @whatsaaaa/form-builder-fills --filter @whatsaaaa/form-builder-react size
 
   # The schema, affects and fills tests again, with the lowest Valibot and @valibot/to-json-schema the
