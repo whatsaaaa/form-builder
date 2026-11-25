@@ -242,7 +242,7 @@ importers:
         version: 1.2.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@formisch/vue':
         specifier: ^1.1.1
-        version: 1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
+        version: 1.2.0(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.2
@@ -302,7 +302,7 @@ importers:
     dependencies:
       '@formisch/vue':
         specifier: ^1.1.1
-        version: 1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
+        version: 1.2.0(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
       '@whatsaaaa/form-builder-affects':
         specifier: workspace:*
         version: link:../../packages/affects
@@ -423,7 +423,7 @@ importers:
         version: 0.18.5
       '@formisch/vue':
         specifier: ^1.1.1
-        version: 1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
+        version: 1.2.0(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
       '@vitest/coverage-v8':
         specifier: ^5.0.5
         version: 5.0.5(vitest@5.0.5)
@@ -504,7 +504,7 @@ importers:
         version: 1.2.0(svelte@5.57.3(@typescript-eslint/types@8.72.0))(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))
       '@formisch/vue':
         specifier: ^1.1.1
-        version: 1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
+        version: 1.2.0(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))
       '@preact/signals':
         specifier: ^2.11.4
         version: 2.11.4(preact@11.2.0)
@@ -1703,8 +1703,8 @@ packages:
       typescript:
         optional: true
 
-  '@formisch/vue@1.1.1':
-    resolution: {integrity: sha512-+PJg3lyeK4gY4aozd8zVVd6WszIhBSlTSTVRkcxbFwIHCNhShjWlA7t3x2H4ldJkrHSsxxoGwyepc0BrUNGV8w==}
+  '@formisch/vue@1.2.0':
+    resolution: {integrity: sha512-KAdH8JHbiRbAY/Iroelo3A0sHh3nMuwiUoETx3QtG7g5Kd31fQQUkiRF7vy699CudKwW2pMvELOqDOVTqsudMw==}
     peerDependencies:
       typescript: '>=5 <8'
       valibot: '>=1.4.1 <2'
@@ -7738,7 +7738,7 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  '@formisch/vue@1.1.1(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))':
+  '@formisch/vue@1.2.0(typescript@6.0.3)(valibot@1.5.0(typescript@6.0.3))(vue@3.5.44(typescript@6.0.3))':
     dependencies:
       valibot: 1.5.0(typescript@6.0.3)
       vue: 3.5.44(typescript@6.0.3)
