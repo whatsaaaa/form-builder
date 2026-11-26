@@ -2,11 +2,9 @@ name: Latest peers
 
 # A canary for releases of the peers: the adapters read parts of Formisch that Formisch keeps out
 # of semver (frameworks/*/src/formisch-internals.ts), so a Formisch minor or patch can break them.
-# It runs on each PR and every day, so a new release shows up before users meet it.
+# It runs once a day, so a new release shows up before users meet it; a failed run is reported by
+# GitHub's notification for failed scheduled workflows. workflow_dispatch runs it on any branch.
 on:
-  pull_request:
-  push:
-    branches: [main]
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
